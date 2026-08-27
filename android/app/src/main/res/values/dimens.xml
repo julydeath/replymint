@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Transparent gutter around every overlay panel. Overlay windows are WRAP_CONTENT, so an
+         elevation shadow has nowhere to draw without it and gets clipped to the view bounds. -->
+    <dimen name="overlay_shadow_pad">10dp</dimen>
+
+    <dimen name="bubble_size">56dp</dimen>
+    <dimen name="bubble_icon">26dp</dimen>
+
+    <dimen name="glass_radius">20dp</dimen>
+    <dimen name="row_radius">14dp</dimen>
+    <dimen name="menu_min_width">208dp</dimen>
+    <!-- Material minimum touch target; the old rows were ~34dp. -->
+    <dimen name="menu_row_height">48dp</dimen>
+    <dimen name="menu_gap">10dp</dimen>
+    <dimen name="screen_margin">8dp</dimen>
+</resources>

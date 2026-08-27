@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  canRetrieveWindowContent is required to read the reply box.
+  We listen to window/focus changes to decide when a reply box is on screen (to show the bubble) —
+  a content-free check only; conversation text is read solely on a user tap. notificationTimeout
+  throttles rapid content-changed events. flagRetrieveInteractiveWindows resolves the active window.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged|typeViewFocused"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows"
+    android:canRetrieveWindowContent="true"
+    android:notificationTimeout="200"
+    android:description="@string/accessibility_description" />

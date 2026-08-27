@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand">#10B981</color>
+    <color name="brand_dark">#0E9F6E</color>
+    <color name="on_brand">#FFFFFF</color>
+
+    <!-- App chrome (activity_main). These ARE overridden in values-night. -->
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_dim">#F3F4F6</color>
+    <color name="text_primary">#111827</color>
+    <color name="text_secondary">#6B7280</color>
+
+    <!-- Overlay "dark glass". Deliberately NOT overridden in values-night: the bubble floats over
+         other apps and stays dark whatever the phone theme is. Night-invariant by construction. -->
+    <color name="glass_surface">#E6141A1F</color>
+    <color name="glass_surface_press">#F21C232A</color>
+    <color name="glass_stroke">#26FFFFFF</color>
+    <color name="glass_text">#F2F5F7FA</color>
+    <color name="glass_text_dim">#99EAF0F5</color>
+    <color name="mint">#2BE6A0</color>
+    <color name="mint_dim">#332BE6A0</color>
+    <color name="on_mint">#08130E</color>
+</resources>

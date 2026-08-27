@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Android / Gradle
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/captures/
+*.iml
+
+# Node / backend
+backend/node_modules/
+backend/.env
+backend/dist/
+
+# Logs
+*.log

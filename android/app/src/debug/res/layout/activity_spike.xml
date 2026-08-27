@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug-only spike screen. Deliberately plain: this is a measurement instrument, not product UI.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="V0 spike — mic pipe (EXTRA_AUDIO_SOURCE)"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            tools:ignore="HardcodedText" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Say this, clearly, every time:"
+            android:textSize="13sp"
+            tools:ignore="HardcodedText" />
+
+        <!-- A name, a number and a weekday: exactly what native STT gets wrong, and what
+             the screen-context correction in V2 is meant to fix. -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:padding="10dp"
+            android:background="#22000000"
+            android:text="Tell Sanjay the invoice for forty two thousand rupees is due on Friday"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            tools:ignore="HardcodedText" />
+
+        <CheckBox
+            android:id="@+id/spike_on_device"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Use on-device recognizer (API 31+)"
+            tools:ignore="HardcodedText" />
+
+        <CheckBox
+            android:id="@+id/spike_offline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="EXTRA_PREFER_OFFLINE"
+            tools:ignore="HardcodedText" />
+
+        <CheckBox
+            android:id="@+id/spike_segmented"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Segmented session mode"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/spike_models"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="0 · Check / download on-device model"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/spike_run_a"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="A · Control (recognizer owns mic)"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/spike_run_b"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="B · Replay through pipe (speak, then stay silent)"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/spike_run_c"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="C · Live mic + pipe together"
+            tools:ignore="HardcodedText" />
+
+        <TextView
+            android:id="@+id/spike_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:padding="10dp"
+            android:background="#22000000"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            tools:ignore="HardcodedText" />
+
+        <TextView
+            android:id="@+id/spike_report"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:fontFamily="monospace"
+            android:textSize="12sp"
+            android:textIsSelectable="true"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/spike_copy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="24dp"
+            android:text="Copy report"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+</ScrollView>

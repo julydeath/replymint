@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:padding="@dimen/overlay_shadow_pad">
+
+    <LinearLayout
+        android:id="@+id/voice_card"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_glass_panel"
+        android:elevation="16dp"
+        android:minWidth="240dp"
+        android:orientation="vertical"
+        android:outlineProvider="background"
+        android:padding="14dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:contentDescription="@string/cd_mic"
+                android:src="@drawable/ic_mic"
+                android:tint="@color/mint" />
+
+            <TextView
+                android:id="@+id/voice_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/voice_listening"
+                android:textColor="@color/mint"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Track + fill, so the meter reads as a level rather than a stray green line. -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_level_track">
+
+            <View
+                android:id="@+id/voice_level"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_level_fill" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/voice_transcript"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:maxLines="4"
+            android:minLines="2"
+            android:text="@string/voice_hint"
+            android:textColor="@color/glass_text_dim"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/voice_stop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_button_primary"
+            android:clickable="true"
+            android:focusable="false"
+            android:gravity="center"
+            android:minHeight="@dimen/menu_row_height"
+            android:text="@string/voice_stop"
+            android:textColor="@color/on_mint"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</FrameLayout>

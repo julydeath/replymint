@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ReplyMint</string>
+    <string name="accessibility_label">ReplyMint</string>
+    <string name="accessibility_description">ReplyMint reads the visible conversation ONLY when you tap the bubble, and writes a draft into the reply box. It never sends anything. In the background it only checks whether a text box is on screen (to show its bubble there) — it never reads your conversation unless you tap.</string>
+
+    <string name="tagline">One best reply, right inside any app.</string>
+    <string name="mode_personal">Personal</string>
+    <string name="mode_professional">Professional</string>
+    <string name="step_overlay">1 · Allow display over other apps</string>
+    <string name="step_accessibility">2 · Enable accessibility</string>
+    <string name="start_bubble">Start bubble</string>
+
+    <!-- Icons are vector drawables now; emoji rendered differently on every OEM and never tinted. -->
+    <string name="action_auto">Auto Reply</string>
+    <string name="action_voice">Voice</string>
+    <string name="action_fix">Fix</string>
+    <string name="action_undo">Undo</string>
+
+    <string name="voice_listening">Listening…</string>
+    <string name="voice_hint">Speak your instruction, then tap Stop</string>
+    <string name="voice_stop">Stop &amp; use</string>
+
+    <string name="undo_done">Undone</string>
+    <string name="undo_none">Nothing to undo</string>
+    <string name="undo_changed">The reply box has changed — left it alone</string>
+
+    <string name="cd_bubble">ReplyMint</string>
+    <string name="cd_mic">Microphone</string>
+</resources>

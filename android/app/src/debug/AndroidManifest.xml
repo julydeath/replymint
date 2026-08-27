@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      Debug-only overrides. Never merged into a release build.
+
+      1. Cleartext so the app can reach the local dev backend (127.0.0.1:8787 via `adb reverse`).
+         Android 9+ blocks cleartext by default; release stays https-only.
+      2. The V0 mic-pipe spike screen — a measurement tool, not product surface, so it lives
+         here and physically cannot ship.
+    -->
+    <application android:usesCleartextTraffic="true">
+        <activity
+            android:name="com.replymint.spike.SpikeActivity"
+            android:exported="false"
+            android:label="ReplyMint spike" />
+    </application>
+</manifest>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The padded, non-clipping root exists so the elevation shadow has pixels to draw into: the
+     overlay window is WRAP_CONTENT, i.e. exactly the view bounds, so without it the shadow is
+     clipped away entirely. The gutter is part of a touchable window, so the touch listener goes
+     on the ROOT — a tap in the gutter should still open the menu rather than do nothing. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:padding="@dimen/overlay_shadow_pad">
+
+    <FrameLayout
+        android:id="@+id/bubble_touch"
+        android:layout_width="@dimen/bubble_size"
+        android:layout_height="@dimen/bubble_size"
+        android:background="@drawable/bg_bubble"
+        android:elevation="8dp"
+        android:foreground="@drawable/bubble_ripple"
+        android:outlineProvider="background">
+
+        <ImageView
+            android:layout_width="@dimen/bubble_icon"
+            android:layout_height="@dimen/bubble_icon"
+            android:layout_gravity="center"
+            android:contentDescription="@string/cd_bubble"
+            android:src="@drawable/ic_bubble" />
+    </FrameLayout>
+</FrameLayout>

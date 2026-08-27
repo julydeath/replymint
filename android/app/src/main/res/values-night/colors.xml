@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App chrome only. The glass_* / mint tokens are intentionally absent here — the overlay
+         is dark in both themes, so overriding them would be a bug, not an omission. -->
+    <color name="surface">#111417</color>
+    <color name="surface_dim">#1B1F24</color>
+    <color name="text_primary">#F2F5F7FA</color>
+    <color name="text_secondary">#9AA4AF</color>
+</resources>
