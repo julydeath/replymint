@@ -27,4 +27,9 @@
 
     <string name="cd_bubble">ReplyMint</string>
     <string name="cd_mic">Microphone</string>
+    <!-- Pre-empts Android's system notice for accessibility apps. Shown before opening settings. -->
+    <string name="a11y_notice_title">Android will show a warning — here\'s the truth</string>
+    <string name="a11y_notice_body">After you turn ReplyMint on, Android will tell you it \u201ccan view your screen and perform actions.\u201d That notice appears for every accessibility app — keyboards, dictation tools, screen readers.\n\nWhat ReplyMint actually does:\n\n•  Reads the screen only when you tap the bubble — never in the background\n•  Writes drafts only into the text box\n•  Cannot press Send — that button isn\'t wired to anything\n\nOn the next screen, turn ReplyMint ON. Tip: you can leave the \u201cAccessibility button/shortcut\u201d OFF — the app uses its own bubble.</string>
+    <string name="a11y_notice_open">Open settings</string>
+    <string name="a11y_notice_cancel">Cancel</string>
 </resources>

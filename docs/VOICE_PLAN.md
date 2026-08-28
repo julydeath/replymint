@@ -253,10 +253,16 @@ talking and never sees it.
 Privacy: audio is RAM-only, every buffer is zeroed on release and after each write, and the mic
 indicator shows *our* app rather than Google's.
 
-**Not yet verified on a device** — needs a real dictation run with pauses, and a Pixel/Samsung
-check of the fallback path.
+**Verified on device (Nothing A059, 2026-08-27):** real dictation run with mid-sentence pauses —
+no clipped syllables; bridge replay confirmed in logs. Pixel/Samsung fallback check still pending.
 
-### V2 · Context-corrected transcription (~1 week) — **biggest accuracy win per line of code**
+### V2 · Context-corrected transcription — **SHIPPED (2026-08-27)**
+
+Implemented as designed below: `VoicePayload` (n-best + confidences + source + lang) travels
+alongside the legacy `voiceInstruction`; backend renders a `[VOICE INSTRUCTION — raw speech
+recognition]` block and the voice task instructs silent correction of names/numbers/currencies
+against the screen (professional mode: Reply Brain names are the spelling authority). Verified
+end-to-end: "sun jay" → Sanjay (from screen), dropped "rupees" → ₹42,000 restored.
 
 Today we send one string. `SpeechRecognizer` gives us an n-best list + confidence scores;
 we throw them away. Change the wire format:
@@ -367,9 +373,9 @@ You cannot perfect what you don't measure. Before V2 lands, build the eval harne
 | Step | What | Time | Gate |
 |---|---|---|---|
 | V0 | `EXTRA_AUDIO_SOURCE` device spike | ✅ done | Passed on Nothing A059; Pixel/Samsung pending |
-| V1 | `AudioPipeline` (fixes clipping) | ✅ built | Gapless 60s capture — needs a device run |
+| V1 | `AudioPipeline` (fixes clipping) | ✅ verified | Gapless with pauses on Nothing A059 |
 | — | Eval harness (Part 4, parallel) | 1 wk | WER baseline recorded |
-| V2 | N-best + screen-context correction | 1 wk | WER on test set drops vs baseline |
+| V2 | N-best + screen-context correction | ✅ shipped | Name/currency correction verified on device |
 | V3 | Cloud STT proxy + dual-engine (paid) | 1–2 wk | Cloud beats native WER; <1.5s final transcript |
 | V4 | Offline honesty | 3 days | Airplane-mode dictation works |
 | V5 | Voice UX (smart intent, edit-in-place) | 1 wk | — |

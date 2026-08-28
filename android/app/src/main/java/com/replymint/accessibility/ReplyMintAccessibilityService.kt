@@ -39,8 +39,9 @@ class ReplyMintAccessibilityService : AccessibilityService() {
     private fun updateBubbleVisibility() {
         val overlay = overlay ?: return
         val root = rootInActiveWindow
-        val ownApp = root?.packageName == packageName
-        if (!ownApp && ScreenReader.hasEditableField(root)) overlay.show() else overlay.hide()
+        val pkg = root?.packageName?.toString()
+        if (pkg in TARGET_APPS && ScreenReader.hasEditableField(root)) overlay.show()
+        else overlay.hide()
     }
 
     override fun onInterrupt() = Unit
@@ -69,6 +70,19 @@ class ReplyMintAccessibilityService : AccessibilityService() {
 
     companion object {
         private const val DEBOUNCE_MS = 250L
+
+        /**
+         * ReplyMint is a reply assistant, not a dictation/notes tool: the bubble appears only in
+         * the messaging apps we target, never in browsers, settings, or other apps that happen to
+         * have a text field. Also serves as the implicit "not our own app" filter.
+         */
+        private val TARGET_APPS = setOf(
+            "com.whatsapp",            // WhatsApp
+            "com.whatsapp.w4b",        // WhatsApp Business
+            "com.instagram.android",   // Instagram
+            "com.google.android.gm",   // Gmail
+            "com.linkedin.android"     // LinkedIn
+        )
 
         @Volatile
         var instance: ReplyMintAccessibilityService? = null

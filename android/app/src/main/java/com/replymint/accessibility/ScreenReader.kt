@@ -1,11 +1,16 @@
 package com.replymint.accessibility
 
+import android.graphics.Rect
 import android.view.accessibility.AccessibilityNodeInfo
 
 /** Structured snapshot of what is on screen at the moment the bubble was tapped. */
 data class ScreenContext(
     val appPackage: String,
-    /** Visible text lines, top-to-bottom, de-duplicated. This is the conversation context. */
+    /**
+     * Visible text lines in reading order, de-duplicated, most recent (bottom) lines kept when
+     * capped. Chat-bubble lines carry a direction tag: "Me: " (right-aligned, sent by the user)
+     * or "Them: " (left-aligned, received). Untagged lines are headers/UI/full-width text.
+     */
     val visibleText: List<String>,
     /** Current contents of the focused input field, if any (used by Fix). */
     val typedText: String?
@@ -23,36 +28,76 @@ data class ScreenContext(
 object ScreenReader {
 
     private const val MAX_LINES = 60
+    /** Traversal budget: enough for a busy chat screen, bounded so a pathological tree can't hang the tap. */
+    private const val MAX_READ_NODES = 1_500
+    /** A bubble inset beyond this fraction of the screen width marks the side the bubble hugs. */
+    private const val ALIGN_INSET_FRACTION = 0.18f
 
     fun read(root: AccessibilityNodeInfo?): ScreenContext? {
         if (root == null) return null
         val pkg = root.packageName?.toString().orEmpty()
+        val rootBounds = Rect().also { root.getBoundsInScreen(it) }
+
         val lines = LinkedHashSet<String>()
         var typed: String? = null
+        var typedFromFocused = false
+        var budget = MAX_READ_NODES
 
+        // Depth-first in DOCUMENT order: children are pushed last-first so they pop first-first.
+        // (The old forward push reversed every sibling run, so "top-to-bottom" was a lie and the
+        // model was asked for "the most recent message" from a scrambled list.)
         val stack = ArrayDeque<AccessibilityNodeInfo>()
         stack.addLast(root)
-        while (stack.isNotEmpty() && lines.size < MAX_LINES) {
+        while (stack.isNotEmpty() && budget-- > 0) {
             val node = stack.removeLast()
             val text = node.text?.toString()?.trim()
 
             if (isEditable(node)) {
                 // The input field: its text is what the user has typed, not conversation content.
-                if (!text.isNullOrEmpty()) typed = text
-            } else if (!text.isNullOrEmpty() && text.length in 1..500) {
-                lines.add(text)
+                // A focused editable always wins; an empty box showing its hint contributes nothing.
+                if (!text.isNullOrEmpty() && !node.isShowingHintText) {
+                    if (node.isFocused) {
+                        typed = text
+                        typedFromFocused = true
+                    } else if (!typedFromFocused) {
+                        typed = text
+                    }
+                }
+            } else if (!text.isNullOrEmpty() && text.length in 1..500 && node.isVisibleToUser) {
+                lines.add(tagDirection(text, node, rootBounds))
             }
 
-            for (i in 0 until node.childCount) {
+            for (i in node.childCount - 1 downTo 0) {
                 node.getChild(i)?.let { stack.addLast(it) }
             }
         }
 
         return ScreenContext(
             appPackage = pkg,
-            visibleText = lines.toList(),
+            // Recency lives at the bottom of a chat; when over the cap, drop the top.
+            visibleText = lines.toList().takeLast(MAX_LINES),
             typedText = typed
         )
+    }
+
+    /**
+     * Incoming vs outgoing, from geometry: chat apps right-align the user's bubbles and
+     * left-align the other side's. A line hugging one side with a wide inset on the other is
+     * tagged; full-width text (headers, timestamps, system rows) stays untagged. Heuristic by
+     * design — the prompt treats the tags as hints, not ground truth.
+     */
+    private fun tagDirection(text: String, node: AccessibilityNodeInfo, rootBounds: Rect): String {
+        val b = Rect().also { node.getBoundsInScreen(it) }
+        val width = rootBounds.width()
+        if (width <= 0) return text
+        val threshold = width * ALIGN_INSET_FRACTION
+        val leftInset = (b.left - rootBounds.left).toFloat()
+        val rightInset = (rootBounds.right - b.right).toFloat()
+        return when {
+            leftInset > threshold && rightInset < threshold -> "Me: $text"
+            rightInset > threshold && leftInset < threshold -> "Them: $text"
+            else -> text
+        }
     }
 
     internal fun isEditable(node: AccessibilityNodeInfo): Boolean =

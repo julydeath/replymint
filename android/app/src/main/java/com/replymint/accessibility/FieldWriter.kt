@@ -1,5 +1,6 @@
 package com.replymint.accessibility
 
+import android.graphics.Rect
 import android.os.Bundle
 import android.view.accessibility.AccessibilityNodeInfo
 
@@ -86,22 +87,35 @@ object FieldWriter {
     private fun currentText(node: AccessibilityNodeInfo): String =
         if (node.isShowingHintText) "" else node.text?.toString().orEmpty()
 
-    /** Prefer the currently focused editable field; otherwise the first editable we find. */
+    /**
+     * Prefer the currently focused editable field; otherwise the BOTTOM-MOST visible editable.
+     * Compose boxes live at the bottom of chat screens; a screen's other editables (search bars,
+     * subject lines) sit above them, so "lowest on screen" is the right unfocused guess.
+     */
     private fun findEditable(root: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
         if (root == null) return null
         root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
             ?.takeIf { ScreenReader.isEditable(it) }
             ?.let { return it }
 
+        var best: AccessibilityNodeInfo? = null
+        var bestBottom = Int.MIN_VALUE
+        val bounds = Rect()
         val stack = ArrayDeque<AccessibilityNodeInfo>()
         stack.addLast(root)
         while (stack.isNotEmpty()) {
             val node = stack.removeLast()
-            if (ScreenReader.isEditable(node)) return node
+            if (ScreenReader.isEditable(node) && node.isVisibleToUser) {
+                node.getBoundsInScreen(bounds)
+                if (bounds.bottom > bestBottom) {
+                    bestBottom = bounds.bottom
+                    best = node
+                }
+            }
             for (i in 0 until node.childCount) {
                 node.getChild(i)?.let { stack.addLast(it) }
             }
         }
-        return null
+        return best
     }
 }

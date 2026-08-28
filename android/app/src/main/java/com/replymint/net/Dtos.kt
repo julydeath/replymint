@@ -8,7 +8,25 @@ data class ReplyRequest(
     val mode: String,
     val action: String,
     val screen: ScreenPayload,
-    val voiceInstruction: String? = null
+    /** Best transcript as a flat string. Kept alongside [voice] so an old backend still works. */
+    val voiceInstruction: String? = null,
+    val voice: VoicePayload? = null
+)
+
+/**
+ * Everything the recognizer told us about one utterance — the raw material for the backend's
+ * screen-context correction (V2). Mirrors [com.replymint.voice.VoiceResult].
+ */
+@Serializable
+data class VoicePayload(
+    /** n-best, best first. */
+    val hypotheses: List<String>,
+    /** Parallel to [hypotheses]; often empty or all-zero (on-device engine). */
+    val confidences: List<Float> = emptyList(),
+    /** "native_offline" | "native_online" | "cloud" — see VoiceSource.wire. */
+    val source: String,
+    /** BCP-47, e.g. "en-IN". */
+    val lang: String
 )
 
 @Serializable

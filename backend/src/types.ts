@@ -44,14 +44,28 @@ export const ReplyBrainSchema = z.object({
   situation: z.string().optional(), // sales / support / negotiation / hiring / ...
 });
 
+/**
+ * V2: the raw speech-recognition result, not just the winning string. The n-best list is how
+ * the model knows which words were uncertain, so it can correct them against the screen.
+ * Confidences are best-effort (the on-device engine returns all zeros) — never required.
+ */
+export const VoiceSchema = z.object({
+  hypotheses: z.array(z.string()).min(1), // n-best, best first
+  confidences: z.array(z.number()).default([]),
+  source: z.enum(["native_offline", "native_online", "cloud"]).default("native_online"),
+  lang: z.string().default(""), // BCP-47, e.g. "en-IN"
+});
+
 export const ReplyRequestSchema = z.object({
   mode: z.enum(["personal", "professional"]),
   action: z.enum(["auto_reply", "voice", "fix"]),
   screen: ScreenSchema,
-  voiceInstruction: z.string().nullish(),
+  voiceInstruction: z.string().nullish(), // legacy flat form; still accepted from old clients
+  voice: VoiceSchema.nullish(),
   brain: ReplyBrainSchema.nullish(), // used only in professional mode
 });
 
 export type ScreenPayload = z.infer<typeof ScreenSchema>;
+export type VoicePayload = z.infer<typeof VoiceSchema>;
 export type ReplyBrain = z.infer<typeof ReplyBrainSchema>;
 export type ReplyRequest = z.infer<typeof ReplyRequestSchema>;

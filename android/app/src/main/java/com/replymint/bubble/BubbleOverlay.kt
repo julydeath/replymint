@@ -248,9 +248,8 @@ class BubbleOverlay(private val context: Context) {
 
                 override fun onFinal(result: VoiceResult) {
                     hideVoicePanel()
-                    val text = result.text
-                    if (text.isBlank()) toast("Didn't catch that")
-                    else runReply(ReplyAction.VOICE, text)
+                    if (result.text.isBlank()) toast("Didn't catch that")
+                    else runReply(ReplyAction.VOICE, result)
                 }
 
                 override fun onError(message: String) {
@@ -279,10 +278,10 @@ class BubbleOverlay(private val context: Context) {
         voicePanelView = null
     }
 
-    private fun runReply(action: ReplyAction, voiceInstruction: String?) {
+    private fun runReply(action: ReplyAction, voice: VoiceResult?) {
         toast("Writing…")
         scope.launch {
-            when (val result = ReplyEngine.run(context.applicationContext, action, voiceInstruction)) {
+            when (val result = ReplyEngine.run(context.applicationContext, action, voice)) {
                 is EngineResult.Success -> { /* draft is already in the box */ }
                 is EngineResult.Error -> toast(result.message)
             }

@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButtonToggleGroup
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.replymint.accessibility.ReplyMintAccessibilityService
 import com.replymint.data.ModeStore
 import com.replymint.model.Mode
@@ -130,13 +131,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Android shows a scary-but-standard "can view your screen and perform actions" notice for
+     * every enabled accessibility service. Explain it BEFORE the user meets it, in our own words,
+     * so the warning confirms what we said instead of ambushing them.
+     */
     private fun openAccessibilitySettings() {
-        Toast.makeText(
-            this,
-            "Turn ReplyMint ON. Tip: you can turn OFF ReplyMint's 'Accessibility button/shortcut' — the app uses its own bubble.",
-            Toast.LENGTH_LONG
-        ).show()
-        startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.a11y_notice_title)
+            .setMessage(R.string.a11y_notice_body)
+            .setPositiveButton(R.string.a11y_notice_open) { _, _ ->
+                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            }
+            .setNegativeButton(R.string.a11y_notice_cancel, null)
+            .show()
     }
 
     private fun startBubble() {
