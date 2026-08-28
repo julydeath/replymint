@@ -1,48 +1,56 @@
 package com.replymint
 
 import android.content.Intent
-import android.net.Uri
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
+import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButtonToggleGroup
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.replymint.accessibility.ReplyMintAccessibilityService
+import com.google.android.material.card.MaterialCardView
+import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.replymint.auth.SignInManager
 import com.replymint.data.ModeStore
 import com.replymint.model.Mode
+import com.replymint.net.AuthClient
+import com.replymint.net.AuthRequiredException
+import com.replymint.ui.OnboardingActivity
+import com.replymint.ui.PermissionsUi
 import com.replymint.voice.VoiceCapabilities
+import kotlinx.coroutines.launch
 
 /**
- * Onboarding + control panel:
- *   1. Pick a mode (Personal / Professional)
- *   2. Grant "display over other apps"
- *   3. Enable the accessibility service
- *   4. Start the bubble
+ * Home dashboard for a set-up user: readiness status, permissions, today's usage, mode,
+ * supported apps. First run (or signed-out) redirects to [OnboardingActivity].
  *
  * Everything is classic Views for a small, fast-starting APK.
  */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var store: ModeStore
-    private lateinit var status: TextView
-    private lateinit var startButton: Button
 
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { refresh() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
         store = ModeStore(this)
 
-        status = findViewById(R.id.status_text)
-        startButton = findViewById(R.id.btn_start)
+        if (!store.onboarded || !store.isSignedIn) {
+            startActivity(Intent(this, OnboardingActivity::class.java))
+            finish()
+            return
+        }
+
+        setContentView(R.layout.activity_main)
 
         val modeGroup = findViewById<MaterialButtonToggleGroup>(R.id.mode_group)
         modeGroup.check(if (store.mode == Mode.PROFESSIONAL) R.id.button_professional else R.id.button_personal)
@@ -51,19 +59,97 @@ class MainActivity : AppCompatActivity() {
             store.mode = if (checkedId == R.id.button_professional) Mode.PROFESSIONAL else Mode.PERSONAL
         }
 
+        findViewById<View>(R.id.row_overlay).setOnClickListener { PermissionsUi.requestOverlay(this) }
+        findViewById<View>(R.id.row_a11y).setOnClickListener { PermissionsUi.openAccessibilitySettings(this) }
+        findViewById<View>(R.id.btn_replay).setOnClickListener {
+            startActivity(Intent(this, OnboardingActivity::class.java))
+        }
+        findViewById<View>(R.id.btn_sign_out).setOnClickListener { signOut() }
+
         addDebugSpikeEntry()
         addDebugVoiceReset()
-
-        findViewById<Button>(R.id.btn_overlay).setOnClickListener { requestOverlay() }
-        findViewById<Button>(R.id.btn_accessibility).setOnClickListener { openAccessibilitySettings() }
-        startButton.setOnClickListener { startBubble() }
-
-        requestRuntimePermissions()
+        requestRuntimePermissionsIfMissing()
     }
 
     override fun onResume() {
         super.onResume()
-        refresh()
+        if (store.onboarded && store.isSignedIn) refresh()
+    }
+
+    private fun refresh() {
+        val overlay = PermissionsUi.overlayGranted(this)
+        val accessibility = PermissionsUi.accessibilityEnabled()
+        val ready = overlay && accessibility
+
+        findViewById<TextView>(R.id.status_title)
+            .setText(if (ready) R.string.home_status_ready else R.string.home_status_setup)
+        findViewById<TextView>(R.id.status_sub)
+            .setText(if (ready) R.string.home_status_ready_sub else R.string.home_status_setup_sub)
+
+        bindPermissionRow(R.id.overlay_state, R.id.overlay_check, overlay)
+        bindPermissionRow(R.id.a11y_state, R.id.a11y_check, accessibility)
+
+        findViewById<TextView>(R.id.account_line).text =
+            getString(R.string.signed_in_as, store.email ?: "")
+
+        fetchUsage()
+    }
+
+    private fun bindPermissionRow(stateId: Int, checkId: Int, granted: Boolean) {
+        findViewById<TextView>(stateId).apply {
+            text = getString(if (granted) R.string.perm_granted else R.string.perm_needed)
+            visibility = if (granted) View.GONE else View.VISIBLE
+        }
+        findViewById<ImageView>(checkId).visibility = if (granted) View.VISIBLE else View.GONE
+    }
+
+    /** Fills the usage card from /v1/me; the call doubles as a backend warm-up ping. */
+    private fun fetchUsage() {
+        val token = store.token ?: return
+        lifecycleScope.launch {
+            AuthClient(BuildConfig.BASE_URL).fetchMe(token).fold(
+                onSuccess = { me ->
+                    findViewById<MaterialCardView>(R.id.usage_card).visibility = View.VISIBLE
+                    findViewById<LinearProgressIndicator>(R.id.usage_bar).apply {
+                        max = me.dailyLimit
+                        progress = me.todayCount.coerceAtMost(me.dailyLimit)
+                    }
+                    findViewById<TextView>(R.id.usage_text).text =
+                        getString(R.string.home_usage_fmt, me.todayCount, me.dailyLimit)
+                },
+                onFailure = {
+                    if (it is AuthRequiredException) {
+                        store.clearAuth()
+                        startActivity(Intent(this@MainActivity, OnboardingActivity::class.java))
+                        finish()
+                    }
+                    // Other failures (offline, cold start): just leave the card hidden.
+                }
+            )
+        }
+    }
+
+    private fun signOut() {
+        lifecycleScope.launch {
+            SignInManager(this@MainActivity).signOut()
+            startActivity(Intent(this@MainActivity, OnboardingActivity::class.java))
+            finish()
+        }
+    }
+
+    private fun requestRuntimePermissionsIfMissing() {
+        // Onboarding already asked once; re-ask only for what's still missing (no dialog spam).
+        val needed = buildList {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+            ) {
+                add(android.Manifest.permission.POST_NOTIFICATIONS)
+            }
+            if (ContextCompat.checkSelfPermission(this@MainActivity, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                add(android.Manifest.permission.RECORD_AUDIO)
+            }
+        }.toTypedArray()
+        if (needed.isNotEmpty()) permissionLauncher.launch(needed)
     }
 
     /**
@@ -72,7 +158,7 @@ class MainActivity : AppCompatActivity() {
      */
     private fun addDebugSpikeEntry() {
         if (!BuildConfig.DEBUG) return
-        val container = findViewById<Button>(R.id.btn_start).parent as? ViewGroup ?: return
+        val container = findViewById<ViewGroup>(R.id.home_root) ?: return
         container.addView(
             Button(this).apply {
                 text = "Debug · mic-pipe spike"
@@ -96,7 +182,7 @@ class MainActivity : AppCompatActivity() {
      */
     private fun addDebugVoiceReset() {
         if (!BuildConfig.DEBUG) return
-        val container = findViewById<Button>(R.id.btn_start).parent as? ViewGroup ?: return
+        val container = findViewById<ViewGroup>(R.id.home_root) ?: return
         container.addView(
             Button(this).apply {
                 text = "Debug · reset voice probes"
@@ -107,67 +193,4 @@ class MainActivity : AppCompatActivity() {
             }
         )
     }
-
-    private fun requestRuntimePermissions() {
-        // RECORD_AUDIO for the Voice action; POST_NOTIFICATIONS so our status/error toasts are not
-        // suppressed (Android/OEMs block a background app's toasts when its notifications are off).
-        val needed = buildList {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                add(android.Manifest.permission.POST_NOTIFICATIONS)
-            }
-            add(android.Manifest.permission.RECORD_AUDIO)
-        }.toTypedArray()
-        permissionLauncher.launch(needed)
-    }
-
-    private fun requestOverlay() {
-        if (!Settings.canDrawOverlays(this)) {
-            startActivity(
-                Intent(
-                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:$packageName")
-                )
-            )
-        }
-    }
-
-    /**
-     * Android shows a scary-but-standard "can view your screen and perform actions" notice for
-     * every enabled accessibility service. Explain it BEFORE the user meets it, in our own words,
-     * so the warning confirms what we said instead of ambushing them.
-     */
-    private fun openAccessibilitySettings() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.a11y_notice_title)
-            .setMessage(R.string.a11y_notice_body)
-            .setPositiveButton(R.string.a11y_notice_open) { _, _ ->
-                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-            }
-            .setNegativeButton(R.string.a11y_notice_cancel, null)
-            .show()
-    }
-
-    private fun startBubble() {
-        if (!ready()) {
-            Toast.makeText(this, "Grant both permissions first", Toast.LENGTH_SHORT).show()
-            return
-        }
-        store.onboarded = true
-        Toast.makeText(this, "You're all set — open any chat app", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun ready(): Boolean =
-        Settings.canDrawOverlays(this) && ReplyMintAccessibilityService.isEnabled()
-
-    private fun refresh() {
-        val overlay = Settings.canDrawOverlays(this)
-        val accessibility = ReplyMintAccessibilityService.isEnabled()
-        status.text = buildString {
-            appendLine("Overlay permission: ${check(overlay)}")
-            append("Accessibility: ${check(accessibility)}")
-        }
-        startButton.isEnabled = overlay && accessibility
-    }
-
-    private fun check(ok: Boolean): String = if (ok) "✓ granted" else "✗ needed"
 }

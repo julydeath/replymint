@@ -10,6 +10,11 @@ android/.idea/
 android/captures/
 *.iml
 
+# Release signing — never commit the keystore or its passwords
+android/keystore.properties
+*.jks
+*.keystore
+
 # Node / backend
 backend/node_modules/
 backend/.env

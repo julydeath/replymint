@@ -32,24 +32,25 @@ Ordered roughly by dependency/priority. See [ROADMAP.md](ROADMAP.md) for the big
 - [ ] A2.5 Edge-snap the bubble to the nearest side after drag (optional nicety)
 
 ### A3 · Real authentication
-- [ ] A3.1 DECISION: Google Sign-In vs email magic-link
-- [ ] A3.2 Android: sign-in flow in onboarding
-- [ ] A3.3 Android: store token in **EncryptedSharedPreferences** (replaces `ModeStore.kt:10` TODO)
-- [ ] A3.4 Backend: verify a real token on `/v1/reply` (replaces stub at `server.ts:20`)
-- [ ] A3.5 Backend: token issue/verify (IdP or own endpoint)
-- [ ] A3.6 App handles signed-out / expired-token states
+- [x] A3.1 DECISION: Google Sign-In (Credential Manager)
+- [x] A3.2 Android: sign-in flow in onboarding (`SignInManager`, onboarding page 4)
+- [x] A3.3 Android: token encrypted via Android Keystore (`TokenVault`; security-crypto is deprecated)
+- [x] A3.4 Backend: verify a real token on `/v1/reply` (`requireAuth` in `auth.ts`)
+- [x] A3.5 Backend: token issue/verify (`POST /v1/auth/google` exchanges Google ID token for opaque `rt_` token)
+- [x] A3.6 App handles signed-out / expired-token states (401 → clear auth → onboarding)
+- [ ] A3.7 USER SETUP: Google Cloud Console (consent screen + 3 OAuth clients), fill `replymint.googleWebClientId` + Render `GOOGLE_WEB_CLIENT_ID`
 
 ### A4 · Usage metering + free-tier limits
-- [ ] A4.1 Backend: persist per-user request counts
-- [ ] A4.2 Backend: enforce free-tier cap → return a clear limit error
+- [x] A4.1 Backend: persist per-user request counts (`usage_daily` in Supabase)
+- [x] A4.2 Backend: enforce free-tier cap → 429 (`FREE_DAILY_LIMIT`, checked before the LLM call)
 - [ ] A4.3 Backend: basic rate limiting / abuse guard (per token/IP)
-- [ ] A4.4 App: "limit reached" state + upsell to Pro
+- [x] A4.4 App: "limit reached" message + usage card on home (`/v1/me`); Pro upsell later
 
 ### A5 · Backend production deploy
-- [ ] A5.1 DECISION: hosting (Fly / Render / Railway / VPS)
-- [ ] A5.2 Deploy to `api.replymint.app` over HTTPS
-- [ ] A5.3 Prod secrets management (`ANTHROPIC_API_KEY`, etc.)
-- [ ] A5.4 Verify release build points at prod URL; confirm cleartext stays debug-only
+- [x] A5.1 DECISION: Render
+- [x] A5.2 Deployed: `https://replymint-um33.onrender.com` (custom domain later)
+- [x] A5.3 Prod secrets on Render (`ANTHROPIC_API_KEY`; add `DATABASE_URL`, `GOOGLE_WEB_CLIENT_ID`, `FREE_DAILY_LIMIT`)
+- [x] A5.4 Release build points at prod URL; cleartext stays debug-only
 - [ ] A5.5 Privacy-safe error logging / uptime monitoring
 
 ### A6 · Google Play compliance & release prep

@@ -1,13 +1,15 @@
 package com.replymint.data
 
 import android.content.Context
+import com.replymint.auth.TokenVault
 import com.replymint.model.Mode
 
 /**
- * Tiny persisted state for the MVP: chosen mode, auth token, onboarding flag.
+ * Tiny persisted state for the MVP: chosen mode, auth session, onboarding flag.
  * Deliberately SharedPreferences (no Room/DataStore) to stay lightweight.
  *
- * TODO(security): migrate `token` to EncryptedSharedPreferences before release.
+ * The auth token is stored encrypted via [TokenVault] (Android Keystore); email/name are
+ * plain display data.
  */
 class ModeStore(context: Context) {
 
@@ -20,8 +22,34 @@ class ModeStore(context: Context) {
         set(value) = prefs.edit().putString(KEY_MODE, value.name).apply()
 
     var token: String?
-        get() = prefs.getString(KEY_TOKEN, null)
-        set(value) = prefs.edit().putString(KEY_TOKEN, value).apply()
+        get() = prefs.getString(KEY_TOKEN_ENC, null)?.let(TokenVault::decrypt)
+        set(value) {
+            val blob = value?.let(TokenVault::encrypt)
+            // If encryption itself fails we drop the session rather than store plaintext.
+            prefs.edit().apply {
+                if (blob != null) putString(KEY_TOKEN_ENC, blob) else remove(KEY_TOKEN_ENC)
+                remove(KEY_TOKEN_LEGACY)
+            }.apply()
+        }
+
+    var email: String?
+        get() = prefs.getString(KEY_EMAIL, null)
+        set(value) = prefs.edit().putString(KEY_EMAIL, value).apply()
+
+    var displayName: String?
+        get() = prefs.getString(KEY_NAME, null)
+        set(value) = prefs.edit().putString(KEY_NAME, value).apply()
+
+    val isSignedIn: Boolean get() = token != null
+
+    fun clearAuth() {
+        prefs.edit()
+            .remove(KEY_TOKEN_ENC)
+            .remove(KEY_TOKEN_LEGACY)
+            .remove(KEY_EMAIL)
+            .remove(KEY_NAME)
+            .apply()
+    }
 
     var onboarded: Boolean
         get() = prefs.getBoolean(KEY_ONBOARDED, false)
@@ -30,7 +58,11 @@ class ModeStore(context: Context) {
     private companion object {
         const val PREFS = "replymint"
         const val KEY_MODE = "mode"
-        const val KEY_TOKEN = "token"
+        /** Pre-vault plaintext slot; nothing ever wrote it, removed on any token write. */
+        const val KEY_TOKEN_LEGACY = "token"
+        const val KEY_TOKEN_ENC = "token_enc"
+        const val KEY_EMAIL = "email"
+        const val KEY_NAME = "name"
         const val KEY_ONBOARDED = "onboarded"
     }
 }

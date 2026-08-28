@@ -30,6 +30,12 @@
             </intent-filter>
         </activity>
 
+        <!-- First-run tour + sign-in; MainActivity forwards here until setup is complete. -->
+        <activity
+            android:name=".ui.OnboardingActivity"
+            android:exported="false" />
+
+
         <!-- The bubble + the only component that reads/writes other apps. Reads ON TAP ONLY;
              it also hosts the floating bubble (no foreground service, so no notification). -->
 

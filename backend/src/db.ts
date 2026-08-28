@@ -1,0 +1,78 @@
+import postgres from "postgres";
+
+/**
+ * Thin data layer over Supabase Postgres (schema in schema.sql). Plain SQL via postgres.js —
+ * three tables don't need an ORM.
+ *
+ * `prepare: false` is required: we connect through Supabase's transaction pooler (pgbouncer),
+ * which doesn't support prepared statements.
+ */
+let client: postgres.Sql | undefined;
+
+function sql(): postgres.Sql {
+  if (!client) {
+    const url = process.env.DATABASE_URL;
+    if (!url) throw new Error("DATABASE_URL is not set");
+    client = postgres(url, { prepare: false, max: 5 });
+  }
+  return client;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  name: string | null;
+}
+
+export async function upsertUserByGoogle(
+  googleSub: string,
+  email: string,
+  name: string | null
+): Promise<User> {
+  const rows = await sql()<User[]>`
+    insert into users (google_sub, email, name)
+    values (${googleSub}, ${email}, ${name})
+    on conflict (google_sub) do update set email = excluded.email, name = excluded.name
+    returning id, email, name
+  `;
+  const user = rows[0];
+  if (!user) throw new Error("user upsert returned no row");
+  return user;
+}
+
+export async function insertToken(tokenHash: string, userId: string): Promise<void> {
+  await sql()`insert into tokens (token_hash, user_id) values (${tokenHash}, ${userId})`;
+}
+
+/** Look up the user for a token hash; touches last_used_at as a side effect. */
+export async function userForTokenHash(tokenHash: string): Promise<User | null> {
+  const rows = await sql()<User[]>`
+    update tokens set last_used_at = now()
+    from users
+    where tokens.token_hash = ${tokenHash} and users.id = tokens.user_id
+    returning users.id, users.email, users.name
+  `;
+  return rows[0] ?? null;
+}
+
+export async function deleteToken(tokenHash: string): Promise<void> {
+  await sql()`delete from tokens where token_hash = ${tokenHash}`;
+}
+
+export async function todayUsage(userId: string): Promise<number> {
+  const rows = await sql()<{ count: number }[]>`
+    select count from usage_daily
+    where user_id = ${userId} and day = (now() at time zone 'utc')::date
+  `;
+  return rows[0]?.count ?? 0;
+}
+
+export async function bumpUsage(userId: string): Promise<number> {
+  const rows = await sql()<{ count: number }[]>`
+    insert into usage_daily (user_id, day, count)
+    values (${userId}, (now() at time zone 'utc')::date, 1)
+    on conflict (user_id, day) do update set count = usage_daily.count + 1
+    returning count
+  `;
+  return rows[0]?.count ?? 0;
+}

@@ -41,3 +41,24 @@ data class ScreenPayload(
 data class ReplyResponse(
     val draft: String
 )
+
+// --- Auth ---
+
+@Serializable
+data class AuthExchangeRequest(val idToken: String)
+
+@Serializable
+data class AuthUser(val email: String, val name: String? = null)
+
+/** From POST /v1/auth/google: our opaque long-lived token plus display identity. */
+@Serializable
+data class AuthExchangeResponse(val token: String, val user: AuthUser)
+
+/** From GET /v1/me — feeds the home-screen usage card. */
+@Serializable
+data class MeResponse(
+    val email: String,
+    val name: String? = null,
+    val todayCount: Int,
+    val dailyLimit: Int
+)

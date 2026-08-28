@@ -7,6 +7,8 @@ import com.replymint.BuildConfig
 import com.replymint.accessibility.ReplyMintAccessibilityService
 import com.replymint.data.ModeStore
 import com.replymint.model.ReplyAction
+import com.replymint.net.AuthRequiredException
+import com.replymint.net.DailyLimitException
 import com.replymint.net.ReplyClient
 import com.replymint.net.ReplyRequest
 import com.replymint.net.ScreenPayload
@@ -97,7 +99,16 @@ object ReplyEngine {
             },
             onFailure = {
                 log("request FAILED · ${SystemClock.elapsedRealtime() - startedMs}ms ${it.message}")
-                EngineResult.Error(it.message ?: "Network error")
+                when (it) {
+                    is AuthRequiredException -> {
+                        // Stale/revoked session: drop it so the app shows the signed-out state.
+                        store.clearAuth()
+                        EngineResult.Error("Sign in again in ReplyMint")
+                    }
+                    is DailyLimitException ->
+                        EngineResult.Error("Daily free limit reached — resets tomorrow")
+                    else -> EngineResult.Error(it.message ?: "Network error")
+                }
             }
         )
     }
