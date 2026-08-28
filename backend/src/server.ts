@@ -1,7 +1,7 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { exchangeGoogleToken, requireAuth, signOut, type AuthEnv } from "./auth.js";
-import { bumpUsage, todayUsage } from "./db.js";
+import { bumpUsage, pingDb, todayUsage } from "./db.js";
 import { generateReply } from "./llm.js";
 import { buildSystem, buildUser } from "./prompts.js";
 import { ReplyRequestSchema } from "./types.js";
@@ -21,6 +21,12 @@ const exemptEmails = new Set(
 const isExempt = (email: string) => exemptEmails.has(email.toLowerCase());
 
 app.get("/health", (c) => c.json({ ok: true }));
+
+// DB connectivity probe (error message only, never credentials) — for diagnosing deploys.
+app.get("/health/db", async (c) => {
+  const result = await pingDb();
+  return c.json(result, result.ok ? 200 : 500);
+});
 
 app.post("/v1/auth/google", exchangeGoogleToken);
 app.post("/v1/auth/signout", signOut);

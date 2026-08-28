@@ -67,6 +67,16 @@ export async function todayUsage(userId: string): Promise<number> {
   return rows[0]?.count ?? 0;
 }
 
+/** Connectivity probe for /health/db — returns the error message on failure, never throws. */
+export async function pingDb(): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await sql()`select 1`;
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
 export async function bumpUsage(userId: string): Promise<number> {
   const rows = await sql()<{ count: number }[]>`
     insert into usage_daily (user_id, day, count)
