@@ -47,10 +47,13 @@ android {
 
     buildTypes {
         debug {
-            // Physical device over USB: `adb reverse tcp:8787 tcp:8787` tunnels the phone's
-            // 127.0.0.1:8787 to the host machine's backend. Same command also works on the
-            // emulator. (Emulator-only alternative if you skip adb reverse: http://10.0.2.2:8787.)
-            buildConfigField("String", "BASE_URL", "\"http://127.0.0.1:8787\"")
+            // Defaults to the live backend so a debug install works untethered. For local
+            // backend dev, add `replymint.debugBaseUrl=http://127.0.0.1:8787` to
+            // android/gradle.properties (or -P on the command line) and run
+            // `adb reverse tcp:8787 tcp:8787` to tunnel the phone's 127.0.0.1 to the host.
+            val debugBaseUrl = (project.findProperty("replymint.debugBaseUrl") as? String)
+                ?: "https://replymint-um33.onrender.com"
+            buildConfigField("String", "BASE_URL", "\"$debugBaseUrl\"")
             isMinifyEnabled = false
         }
         release {

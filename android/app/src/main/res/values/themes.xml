@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.ReplyMint" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- Dark-first by design (the approved "elevated mint" direction), so the parent is the Dark
+         theme rather than DayNight — values/colors.xml carries the single palette. -->
+    <style name="Theme.ReplyMint" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">@color/brand</item>
         <item name="colorPrimaryDark">@color/brand_dark</item>
-        <item name="colorOnPrimary">@color/on_brand</item>
+        <item name="colorOnPrimary">@color/on_mint</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="android:windowBackground">@color/surface</item>
+        <item name="android:statusBarColor">@color/surface</item>
+        <item name="android:navigationBarColor">@color/surface</item>
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="fontFamily">@font/inter</item>
     </style>
 
     <!-- Used only via ContextThemeWrapper when inflating overlays. The accessibility service
@@ -12,5 +21,7 @@
         <item name="colorPrimary">@color/mint</item>
         <item name="colorOnPrimary">@color/on_mint</item>
         <item name="colorSurface">@color/glass_surface</item>
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="fontFamily">@font/inter</item>
     </style>
 </resources>

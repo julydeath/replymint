@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReplyMint — Premium UI Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg:#07090C;
+  --bg2:#0B0F13;
+  --panel:#10151B;
+  --panel2:#141B22;
+  --stroke:rgba(255,255,255,.08);
+  --stroke-soft:rgba(255,255,255,.05);
+  --mint:#2BE6A0;
+  --mint-deep:#10B981;
+  --mint-dark:#0E9F6E;
+  --on-mint:#07130E;
+  --ink:#F2F5F7;
+  --ink-dim:#9AA6B2;
+  --ink-faint:#5D6873;
+  --glass:rgba(18,24,30,.86);
+  --glass-stroke:rgba(255,255,255,.14);
+  --err:#FF6B6B;
+  --r-lg:24px;
+  --r-md:18px;
+  --r-sm:12px;
+  --font-body:'Inter',-apple-system,system-ui,sans-serif;
+  --font-disp:'Space Grotesk','Inter',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.6;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{ /* ambient glow */
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(900px 500px at 15% -5%, rgba(43,230,160,.07), transparent 60%),
+    radial-gradient(700px 500px at 90% 20%, rgba(16,185,129,.05), transparent 60%);
+}
+.wrap{max-width:1280px;margin:0 auto;padding:0 32px;position:relative;z-index:1}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+svg{display:block}
+
+/* ============ HERO ============ */
+.hero{padding:96px 0 72px;text-align:center}
+.hero .orb-wrap{display:flex;justify-content:center;margin-bottom:28px}
+.wordmark{
+  font-family:var(--font-disp);font-size:clamp(44px,7vw,76px);font-weight:700;letter-spacing:-.03em;line-height:1.05;
+}
+.wordmark .mint{
+  background:linear-gradient(120deg,#7CF5C8,var(--mint) 40%,var(--mint-deep));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero .tag{color:var(--ink-dim);font-size:19px;max-width:560px;margin:18px auto 0}
+.hero .sub{color:var(--ink-faint);font-size:13px;margin-top:10px;letter-spacing:.06em;text-transform:uppercase}
+.swatches{display:flex;gap:10px;justify-content:center;margin-top:40px;flex-wrap:wrap}
+.sw{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--stroke);border-radius:999px;padding:8px 16px 8px 9px;font-size:12.5px;color:var(--ink-dim)}
+.sw i{width:22px;height:22px;border-radius:50%;display:block;border:1px solid rgba(255,255,255,.15)}
+
+/* ============ SECTIONS ============ */
+section{padding:72px 0}
+.eyebrow{font-size:12.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--mint);font-weight:600;margin-bottom:12px}
+h2{font-family:var(--font-disp);font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-.02em;line-height:1.15;margin-bottom:12px}
+.lede{color:var(--ink-dim);max-width:640px;margin-bottom:48px;font-size:16.5px}
+
+/* ============ PHONES ============ */
+.phones{display:flex;gap:44px;justify-content:center;flex-wrap:wrap}
+.phone-col{display:flex;flex-direction:column;align-items:center;gap:18px}
+.phone{
+  width:330px;height:696px;border-radius:48px;padding:11px;position:relative;flex:none;
+  background:linear-gradient(160deg,#2A3138,#0E1114 40%);
+  box-shadow:0 40px 90px -30px rgba(0,0,0,.85), 0 0 0 1px rgba(255,255,255,.07), inset 0 0 0 1px rgba(0,0,0,.7);
+}
+.screen{
+  width:100%;height:100%;border-radius:38px;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;background:#000;
+}
+.punch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:11px;height:11px;border-radius:50%;background:#000;z-index:60;box-shadow:inset 0 0 2px 1px #111}
+.statusbar{display:flex;justify-content:space-between;align-items:center;padding:9px 22px 4px;font-size:12px;font-weight:600;position:relative;z-index:5;flex:none}
+.statusbar .sicons{display:flex;gap:5px;align-items:center;opacity:.9}
+.caption{display:flex;align-items:center;gap:12px}
+.caption .applogo{width:34px;height:34px;flex:none}
+.caption .cttl{font-weight:600;font-size:15px}
+.caption .csub{color:var(--ink-faint);font-size:12.5px}
+.replay{
+  display:none;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--mint);
+  border:1px solid rgba(43,230,160,.35);border-radius:999px;padding:6px 14px;margin-left:8px;
+  transition:background .2s;
+}
+.replay:hover{background:rgba(43,230,160,.1)}
+.replay.show{display:inline-flex}
+.hint{color:var(--ink-faint);font-size:13px;text-align:center;margin-top:36px}
+.hint b{color:var(--ink-dim);font-weight:600}
+
+/* ============ WHATSAPP ============ */
+.wa .statusbar{background:#1F2C34;color:#E9EDEF}
+.wa-head{flex:none;display:flex;align-items:center;gap:10px;padding:8px 12px 10px;background:#1F2C34;color:#E9EDEF;position:relative;z-index:5}
+.wa-head .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#F0A860,#D96C6C);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff}
+.wa-head .who b{display:block;font-size:15.5px;font-weight:600;line-height:1.2}
+.wa-head .who span{font-size:12px;color:#8696A0}
+.wa-head .hics{margin-left:auto;display:flex;gap:20px;color:#AEBAC1}
+.wa-chat{
+  flex:1;overflow:hidden;padding:12px 12px 8px;display:flex;flex-direction:column;gap:6px;position:relative;
+  background:#0B141A;
+  background-image:radial-gradient(rgba(255,255,255,.028) 1.4px, transparent 1.4px);
+  background-size:26px 26px;
+}
+.datechip{align-self:center;background:#1F2C34;color:#8696A0;font-size:11px;padding:4px 12px;border-radius:8px;margin-bottom:6px}
+.msg{max-width:78%;padding:7px 10px 6px;border-radius:10px;font-size:13.8px;line-height:1.4;position:relative;color:#E9EDEF;box-shadow:0 1px 1px rgba(0,0,0,.3)}
+.msg .mt{display:inline-flex;gap:3px;align-items:center;float:right;margin:8px -2px -2px 8px;font-size:10.5px;color:#8696A0}
+.msg.in{background:#1F2C34;align-self:flex-start;border-top-left-radius:2px}
+.msg.out{background:#005C4B;align-self:flex-end;border-top-right-radius:2px}
+.msg.out .mt{color:#7FC4AD}
+.ticks{color:#53BDEB}
+.wa-composer{flex:none;display:flex;align-items:flex-end;gap:7px;padding:7px 9px 12px;background:transparent;position:relative;z-index:5}
+.wa-input{
+  flex:1;background:#1F2C34;border-radius:22px;min-height:44px;display:flex;align-items:center;gap:9px;padding:9px 12px;color:#E9EDEF;
+}
+.wa-input .cics{color:#8696A0;flex:none}
+.composer-text{flex:1;font-size:14.2px;line-height:1.35;max-height:88px;overflow:hidden;white-space:pre-wrap;word-break:break-word}
+.composer-text.empty::before{content:attr(data-ph);color:#8696A0}
+.composer-text.fade{opacity:.15;transition:opacity .3s}
+.fab{width:44px;height:44px;border-radius:50%;background:#00A884;display:flex;align-items:center;justify-content:center;color:#fff;flex:none;position:relative}
+.fab .ic-send{display:none}
+.fab.active .ic-send{display:block}
+.fab.active .ic-mic{display:none}
+
+/* ============ INSTAGRAM ============ */
+.ig .statusbar{background:#000;color:#fff}
+.ig-head{flex:none;display:flex;align-items:center;gap:11px;padding:8px 14px 10px;background:#000;color:#fff;position:relative;z-index:5}
+.ring{width:40px;height:40px;border-radius:50%;padding:2.5px;background:conic-gradient(from 210deg,#F9CE34,#EE2A7B,#6228D7,#F9CE34);flex:none}
+.ring .av{width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,#5D6DF0,#31B3C4);border:2px solid #000;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff}
+.ig-head .who b{display:block;font-size:15px;font-weight:600;line-height:1.2}
+.ig-head .who span{font-size:12px;color:#A8A8A8}
+.ig-head .hics{margin-left:auto;display:flex;gap:20px;color:#fff}
+.ig-chat{flex:1;overflow:hidden;padding:14px 12px 8px;display:flex;flex-direction:column;gap:7px;background:#000;position:relative}
+.ig-msg{max-width:76%;padding:10px 14px;border-radius:20px;font-size:14px;line-height:1.4}
+.ig-msg.in{background:#262626;color:#fff;align-self:flex-start;border-bottom-left-radius:6px}
+.ig-msg.out{background:linear-gradient(135deg,#405DE6,#833AB4 70%,#C13584);color:#fff;align-self:flex-end;border-bottom-right-radius:6px}
+.ig-time{align-self:center;color:#737373;font-size:11px;margin-bottom:4px}
+.ig-composer{flex:none;display:flex;align-items:flex-end;padding:8px 10px 14px;background:#000;position:relative;z-index:5}
+.ig-input{flex:1;background:#262626;border-radius:24px;min-height:46px;display:flex;align-items:center;gap:10px;padding:5px 14px 5px 5px;color:#fff}
+.ig-cam{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#405DE6,#B33BB3);display:flex;align-items:center;justify-content:center;color:#fff;flex:none}
+.ig-input .composer-text{font-size:14.2px}
+.ig-input .composer-text.empty::before{color:#8E8E8E}
+.ig-input .cics{color:#fff;display:flex;gap:14px;flex:none;padding-right:4px}
+
+/* ============ GMAIL ============ */
+.gm .statusbar{background:#FFFFFF;color:#1F1F1F}
+.gm-head{flex:none;display:flex;align-items:center;gap:22px;padding:10px 16px;background:#fff;color:#444746;position:relative;z-index:5}
+.gm-head .hics{margin-left:auto;display:flex;gap:22px;align-items:center}
+.gm-body{flex:1;background:#fff;color:#1F1F1F;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.gm-field{display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid #E3E3E3;font-size:14px;color:#444746}
+.gm-field b{color:#1F1F1F;font-weight:500}
+.gm-field .chipmail{background:#F1F3F4;border-radius:999px;padding:3px 12px;font-size:13px;color:#3C4043}
+.gm-subject{font-size:15px;font-weight:500;color:#1F1F1F}
+.gm-compose{flex:1;padding:16px;font-size:14.5px;line-height:1.55;color:#1F1F1F}
+.gm-compose .composer-text.empty::before{color:#9AA0A6}
+
+/* ============ OVERLAY (shared) ============ */
+.rm-layer{position:absolute;inset:0;pointer-events:none;z-index:40}
+.rm-layer > *{pointer-events:auto}
+.rm-bubble{
+  position:absolute;right:12px;top:44%;width:54px;height:54px;border-radius:50%;
+  background:radial-gradient(circle at 32% 28%, #7CF5C8, var(--mint) 38%, var(--mint-dark) 90%);
+  border:1px solid rgba(255,255,255,.55);
+  box-shadow:0 6px 22px rgba(16,185,129,.45), 0 2px 8px rgba(0,0,0,.4), inset 0 1px 3px rgba(255,255,255,.55);
+  display:flex;align-items:center;justify-content:center;color:var(--on-mint);
+  opacity:0;transform:scale(.4);transition:transform .45s cubic-bezier(.2,1.4,.4,1), opacity .35s;
+}
+.rm-bubble.in{opacity:1;transform:scale(1);animation:bubblePulse 2.6s ease-in-out .6s infinite}
+.rm-bubble.pressed{transform:scale(.88);animation:none}
+@keyframes bubblePulse{
+  0%,100%{box-shadow:0 6px 22px rgba(16,185,129,.45), 0 2px 8px rgba(0,0,0,.4), inset 0 1px 3px rgba(255,255,255,.55)}
+  50%{box-shadow:0 6px 30px rgba(43,230,160,.75), 0 2px 8px rgba(0,0,0,.4), inset 0 1px 3px rgba(255,255,255,.55)}
+}
+.rm-menu{
+  position:absolute;right:14px;top:calc(44% + 62px);min-width:196px;
+  background:var(--glass);border:1px solid var(--glass-stroke);border-radius:20px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 20px 50px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.1);
+  padding:7px;opacity:0;transform:scale(.6) translateY(-14px);transform-origin:top right;
+  transition:transform .32s cubic-bezier(.2,1.3,.4,1), opacity .22s;pointer-events:none!important;
+}
+.rm-menu.open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto!important}
+.rm-menu .mi{
+  display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border-radius:14px;
+  color:var(--ink);font-size:14.5px;font-weight:500;text-align:left;transition:background .18s;
+}
+.rm-menu .mi svg{color:var(--mint);flex:none}
+.rm-menu .mi:hover,.rm-menu .mi.hl{background:rgba(43,230,160,.13)}
+.rm-menu .mi.hl{outline:1px solid rgba(43,230,160,.35)}
+.rm-undo-wrap{display:none}
+.rm-undo-wrap.on{display:block}
+.rm-menu-div{height:1px;background:rgba(255,255,255,.09);margin:5px 10px}
+.rm-voice{
+  position:absolute;left:14px;right:14px;bottom:78px;
+  background:var(--glass);border:1px solid var(--glass-stroke);border-radius:22px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 24px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.1);
+  padding:18px 18px 16px;opacity:0;transform:translateY(24px) scale(.94);
+  transition:transform .34s cubic-bezier(.2,1.2,.4,1), opacity .24s;pointer-events:none!important;
+}
+.rm-voice.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto!important}
+.rm-voice-head{display:flex;align-items:center;gap:10px;color:var(--mint);font-weight:600;font-size:15px;margin-bottom:13px}
+.rm-voice-head .micdot{width:32px;height:32px;border-radius:50%;background:rgba(43,230,160,.14);display:flex;align-items:center;justify-content:center}
+.rm-wave{display:flex;align-items:center;gap:3px;height:26px;margin-bottom:12px}
+.rm-wave i{flex:1;background:linear-gradient(180deg,var(--mint),var(--mint-dark));border-radius:3px;height:15%;opacity:.9}
+.rm-voice.open .rm-wave i{animation:wave 1s ease-in-out infinite alternate}
+@keyframes wave{from{height:12%}to{height:92%}}
+.rm-transcript{color:var(--ink);font-size:14px;line-height:1.5;min-height:42px;margin-bottom:13px}
+.rm-transcript.empty{color:var(--ink-faint)}
+.rm-stop{
+  width:100%;background:linear-gradient(120deg,#3EF0AE,var(--mint-deep));color:var(--on-mint);
+  font-weight:700;font-size:14.5px;border-radius:14px;padding:12px;
+  box-shadow:0 6px 18px rgba(16,185,129,.35);transition:transform .15s;font-family:inherit;
+}
+.rm-stop.pressed,.rm-stop:active{transform:scale(.96)}
+.rm-pill{
+  position:absolute;left:50%;bottom:82px;transform:translateX(-50%) translateY(16px);
+  background:var(--glass);border:1px solid var(--glass-stroke);border-radius:999px;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  box-shadow:0 12px 34px rgba(0,0,0,.5);
+  display:flex;align-items:center;gap:9px;padding:9px 18px 9px 12px;
+  font-size:13.5px;font-weight:600;color:var(--ink);white-space:nowrap;
+  opacity:0;transition:opacity .25s, transform .3s cubic-bezier(.2,1.2,.4,1);pointer-events:none!important;
+}
+.rm-pill.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.rm-pill .spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(43,230,160,.25);border-top-color:var(--mint);animation:spin .8s linear infinite;display:none}
+.rm-pill .okic,.rm-pill .eric{display:none}
+.rm-pill.writing .spin{display:block}
+.rm-pill.writing{background:linear-gradient(100deg,rgba(18,24,30,.86) 30%,rgba(43,230,160,.14) 50%,rgba(18,24,30,.86) 70%) var(--glass);background-size:220% 100%;animation:shimmer 1.6s linear infinite}
+.rm-pill.ok .okic{display:block;color:var(--mint)}
+.rm-pill.ok{border-color:rgba(43,230,160,.4)}
+.rm-pill.err .eric{display:block;color:var(--err)}
+.rm-pill.err{border-color:rgba(255,107,107,.4)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-20% 0}}
+.rm-undochip{
+  position:absolute;left:50%;bottom:82px;transform:translateX(-50%) translateY(14px);
+  background:var(--glass);border:1px solid var(--glass-stroke);border-radius:999px;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  display:flex;align-items:center;gap:7px;padding:8px 16px 8px 12px;font-size:13px;font-weight:600;color:var(--ink);
+  box-shadow:0 10px 28px rgba(0,0,0,.5);opacity:0;transition:opacity .25s, transform .3s;pointer-events:none!important;
+}
+.rm-undochip.in{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto!important}
+.rm-undochip svg{color:var(--mint)}
+
+/* ============ SPECIMENS ============ */
+.specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px}
+.spec{
+  background:linear-gradient(170deg,var(--panel2),var(--panel));border:1px solid var(--stroke);
+  border-radius:var(--r-lg);padding:28px;display:flex;flex-direction:column;gap:22px;min-height:230px;
+  position:relative;overflow:hidden;
+}
+.spec::before{content:'';position:absolute;inset:0;background:radial-gradient(400px 200px at 80% -20%,rgba(43,230,160,.06),transparent);pointer-events:none}
+.spec .slabel{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);font-weight:600}
+.spec .snote{font-size:13px;color:var(--ink-dim);margin-top:auto}
+.spec .stage{display:flex;align-items:center;justify-content:center;flex:1;padding:8px 0}
+.spec .rm-bubble,.spec .rm-menu,.spec .rm-voice,.spec .rm-pill,.spec .rm-undochip{position:static;opacity:1;transform:none;pointer-events:auto!important}
+.spec .rm-voice{width:100%;max-width:280px}
+.spec .rm-bubble{animation:bubblePulse 2.6s ease-in-out infinite}
+
+/* ============ ONBOARDING & DASHBOARD PHONES ============ */
+.appdark{background:linear-gradient(180deg,#0B1015,#0D1319 55%,#0E1A18)}
+.appdark .statusbar{color:var(--ink)}
+.ob-track-wrap{flex:1;overflow:hidden;position:relative}
+.ob-track{display:flex;height:100%;transition:transform .45s cubic-bezier(.3,1,.3,1)}
+.ob-page{width:100%;flex:none;padding:34px 26px 12px;display:flex;flex-direction:column;overflow:hidden}
+.ob-page h3{font-family:var(--font-disp);font-size:27px;font-weight:700;letter-spacing:-.02em;line-height:1.18;margin-bottom:12px}
+.ob-page h3 .mint{color:var(--mint)}
+.ob-page .p{color:var(--ink-dim);font-size:14px;line-height:1.55}
+.ob-hero-orb{margin:26px auto 34px}
+.ob-row{display:flex;gap:14px;align-items:flex-start;padding:15px 0;border-bottom:1px solid var(--stroke-soft)}
+.ob-row:last-of-type{border-bottom:none}
+.ob-num{width:34px;height:34px;border-radius:12px;background:rgba(43,230,160,.12);color:var(--mint);display:flex;align-items:center;justify-content:center;font-family:var(--font-disp);font-weight:700;font-size:15px;flex:none}
+.ob-row b{display:block;font-size:14.5px;font-weight:600;margin-bottom:2px}
+.ob-row span{color:var(--ink-dim);font-size:13px;line-height:1.45}
+.appgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}
+.apptile{background:var(--panel2);border:1px solid var(--stroke);border-radius:18px;padding:16px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:9px;font-size:11.5px;color:var(--ink-dim);text-align:center}
+.apptile svg{width:30px;height:30px}
+.gbtn{
+  display:flex;align-items:center;justify-content:center;gap:11px;background:#fff;color:#1F1F1F;
+  font-weight:600;font-size:14.5px;border-radius:14px;padding:13px;width:100%;margin-top:26px;font-family:inherit;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
+}
+.perm{
+  display:flex;align-items:center;gap:13px;background:var(--panel2);border:1px solid var(--stroke);
+  border-radius:18px;padding:15px;margin-top:13px;width:100%;text-align:left;transition:border-color .25s;font-family:inherit;color:var(--ink);
+}
+.perm .pic{width:38px;height:38px;border-radius:13px;background:rgba(43,230,160,.1);display:flex;align-items:center;justify-content:center;color:var(--mint);flex:none}
+.perm b{display:block;font-size:14px;font-weight:600}
+.perm span{font-size:12.5px;color:var(--ink-dim)}
+.perm .pcheck{margin-left:auto;width:24px;height:24px;border-radius:50%;border:1.6px solid var(--ink-faint);flex:none;display:flex;align-items:center;justify-content:center;color:transparent;transition:all .25s}
+.perm.granted{border-color:rgba(43,230,160,.4)}
+.perm.granted .pcheck{background:var(--mint);border-color:var(--mint);color:var(--on-mint)}
+.perm.granted span{color:var(--mint)}
+.ob-footer{flex:none;padding:14px 26px 26px}
+.ob-dots{display:flex;gap:7px;justify-content:center;margin-bottom:16px}
+.ob-dots i{width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.18);transition:all .3s;cursor:pointer}
+.ob-dots i.on{width:22px;background:var(--mint)}
+.cta{
+  width:100%;background:linear-gradient(120deg,#3EF0AE,var(--mint-deep));color:var(--on-mint);
+  font-weight:700;font-size:15px;border-radius:16px;padding:15px;font-family:inherit;
+  box-shadow:0 10px 28px rgba(16,185,129,.32);transition:transform .15s, opacity .2s;
+}
+.cta:active{transform:scale(.97)}
+.cta.disabled{opacity:.45;pointer-events:none}
+
+/* dashboard */
+.db-scroll{flex:1;overflow-y:auto;padding:20px 20px 26px;scrollbar-width:none}
+.db-scroll::-webkit-scrollbar{display:none}
+.db-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.db-brand{display:flex;align-items:center;gap:9px;font-family:var(--font-disp);font-weight:700;font-size:17px}
+.db-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#5D6DF0,#31B3C4);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.db-greet{font-family:var(--font-disp);font-size:24px;font-weight:700;letter-spacing:-.02em;margin-bottom:18px}
+.card{
+  background:linear-gradient(170deg,var(--panel2),var(--panel));border:1px solid var(--stroke);
+  border-radius:22px;padding:19px;margin-bottom:14px;position:relative;overflow:hidden;
+}
+.card .ctitle{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;margin-bottom:14px}
+.statuscard{border-color:rgba(43,230,160,.3)}
+.statuscard::before{content:'';position:absolute;inset:0;background:radial-gradient(320px 150px at 15% 0%,rgba(43,230,160,.12),transparent);pointer-events:none}
+.statusrow{display:flex;align-items:center;gap:14px}
+.bigcheck{width:46px;height:46px;border-radius:50%;background:rgba(43,230,160,.14);display:flex;align-items:center;justify-content:center;flex:none}
+.bigcheck svg{color:var(--mint)}
+.bigcheck path{stroke-dasharray:26;stroke-dashoffset:26}
+.seen .bigcheck path{animation:draw .7s .3s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.statusrow b{display:block;font-size:16.5px;font-weight:700}
+.statusrow span{font-size:13px;color:var(--ink-dim)}
+.usagerow{display:flex;align-items:center;gap:20px}
+.ringwrap{position:relative;width:92px;height:92px;flex:none}
+.ringwrap svg{transform:rotate(-90deg)}
+.ringwrap .ringval{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.ringwrap .ringval b{font-family:var(--font-disp);font-size:20px;font-weight:700}
+.ringwrap .ringval span{font-size:10px;color:var(--ink-faint)}
+.ring-fg{stroke:url(#mintgrad);stroke-linecap:round;stroke-dasharray:239;stroke-dashoffset:239;transition:stroke-dashoffset 1.2s cubic-bezier(.3,1,.4,1)}
+.seen .ring-fg{stroke-dashoffset:172}
+.usagerow .utx b{display:block;font-size:15px;font-weight:600;margin-bottom:2px}
+.usagerow .utx span{font-size:12.5px;color:var(--ink-dim);line-height:1.45;display:block}
+.seg{display:flex;background:var(--bg2);border:1px solid var(--stroke);border-radius:15px;padding:4px;position:relative}
+.seg .thumb{position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);background:linear-gradient(120deg,rgba(43,230,160,.22),rgba(16,185,129,.16));border:1px solid rgba(43,230,160,.4);border-radius:11px;transition:transform .3s cubic-bezier(.3,1.2,.4,1)}
+.seg.pro .thumb{transform:translateX(100%)}
+.seg button{flex:1;position:relative;z-index:1;padding:10px;font-size:13.5px;font-weight:600;color:var(--ink-dim);border-radius:11px;transition:color .25s;font-family:inherit}
+.seg button.on{color:var(--mint)}
+.approw{display:flex;gap:10px}
+.approw .apptile{flex:1;padding:13px 4px 10px;font-size:10.5px}
+.approw .apptile svg{width:26px;height:26px}
+.db-foot{display:flex;justify-content:center;gap:26px;margin-top:8px;font-size:13px}
+.db-foot .ghost{color:var(--ink-dim);font-weight:500}
+.db-foot .ghost:hover{color:var(--ink)}
+
+.duo{display:flex;gap:44px;justify-content:center;flex-wrap:wrap;align-items:flex-start}
+
+footer{padding:60px 0 80px;text-align:center;color:var(--ink-faint);font-size:13px}
+footer b{color:var(--ink-dim)}
+
+@media (max-width:760px){
+  .wrap{padding:0 18px}
+  .hero{padding:64px 0 48px}
+  section{padding:48px 0}
+  .phones,.duo{gap:32px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= HERO ================= -->
+<header class="hero wrap">
+  <div class="orb-wrap">
+    <div class="rm-bubble in" style="position:static;opacity:1;transform:none;width:74px;height:74px;pointer-events:none">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.2-.6L3 21l1.7-4.6A8.4 8.4 0 1 1 21 11.5z"/><path d="M12 7.6l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z" fill="currentColor" stroke="none"/></svg>
+    </div>
+  </div>
+  <h1 class="wordmark">Reply<span class="mint">Mint</span></h1>
+  <p class="tag">The perfect reply, in one tap — right inside the apps you already use.</p>
+  <p class="sub">Premium UI direction · design mockup · v1</p>
+  <div class="swatches">
+    <span class="sw"><i style="background:linear-gradient(135deg,#7CF5C8,#10B981)"></i>Mint #2BE6A0</span>
+    <span class="sw"><i style="background:#10B981"></i>Brand #10B981</span>
+    <span class="sw"><i style="background:rgba(18,24,30,.9)"></i>Glass overlay</span>
+    <span class="sw"><i style="background:#0B0F13"></i>Surface #0B0F13</span>
+    <span class="sw"><i style="background:#F2F5F7"></i>Ink #F2F5F7</span>
+    <span class="sw" style="font-family:var(--font-disp)"><i style="background:#141B22;display:flex;align-items:center;justify-content:center;color:#2BE6A0;font-size:11px;font-style:normal">Aa</i>Space Grotesk + Inter</span>
+  </div>
+</header>
+
+<!-- ================= DEMOS ================= -->
+<section class="wrap" id="demos">
+  <div class="eyebrow">01 · In-app experience</div>
+  <h2>One bubble. Every app.</h2>
+  <p class="lede">The mint bubble lives quietly at the edge of the screen and only appears when there's somewhere to type. Watch each flow play out — or tap the bubble yourself to drive it.</p>
+
+  <div class="phones">
+    <!-- WHATSAPP -->
+    <div class="phone-col">
+      <div class="phone" id="demo-wa">
+        <div class="screen wa">
+          <div class="punch"></div>
+          <div class="statusbar"><span>9:41</span><span class="sicons">
+            <svg width="15" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M1 8h2v4H1zM5 6h2v6H5zM9 4h2v8H9zM13 1h2v11h-2z"/></svg>
+            <svg width="15" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M8 9.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM8 6c-1.9 0-3.6.8-4.8 2l1.4 1.4A4.8 4.8 0 0 1 8 8c1.3 0 2.5.5 3.4 1.4L12.8 8A6.8 6.8 0 0 0 8 6zm0-4C5 2 2.3 3.2 .4 5.2l1.4 1.4A8.9 8.9 0 0 1 8 4c2.4 0 4.6 1 6.2 2.6l1.4-1.4C13.7 3.2 11 2 8 2z"/></svg>
+            <svg width="22" height="11" viewBox="0 0 24 12"><rect x="1" y="1" width="19" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".5"/><rect x="2.5" y="2.5" width="13" height="7" rx="1.4" fill="currentColor"/><rect x="21" y="4" width="2" height="4" rx="1" fill="currentColor" fill-opacity=".5"/></svg>
+          </span></div>
+          <div class="wa-head">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#AEBAC1" stroke-width="2.2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+            <div class="av">P</div>
+            <div class="who"><b>Priya</b><span>online</span></div>
+            <div class="hics">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 3v-9l-4 3z"/></svg>
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.24 11 11 0 0 0 3.6.6 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11 11 0 0 0 .6 3.6 1 1 0 0 1-.25 1z"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+            </div>
+          </div>
+          <div class="wa-chat">
+            <div class="datechip">Today</div>
+            <div class="msg in">Hey! Are we still on for dinner tonight? 🍜<span class="mt">6:42 PM</span></div>
+            <div class="msg in">I found this new ramen place near the station, looks amazing<span class="mt">6:42 PM</span></div>
+          </div>
+          <div class="wa-composer">
+            <div class="wa-input">
+              <span class="cics"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0" stroke-linecap="round"/><circle cx="9" cy="9.6" r=".8" fill="currentColor" stroke="none"/><circle cx="15" cy="9.6" r=".8" fill="currentColor" stroke="none"/></svg></span>
+              <div class="composer-text empty" data-ph="Message"></div>
+              <span class="cics"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 12.5l-8.5 8.5a5.66 5.66 0 0 1-8-8L13 4.5a3.77 3.77 0 0 1 5.3 5.3L10 18a1.89 1.89 0 0 1-2.7-2.7l7.8-7.8"/></svg></span>
+              <span class="cics"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 3L7.2 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 15.4A6.4 6.4 0 1 1 12 5.6a6.4 6.4 0 0 1 0 12.8z" fill-opacity=".01"/><path d="M20 5h-3.2L15 3H9L7.2 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm-8 13a6 6 0 1 1 0-12 6 6 0 0 1 0 12z"/></svg></span>
+            </div>
+            <button class="fab">
+              <svg class="ic-mic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v4"/></svg>
+              <svg class="ic-send" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.6L21.6 12 3 3.4v6.7L15.5 12 3 13.9z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <svg class="applogo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#25D366"/><path fill="#fff" d="M17.3 6.7A7.4 7.4 0 0 0 5.6 15.6L4.6 19.4l3.9-1a7.4 7.4 0 0 0 3.5.9 7.4 7.4 0 0 0 5.3-12.6zm-5.3 11.4a6.2 6.2 0 0 1-3.1-.9l-.2-.1-2.3.6.6-2.3-.1-.2a6.2 6.2 0 1 1 5.1 2.9zm3.4-4.6c-.2-.1-1.1-.5-1.3-.6-.2-.1-.3-.1-.4.1l-.6.7c-.1.1-.2.1-.4 0a5 5 0 0 1-1.5-.9 5.6 5.6 0 0 1-1-1.3c-.1-.2 0-.3.1-.4l.3-.3.2-.3v-.3c0-.1-.4-1-.6-1.4-.1-.4-.3-.3-.4-.3h-.4a.7.7 0 0 0-.5.2 2 2 0 0 0-.6 1.5A3.5 3.5 0 0 0 9 11.6a8 8 0 0 0 3.1 2.8c.4.2.8.3 1 .4.4.1.8.1 1.1.1.4-.1 1.1-.4 1.2-.9.2-.4.2-.8.1-.9l-.4-.2z"/></svg>
+        <div><div class="cttl">WhatsApp · Auto Reply</div><div class="csub">Reads the chat, drafts once, writes into the field</div></div>
+        <button class="replay" data-for="demo-wa"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"/></svg>Replay</button>
+      </div>
+    </div>
+
+    <!-- INSTAGRAM -->
+    <div class="phone-col">
+      <div class="phone" id="demo-ig">
+        <div class="screen ig">
+          <div class="punch"></div>
+          <div class="statusbar"><span>9:41</span><span class="sicons">
+            <svg width="15" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M1 8h2v4H1zM5 6h2v6H5zM9 4h2v8H9zM13 1h2v11h-2z"/></svg>
+            <svg width="22" height="11" viewBox="0 0 24 12"><rect x="1" y="1" width="19" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".5"/><rect x="2.5" y="2.5" width="13" height="7" rx="1.4" fill="currentColor"/><rect x="21" y="4" width="2" height="4" rx="1" fill="currentColor" fill-opacity=".5"/></svg>
+          </span></div>
+          <div class="ig-head">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+            <div class="ring"><div class="av">A</div></div>
+            <div class="who"><b>alex.j</b><span>Active now</span></div>
+            <div class="hics">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.24 11 11 0 0 0 3.6.6 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11 11 0 0 0 .6 3.6 1 1 0 0 1-.25 1z"/></svg>
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="13" height="12" rx="2.5"/><path d="M15 10.5l6-3.5v10l-6-3.5" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <div class="ig-chat">
+            <div class="ig-time">TODAY 8:14 PM</div>
+            <div class="ig-msg in">yo the concert got moved to saturday 😭</div>
+            <div class="ig-msg in">can you still make it?</div>
+          </div>
+          <div class="ig-composer">
+            <div class="ig-input">
+              <div class="ig-cam"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 5h-3.2L15 3H9L7.2 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm-8 13a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2.8a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/></svg></div>
+              <div class="composer-text empty" data-ph="Message…"></div>
+              <span class="cics">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0"/></svg>
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9.5" r="1.6" fill="currentColor" stroke="none"/><path d="M21 15.5l-4.5-4.5L7 20.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <svg class="applogo" viewBox="0 0 24 24"><defs><radialGradient id="iggr" cx="30%" cy="107%" r="150%"><stop offset="0%" stop-color="#FDF497"/><stop offset="9%" stop-color="#FDF497"/><stop offset="45%" stop-color="#FD5949"/><stop offset="60%" stop-color="#D6249F"/><stop offset="90%" stop-color="#285AEB"/></radialGradient></defs><rect width="24" height="24" rx="6.5" fill="url(#iggr)"/><rect x="5.2" y="5.2" width="13.6" height="13.6" rx="4.2" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="12" cy="12" r="3.4" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="16.2" cy="7.9" r="1.05" fill="#fff"/></svg>
+        <div><div class="cttl">Instagram · Voice</div><div class="csub">Speak an instruction, get a written draft</div></div>
+        <button class="replay" data-for="demo-ig"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"/></svg>Replay</button>
+      </div>
+    </div>
+
+    <!-- GMAIL -->
+    <div class="phone-col">
+      <div class="phone" id="demo-gm">
+        <div class="screen gm">
+          <div class="punch"></div>
+          <div class="statusbar"><span>9:41</span><span class="sicons">
+            <svg width="15" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M1 8h2v4H1zM5 6h2v6H5zM9 4h2v8H9zM13 1h2v11h-2z"/></svg>
+            <svg width="22" height="11" viewBox="0 0 24 12"><rect x="1" y="1" width="19" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".5"/><rect x="2.5" y="2.5" width="13" height="7" rx="1.4" fill="currentColor"/><rect x="21" y="4" width="2" height="4" rx="1" fill="currentColor" fill-opacity=".5"/></svg>
+          </span></div>
+          <div class="gm-head">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            <div class="hics">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 12.5l-8.5 8.5a5.66 5.66 0 0 1-8-8L13 4.5a3.77 3.77 0 0 1 5.3 5.3L10 18a1.89 1.89 0 0 1-2.7-2.7l7.8-7.8"/></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#0B57D0"><path d="M3 20.6L21.6 12 3 3.4v6.7L15.5 12 3 13.9z"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+            </div>
+          </div>
+          <div class="gm-body">
+            <div class="gm-field">From&nbsp;<b>manoj@tutortech.co.uk</b></div>
+            <div class="gm-field">To&nbsp;<span class="chipmail">sarah@acme.co</span></div>
+            <div class="gm-field gm-subject">Re: Q3 budget report</div>
+            <div class="gm-compose"><div class="composer-text" data-ph="Compose email">hey got ur mail. report not done yet maybe friday. sry</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <svg class="applogo" viewBox="0 0 24 24"><rect width="24" height="24" rx="6.5" fill="#fff"/><g transform="translate(3.2 4.2) scale(0.73)"><path fill="#4285F4" d="M1.6 20.7h3.9V11.5L0 7.4v11.7c0 .9.7 1.6 1.6 1.6z"/><path fill="#34A853" d="M18.5 20.7h3.9c.9 0 1.6-.7 1.6-1.6V7.4l-5.5 4.1z"/><path fill="#FBBC04" d="M18.5 4.4v7.1L24 7.4V5.2c0-2-2.3-3.2-3.9-2z"/><path fill="#EA4335" d="M5.5 11.5v-7L12 9.3l6.5-4.9v7.1L12 16.4z"/><path fill="#C5221F" d="M0 5.2v2.2l5.5 4.1v-7L3.9 3.2C2.3 2 0 3.2 0 5.2z"/></g></svg>
+        <div><div class="cttl">Gmail · Fix</div><div class="csub">Rough draft in, polished professional email out</div></div>
+        <button class="replay" data-for="demo-gm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"/></svg>Replay</button>
+      </div>
+    </div>
+  </div>
+  <p class="hint">Demos loop on their own. <b>Tap a bubble</b> to take over — then pick Auto Reply, Voice or Fix yourself. Undo appears after a draft is written.</p>
+</section>
+
+<!-- ================= OVERLAY STATES ================= -->
+<section class="wrap" id="states">
+  <div class="eyebrow">02 · Overlay design system</div>
+  <h2>Glass, not toasts.</h2>
+  <p class="lede">Every transient state that used to be a system toast becomes a designed, in-overlay moment. The overlay never contains a text input — a hard constraint of the accessibility architecture — so every state is glanceable and tap-light.</p>
+  <div class="specs">
+    <div class="spec">
+      <div class="slabel">Bubble · idle</div>
+      <div class="stage">
+        <button class="rm-bubble in" style="width:64px;height:64px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.2-.6L3 21l1.7-4.6A8.4 8.4 0 1 1 21 11.5z"/><path d="M12 7.6l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z" fill="currentColor" stroke="none"/></svg></button>
+      </div>
+      <div class="snote">54dp orb, mint radial gradient, soft breathing glow. Appears only when an editable field is on screen; drag-dockable to either edge.</div>
+    </div>
+    <div class="spec">
+      <div class="slabel">Menu · expanded</div>
+      <div class="stage">
+        <div class="rm-menu open" style="min-width:200px">
+          <button class="mi"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.8L18.7 9.7l-4.8 1.9L12 16.4l-1.9-4.8L5.3 9.7l4.8-1.9z" fill="currentColor" fill-opacity=".15"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>Auto Reply</button>
+          <button class="mi"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v4"/></svg>Voice</button>
+          <button class="mi"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l10.5-10.5M13 4.5l1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1zM19 12l.6 1.5L21 14l-1.4.5L19 16l-.6-1.5L17 14l1.4-.5z"/></svg>Fix</button>
+          <div class="rm-menu-div"></div>
+          <button class="mi"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"/></svg>Undo</button>
+        </div>
+      </div>
+      <div class="snote">Dark glass, 20dp radius, blur + inner highlight. Pops from the bubble's corner; Undo row appears only when a draft snapshot exists.</div>
+    </div>
+    <div class="spec">
+      <div class="slabel">Voice · listening</div>
+      <div class="stage">
+        <div class="rm-voice open">
+          <div class="rm-voice-head"><span class="micdot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0"/></svg></span>Listening…</div>
+          <div class="rm-wave"><i style="animation-delay:0s"></i><i style="animation-delay:.12s"></i><i style="animation-delay:.05s"></i><i style="animation-delay:.2s"></i><i style="animation-delay:.32s"></i><i style="animation-delay:.15s"></i><i style="animation-delay:.4s"></i><i style="animation-delay:.08s"></i><i style="animation-delay:.26s"></i><i style="animation-delay:.44s"></i><i style="animation-delay:.18s"></i><i style="animation-delay:.3s"></i><i style="animation-delay:.02s"></i><i style="animation-delay:.36s"></i><i style="animation-delay:.1s"></i><i style="animation-delay:.24s"></i><i style="animation-delay:.42s"></i><i style="animation-delay:.06s"></i></div>
+          <div class="rm-transcript">Tell him Saturday works, and ask about parking</div>
+          <button class="rm-stop">Stop &amp; use</button>
+        </div>
+      </div>
+      <div class="snote">Live waveform + streaming transcript replace the old bare panel. Deliberately not dismissable by an outside tap while recording.</div>
+    </div>
+    <div class="spec">
+      <div class="slabel">Writing · in progress</div>
+      <div class="stage">
+        <div class="rm-pill on writing"><span class="spin"></span><span class="rm-pill-tx">Writing…</span></div>
+      </div>
+      <div class="snote">Shimmering glass pill floats above the composer while the draft streams in — replaces the "Writing…" system toast.</div>
+    </div>
+    <div class="spec">
+      <div class="slabel">Success + Undo</div>
+      <div class="stage" style="flex-direction:column;gap:14px">
+        <div class="rm-pill on ok"><svg class="okic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span class="rm-pill-tx">Draft ready — review &amp; send</span></div>
+        <button class="rm-undochip in"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"/></svg>Undo</button>
+      </div>
+      <div class="snote">Success confirms without stealing focus; the Undo chip lingers for a few seconds, then retreats into the menu.</div>
+    </div>
+    <div class="spec">
+      <div class="slabel">Errors &amp; limits</div>
+      <div class="stage" style="flex-direction:column;gap:14px">
+        <div class="rm-pill on err"><svg class="eric" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v5.5M12 16.5v.1"/></svg><span class="rm-pill-tx">Tap the reply box, then try again</span></div>
+        <div class="rm-pill on err"><svg class="eric" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3 2"/></svg><span class="rm-pill-tx">Daily limit reached — resets at midnight</span></div>
+      </div>
+      <div class="snote">Errors use the same pill language with a coral accent — calm, specific, and never a system toast.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ONBOARDING + DASHBOARD ================= -->
+<section class="wrap" id="appui">
+  <div class="eyebrow">03 · App surfaces</div>
+  <h2>Onboarding &amp; home, reskinned.</h2>
+  <p class="lede">The same five-step onboarding and dashboard the app has today — dressed in the elevated-mint system. Both phones are fully clickable: page through onboarding, grant the mock permissions, flip the reply style.</p>
+
+  <div class="duo">
+    <!-- ONBOARDING PHONE -->
+    <div class="phone-col">
+      <div class="phone">
+        <div class="screen appdark" id="ob">
+          <div class="punch"></div>
+          <div class="statusbar"><span>9:41</span><span class="sicons">
+            <svg width="15" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M1 8h2v4H1zM5 6h2v6H5zM9 4h2v8H9zM13 1h2v11h-2z"/></svg>
+            <svg width="22" height="11" viewBox="0 0 24 12"><rect x="1" y="1" width="19" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".5"/><rect x="2.5" y="2.5" width="13" height="7" rx="1.4" fill="currentColor"/><rect x="21" y="4" width="2" height="4" rx="1" fill="currentColor" fill-opacity=".5"/></svg>
+          </span></div>
+          <div class="ob-track-wrap">
+            <div class="ob-track">
+              <!-- p1 welcome -->
+              <div class="ob-page" style="text-align:center;justify-content:center">
+                <div class="rm-bubble in ob-hero-orb" style="position:static;opacity:1;transform:none;width:86px;height:86px;pointer-events:none">
+                  <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.2-.6L3 21l1.7-4.6A8.4 8.4 0 1 1 21 11.5z"/><path d="M12 7.6l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z" fill="currentColor" stroke="none"/></svg>
+                </div>
+                <h3>The perfect reply,<br><span class="mint">in one tap.</span></h3>
+                <p class="p">ReplyMint reads the chat you're looking at and writes the reply for you — in your voice, right inside the app.</p>
+              </div>
+              <!-- p2 how -->
+              <div class="ob-page" style="justify-content:center">
+                <h3>How it works</h3>
+                <div class="ob-row"><span class="ob-num">1</span><div><b>Open any chat</b><span>The mint bubble appears whenever there's somewhere to type.</span></div></div>
+                <div class="ob-row"><span class="ob-num">2</span><div><b>Tap the bubble</b><span>Auto Reply drafts for you. Voice takes a spoken instruction. Fix polishes what you typed.</span></div></div>
+                <div class="ob-row"><span class="ob-num">3</span><div><b>Review &amp; send</b><span>The draft lands in the text field. You always press send yourself.</span></div></div>
+              </div>
+              <!-- p3 apps -->
+              <div class="ob-page" style="justify-content:center">
+                <h3>Works inside the apps<br>you already use</h3>
+                <p class="p">No copy-paste, no switching apps. ReplyMint writes directly into the reply box.</p>
+                <div class="appgrid">
+                  <div class="apptile"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#25D366"/><path fill="#fff" d="M17.3 6.7A7.4 7.4 0 0 0 5.6 15.6L4.6 19.4l3.9-1a7.4 7.4 0 0 0 3.5.9 7.4 7.4 0 0 0 5.3-12.6zm-5.3 11.4a6.2 6.2 0 0 1-3.1-.9l-.2-.1-2.3.6.6-2.3-.1-.2a6.2 6.2 0 1 1 5.1 2.9zm3.4-4.6c-.2-.1-1.1-.5-1.3-.6-.2-.1-.3-.1-.4.1l-.6.7c-.1.1-.2.1-.4 0a5 5 0 0 1-1.5-.9 5.6 5.6 0 0 1-1-1.3c-.1-.2 0-.3.1-.4l.3-.3.2-.3v-.3c0-.1-.4-1-.6-1.4-.1-.4-.3-.3-.4-.3h-.4a.7.7 0 0 0-.5.2 2 2 0 0 0-.6 1.5A3.5 3.5 0 0 0 9 11.6a8 8 0 0 0 3.1 2.8c.4.2.8.3 1 .4.4.1.8.1 1.1.1.4-.1 1.1-.4 1.2-.9.2-.4.2-.8.1-.9l-.4-.2z"/></svg>WhatsApp</div>
+                  <div class="apptile"><svg viewBox="0 0 24 24"><rect width="24" height="24" rx="6.5" fill="url(#iggr)"/><rect x="5.2" y="5.2" width="13.6" height="13.6" rx="4.2" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="12" cy="12" r="3.4" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="16.2" cy="7.9" r="1.05" fill="#fff"/></svg>Instagram</div>
+                  <div class="apptile"><svg viewBox="0 0 24 24"><rect width="24" height="24" rx="6.5" fill="#fff"/><g transform="translate(3.2 4.2) scale(0.73)"><path fill="#4285F4" d="M1.6 20.7h3.9V11.5L0 7.4v11.7c0 .9.7 1.6 1.6 1.6z"/><path fill="#34A853" d="M18.5 20.7h3.9c.9 0 1.6-.7 1.6-1.6V7.4l-5.5 4.1z"/><path fill="#FBBC04" d="M18.5 4.4v7.1L24 7.4V5.2c0-2-2.3-3.2-3.9-2z"/><path fill="#EA4335" d="M5.5 11.5v-7L12 9.3l6.5-4.9v7.1L12 16.4z"/><path fill="#C5221F" d="M0 5.2v2.2l5.5 4.1v-7L3.9 3.2C2.3 2 0 3.2 0 5.2z"/></g></svg>Gmail</div>
+                  <div class="apptile"><svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#0A66C2"/><path fill="#fff" d="M8.1 18.3H5.6V9.7h2.5v8.6zM6.8 8.6c-.8 0-1.4-.7-1.4-1.5S6 5.7 6.8 5.7s1.5.6 1.5 1.4-.7 1.5-1.5 1.5zm11.5 9.7h-2.5v-4.2c0-1-.02-2.3-1.4-2.3-1.4 0-1.6 1.1-1.6 2.2v4.3H10.3V9.7h2.4v1.2h.03c.3-.6 1.2-1.4 2.4-1.4 2.6 0 3.1 1.7 3.1 3.9v4.9z"/></svg>LinkedIn</div>
+                  <div class="apptile" style="color:var(--ink-faint)"><svg viewBox="0 0 24 24" fill="none" stroke="#5D6873" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="6" stroke-dasharray="3 3"/><path d="M12 8.5v7M8.5 12h7" stroke-linecap="round"/></svg>More soon</div>
+                </div>
+              </div>
+              <!-- p4 sign in -->
+              <div class="ob-page" style="justify-content:center;text-align:center">
+                <h3>One account,<br>every device</h3>
+                <p class="p">Sign in to sync your reply style and keep your free daily drafts.</p>
+                <button class="gbtn"><svg width="19" height="19" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.77 12.28c0-.92-.08-1.8-.24-2.65H12.24v5.01h6.46a5.53 5.53 0 0 1-2.4 3.63v3.01h3.88c2.27-2.09 3.59-5.17 3.59-9z"/><path fill="#34A853" d="M12.24 24c3.24 0 5.96-1.07 7.94-2.9l-3.88-3.02c-1.07.72-2.45 1.15-4.06 1.15-3.13 0-5.77-2.11-6.72-4.95H1.52v3.11A11.98 11.98 0 0 0 12.24 24z"/><path fill="#FBBC05" d="M5.52 14.27a7.2 7.2 0 0 1 0-4.55V6.61H1.52a12 12 0 0 0 0 10.77l4-3.11z"/><path fill="#EA4335" d="M12.24 4.78c1.76 0 3.34.6 4.59 1.79l3.44-3.44A11.98 11.98 0 0 0 1.52 6.61l4 3.11c.95-2.84 3.6-4.94 6.72-4.94z"/></svg>Continue with Google</button>
+                <p class="p" style="margin-top:16px;font-size:12px;color:var(--ink-faint)">We never read your chats in the background —<br>only the screen you ask us to reply to.</p>
+              </div>
+              <!-- p5 permissions -->
+              <div class="ob-page" style="justify-content:center">
+                <h3>Two switches,<br>then you're set</h3>
+                <p class="p">Android needs your OK for the bubble to float above other apps and read the chat you point it at.</p>
+                <button class="perm" data-perm="overlay">
+                  <span class="pic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="5" width="13" height="15" rx="2.5"/><path d="M8.5 3H18a2.5 2.5 0 0 1 2.5 2.5V16" stroke-linecap="round"/></svg></span>
+                  <div><b>Display over other apps</b><span class="pstate">Tap to allow</span></div>
+                  <span class="pcheck"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+                </button>
+                <button class="perm" data-perm="a11y">
+                  <span class="pic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="7.4" r="1.7" fill="currentColor" stroke="none"/><path d="M6.5 9.8c3.6 1 7.4 1 11 0M12 12.5v3l-2.4 4M12 15.5l2.4 4"/></svg></span>
+                  <div><b>Accessibility access</b><span class="pstate">Tap to allow</span></div>
+                  <span class="pcheck"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+                </button>
+                <p class="p" style="margin-top:14px;font-size:12px;color:var(--ink-faint)">The screen is read only when you tap the bubble. Nothing is stored.</p>
+              </div>
+            </div>
+          </div>
+          <div class="ob-footer">
+            <div class="ob-dots"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+            <button class="cta" id="ob-next">Continue</button>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><div><div class="cttl">Onboarding</div><div class="csub">5 steps · tap Continue or the dots</div></div></div>
+    </div>
+
+    <!-- DASHBOARD PHONE -->
+    <div class="phone-col">
+      <div class="phone">
+        <div class="screen appdark" id="db">
+          <div class="punch"></div>
+          <div class="statusbar"><span>9:41</span><span class="sicons">
+            <svg width="15" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M1 8h2v4H1zM5 6h2v6H5zM9 4h2v8H9zM13 1h2v11h-2z"/></svg>
+            <svg width="22" height="11" viewBox="0 0 24 12"><rect x="1" y="1" width="19" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity=".5"/><rect x="2.5" y="2.5" width="13" height="7" rx="1.4" fill="currentColor"/><rect x="21" y="4" width="2" height="4" rx="1" fill="currentColor" fill-opacity=".5"/></svg>
+          </span></div>
+          <div class="db-scroll">
+            <div class="db-top">
+              <div class="db-brand">
+                <div class="rm-bubble in" style="position:static;opacity:1;transform:none;width:30px;height:30px;animation:none;pointer-events:none">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.2-.6L3 21l1.7-4.6A8.4 8.4 0 1 1 21 11.5z"/></svg>
+                </div>
+                Reply<span style="color:var(--mint)">Mint</span>
+              </div>
+              <div class="db-av">M</div>
+            </div>
+            <div class="db-greet">Good evening,<br>Manoj</div>
+
+            <div class="card statuscard">
+              <div class="statusrow">
+                <span class="bigcheck"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+                <div><b>You're all set</b><span>The bubble is live in your chats</span></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="ctitle">Today's drafts</div>
+              <div class="usagerow">
+                <div class="ringwrap">
+                  <svg width="92" height="92" viewBox="0 0 92 92">
+                    <defs><linearGradient id="mintgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7CF5C8"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs>
+                    <circle cx="46" cy="46" r="38" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="8"/>
+                    <circle class="ring-fg" cx="46" cy="46" r="38" fill="none" stroke-width="8"/>
+                  </svg>
+                  <div class="ringval"><b>7<span style="font-size:12px;color:var(--ink-faint)">/25</span></b><span>used</span></div>
+                </div>
+                <div class="utx"><b>18 drafts left today</b><span>Free plan resets at midnight.</span><span style="color:var(--mint);font-weight:600;margin-top:6px">Go unlimited →</span></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="ctitle">Reply style</div>
+              <div class="seg" id="seg">
+                <div class="thumb"></div>
+                <button class="on" data-mode="personal">Personal</button>
+                <button data-mode="pro">Professional</button>
+              </div>
+              <p style="font-size:12.5px;color:var(--ink-dim);margin-top:12px" id="segnote">Warm, casual, sounds like you texting a friend.</p>
+            </div>
+
+            <div class="card">
+              <div class="ctitle">Works inside</div>
+              <div class="approw">
+                <div class="apptile"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#25D366"/><path fill="#fff" d="M17.3 6.7A7.4 7.4 0 0 0 5.6 15.6L4.6 19.4l3.9-1a7.4 7.4 0 0 0 3.5.9 7.4 7.4 0 0 0 5.3-12.6zm-5.3 11.4a6.2 6.2 0 0 1-3.1-.9l-.2-.1-2.3.6.6-2.3-.1-.2a6.2 6.2 0 1 1 5.1 2.9zm3.4-4.6c-.2-.1-1.1-.5-1.3-.6-.2-.1-.3-.1-.4.1l-.6.7c-.1.1-.2.1-.4 0a5 5 0 0 1-1.5-.9 5.6 5.6 0 0 1-1-1.3c-.1-.2 0-.3.1-.4l.3-.3.2-.3v-.3c0-.1-.4-1-.6-1.4-.1-.4-.3-.3-.4-.3h-.4a.7.7 0 0 0-.5.2 2 2 0 0 0-.6 1.5A3.5 3.5 0 0 0 9 11.6a8 8 0 0 0 3.1 2.8c.4.2.8.3 1 .4.4.1.8.1 1.1.1.4-.1 1.1-.4 1.2-.9.2-.4.2-.8.1-.9l-.4-.2z"/></svg>WhatsApp</div>
+                <div class="apptile"><svg viewBox="0 0 24 24"><rect width="24" height="24" rx="6.5" fill="url(#iggr)"/><rect x="5.2" y="5.2" width="13.6" height="13.6" rx="4.2" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="12" cy="12" r="3.4" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="16.2" cy="7.9" r="1.05" fill="#fff"/></svg>Instagram</div>
+                <div class="apptile"><svg viewBox="0 0 24 24"><rect width="24" height="24" rx="6.5" fill="#fff"/><g transform="translate(3.2 4.2) scale(0.73)"><path fill="#4285F4" d="M1.6 20.7h3.9V11.5L0 7.4v11.7c0 .9.7 1.6 1.6 1.6z"/><path fill="#34A853" d="M18.5 20.7h3.9c.9 0 1.6-.7 1.6-1.6V7.4l-5.5 4.1z"/><path fill="#FBBC04" d="M18.5 4.4v7.1L24 7.4V5.2c0-2-2.3-3.2-3.9-2z"/><path fill="#EA4335" d="M5.5 11.5v-7L12 9.3l6.5-4.9v7.1L12 16.4z"/><path fill="#C5221F" d="M0 5.2v2.2l5.5 4.1v-7L3.9 3.2C2.3 2 0 3.2 0 5.2z"/></g></svg>Gmail</div>
+                <div class="apptile"><svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#0A66C2"/><path fill="#fff" d="M8.1 18.3H5.6V9.7h2.5v8.6zM6.8 8.6c-.8 0-1.4-.7-1.4-1.5S6 5.7 6.8 5.7s1.5.6 1.5 1.4-.7 1.5-1.5 1.5zm11.5 9.7h-2.5v-4.2c0-1-.02-2.3-1.4-2.3-1.4 0-1.6 1.1-1.6 2.2v4.3H10.3V9.7h2.4v1.2h.03c.3-.6 1.2-1.4 2.4-1.4 2.6 0 3.1 1.7 3.1 3.9v4.9z"/></svg>LinkedIn</div>
+              </div>
+            </div>
+
+            <div class="db-foot">
+              <button class="ghost">Replay the tour</button>
+              <button class="ghost">Sign out</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="caption"><div><div class="cttl">Home dashboard</div><div class="csub">Status · usage ring · reply style · supported apps</div></div></div>
+    </div>
+  </div>
+</section>
+
+<footer class="wrap">
+  <b>ReplyMint UI mockup</b> · design exploration only — no app code is affected. Third-party app names, logos and colors appear solely to illustrate where ReplyMint runs.
+</footer>
+
+<script>
+/* ================= SHARED OVERLAY ================= */
+const ICONS = {
+  auto:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.8L18.7 9.7l-4.8 1.9L12 16.4l-1.9-4.8L5.3 9.7l4.8-1.9z" fill="currentColor" fill-opacity=".15"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>',
+  voice:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v4"/></svg>',
+  fix:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l10.5-10.5M13 4.5l1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1zM19 12l.6 1.5L21 14l-1.4.5L19 16l-.6-1.5L17 14l1.4-.5z"/></svg>',
+  undo:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"/></svg>',
+  ok:'<svg class="okic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  err:'<svg class="eric" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v5.5M12 16.5v.1"/></svg>',
+  bubble:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.2-.6L3 21l1.7-4.6A8.4 8.4 0 1 1 21 11.5z"/><path d="M12 7.6l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z" fill="currentColor" stroke="none"/></svg>',
+  mic:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0"/></svg>'
+};
+let waveBars='';
+for(let i=0;i<18;i++) waveBars += `<i style="animation-delay:${(Math.random()*0.5).toFixed(2)}s;animation-duration:${(0.7+Math.random()*0.6).toFixed(2)}s"></i>`;
+const OVERLAY_TPL = `
+<div class="rm-layer">
+  <button class="rm-bubble" aria-label="ReplyMint bubble">${ICONS.bubble}</button>
+  <div class="rm-menu">
+    <button class="mi" data-act="auto">${ICONS.auto}Auto Reply</button>
+    <button class="mi" data-act="voice">${ICONS.voice}Voice</button>
+    <button class="mi" data-act="fix">${ICONS.fix}Fix</button>
+    <div class="rm-undo-wrap"><div class="rm-menu-div"></div>
+      <button class="mi" data-act="undo">${ICONS.undo}Undo</button></div>
+  </div>
+  <div class="rm-voice">
+    <div class="rm-voice-head"><span class="micdot">${ICONS.mic}</span>Listening…</div>
+    <div class="rm-wave">${waveBars}</div>
+    <div class="rm-transcript empty">Speak your instruction, then tap Stop</div>
+    <button class="rm-stop">Stop &amp; use</button>
+  </div>
+  <div class="rm-pill">${ICONS.ok}${ICONS.err}<span class="spin"></span><span class="rm-pill-tx"></span></div>
+  <button class="rm-undochip">${ICONS.undo.replace('width="19" height="19"','width="14" height="14"')}Undo</button>
+</div>`;
+
+const wait = ms => new Promise(r=>setTimeout(r,ms));
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function setupDemo(cfg){
+  const phone=document.getElementById(cfg.id);
+  const screen=phone.querySelector('.screen');
+  screen.insertAdjacentHTML('beforeend', OVERLAY_TPL);
+  const q=s=>screen.querySelector(s);
+  const bubble=q('.rm-bubble'), menu=q('.rm-menu'), voicePanel=q('.rm-voice'),
+        pill=q('.rm-pill'), pillTx=q('.rm-pill-tx'), chip=q('.rm-undochip'),
+        transcript=q('.rm-transcript'), stopBtn=q('.rm-stop'),
+        undoWrap=q('.rm-undo-wrap'),
+        composer=q(cfg.composerSel),
+        fab=cfg.fabSel?q(cfg.fabSel):null,
+        replayBtn=document.querySelector(`.replay[data-for="${cfg.id}"]`);
+
+  let runId=0, auto=true, loopRunning=false, hasDraft=false, savedText=cfg.initialText||'', visible=false, voiceStreaming=false;
+  const live=id=>id===runId;
+
+  function setComposer(t){
+    composer.textContent=t;
+    composer.classList.toggle('empty',!t);
+    if(fab) fab.classList.toggle('active',!!t);
+  }
+  function refreshUndo(){ undoWrap.classList.toggle('on',hasDraft); }
+  function pillShow(mode,label){ pill.className='rm-pill on '+mode; pillTx.textContent=label; }
+  function pillHide(){ pill.className='rm-pill'; }
+  function resetOverlay(){
+    bubble.classList.remove('pressed'); menu.classList.remove('open');
+    voicePanel.classList.remove('open'); pillHide(); chip.classList.remove('in');
+    menu.querySelectorAll('.mi').forEach(b=>b.classList.remove('hl'));
+    voiceStreaming=false;
+  }
+  function fullReset(){
+    resetOverlay(); bubble.classList.remove('in');
+    setComposer(cfg.initialText||''); hasDraft=false; savedText=cfg.initialText||''; refreshUndo();
+    transcript.textContent='Speak your instruction, then tap Stop'; transcript.classList.add('empty');
+  }
+  async function typeInto(text,id){
+    const speed=REDUCED?0:22;
+    for(let i=1;i<=text.length;i++){
+      if(!live(id))return false;
+      setComposer(text.slice(0,i));
+      if(speed) await wait(speed+Math.random()*26);
+    }
+    return live(id);
+  }
+  async function finishWrite(id,okLabel){
+    hasDraft=true; refreshUndo();
+    pillShow('ok',okLabel);
+    await wait(1500); if(!live(id))return false;
+    pillHide(); await wait(300); if(!live(id))return false;
+    chip.classList.add('in');
+    await wait(2400); if(!live(id))return false;
+    chip.classList.remove('in');
+    return true;
+  }
+  async function actAuto(id){
+    menu.classList.remove('open');
+    pillShow('writing','Writing…');
+    await wait(1500); if(!live(id))return false;
+    savedText=composer.textContent; pillHide(); await wait(150); if(!live(id))return false;
+    if(!await typeInto(cfg.reply,id)) return false;
+    return finishWrite(id,'Draft ready — review & send');
+  }
+  async function actVoice(id){
+    menu.classList.remove('open');
+    transcript.textContent='Speak your instruction, then tap Stop'; transcript.classList.add('empty');
+    voicePanel.classList.add('open');
+    voiceStreaming=true;
+    await wait(750); if(!live(id))return false;
+    const words=cfg.voiceLine.split(' ');
+    transcript.classList.remove('empty');
+    for(let i=1;i<=words.length;i++){
+      if(!live(id))return false;
+      transcript.textContent=words.slice(0,i).join(' ');
+      await wait(REDUCED?0:170+Math.random()*140);
+    }
+    voiceStreaming=false;
+    await wait(800); if(!live(id))return false;
+    stopBtn.classList.add('pressed'); await wait(220); stopBtn.classList.remove('pressed');
+    if(!live(id))return false;
+    voicePanel.classList.remove('open');
+    pillShow('writing','Writing…');
+    await wait(1400); if(!live(id))return false;
+    savedText=composer.textContent; pillHide(); await wait(150); if(!live(id))return false;
+    if(!await typeInto(cfg.voiceReply||cfg.reply,id)) return false;
+    return finishWrite(id,'Draft ready — review & send');
+  }
+  async function actFix(id){
+    menu.classList.remove('open');
+    const cur=composer.textContent.trim();
+    if(!cur){
+      pillShow('err','Type something first, then tap Fix');
+      await wait(2200); if(!live(id))return false; pillHide(); return true;
+    }
+    pillShow('writing','Polishing…');
+    await wait(1400); if(!live(id))return false;
+    savedText=composer.textContent;
+    composer.classList.add('fade'); await wait(340); if(!live(id))return false;
+    setComposer(''); composer.classList.remove('fade');
+    pillHide(); await wait(150); if(!live(id))return false;
+    if(!await typeInto(cfg.fixedText||cfg.reply,id)) return false;
+    return finishWrite(id,'Polished — review & send');
+  }
+  async function actUndo(id){
+    menu.classList.remove('open'); chip.classList.remove('in');
+    await wait(200); if(!live(id))return false;
+    setComposer(savedText); hasDraft=false; refreshUndo();
+    pillShow('ok','Undone');
+    await wait(1400); if(!live(id))return false;
+    pillHide(); return true;
+  }
+  const ACTIONS={auto:actAuto,voice:actVoice,fix:actFix,undo:actUndo};
+
+  async function loop(){
+    if(loopRunning) return; loopRunning=true;
+    try{
+      while(auto){
+        const id=++runId;
+        fullReset();
+        while(!visible){ await wait(400); if(!live(id))return; }
+        await wait(900); if(!live(id))return;
+        bubble.classList.add('in');
+        await wait(1600); if(!live(id))return;
+        bubble.classList.add('pressed'); await wait(190); bubble.classList.remove('pressed');
+        if(!live(id))return;
+        menu.classList.add('open');
+        await wait(1150); if(!live(id))return;
+        const btn=menu.querySelector(`[data-act="${cfg.autoFlow}"]`);
+        btn.classList.add('hl'); await wait(640); btn.classList.remove('hl');
+        if(!live(id))return;
+        if(!await ACTIONS[cfg.autoFlow](id)) return;
+        await wait(2800); if(!live(id))return;
+      }
+    } finally { loopRunning=false; }
+  }
+
+  function takeOver(){
+    if(auto){ auto=false; if(replayBtn) replayBtn.classList.add('show'); }
+    runId++;
+  }
+  bubble.addEventListener('click',()=>{
+    takeOver();
+    voicePanel.classList.remove('open'); pillHide(); chip.classList.remove('in');
+    bubble.classList.add('in');
+    menu.classList.toggle('open');
+  });
+  menu.querySelectorAll('.mi').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      takeOver();
+      const id=runId;
+      ACTIONS[btn.dataset.act](id);
+    });
+  });
+  stopBtn.addEventListener('click',()=>{
+    if(!voiceStreaming) return;
+    takeOver();
+    const id=runId;
+    (async()=>{
+      voicePanel.classList.remove('open');
+      pillShow('writing','Writing…');
+      await wait(1200); if(!live(id))return;
+      savedText=composer.textContent; pillHide(); await wait(150); if(!live(id))return;
+      if(!await typeInto(cfg.voiceReply||cfg.reply,id)) return;
+      finishWrite(id,'Draft ready — review & send');
+    })();
+  });
+  chip.addEventListener('click',()=>{
+    takeOver();
+    ACTIONS.undo(runId);
+  });
+  if(replayBtn) replayBtn.addEventListener('click',()=>{
+    replayBtn.classList.remove('show');
+    auto=true; runId++; loop();
+  });
+
+  new IntersectionObserver(es=>{
+    visible=es[0].isIntersecting;
+  },{threshold:.12}).observe(phone);
+
+  fullReset();
+  loop();
+}
+
+setupDemo({
+  id:'demo-wa', composerSel:'.composer-text', fabSel:'.fab',
+  autoFlow:'auto', initialText:'',
+  reply:"Yes, absolutely! Ramen sounds perfect — I can be there by 7:30. Want me to book us a table? 🙌",
+  voiceLine:'Say yes and offer to book a table for seven thirty',
+  voiceReply:"Yes! I'll book us a table for 7:30 — see you there 🍜",
+  fixedText:"Yes, absolutely — ramen sounds perfect. I can be there by 7:30; want me to book a table?"
+});
+setupDemo({
+  id:'demo-ig', composerSel:'.composer-text',
+  autoFlow:'voice', initialText:'',
+  reply:"Saturday actually works better for me 🙌 still so in!",
+  voiceLine:'Tell him Saturday works, and ask about parking',
+  voiceReply:"Saturday actually works better for me 🙌 Is parking easy near the venue or should we take the metro?",
+  fixedText:"Saturday works great for me — is parking easy near the venue?"
+});
+setupDemo({
+  id:'demo-gm', composerSel:'.gm-compose .composer-text',
+  autoFlow:'fix',
+  initialText:"hey got ur mail. report not done yet maybe friday. sry",
+  reply:"Hi Sarah,\n\nThanks for checking in — happy to help with anything you need on the Q3 numbers.\n\nBest,\nManoj",
+  voiceLine:'Tell her the report will be ready Friday',
+  voiceReply:"Hi Sarah,\n\nThe Q3 report will be ready by Friday — I'll send it over as soon as it's final.\n\nBest,\nManoj",
+  fixedText:"Hi Sarah,\n\nThanks for following up. The Q3 report is nearly complete — I expect to have it with you by Friday. Apologies for the short delay.\n\nBest,\nManoj"
+});
+
+/* ================= ONBOARDING ================= */
+(function(){
+  const ob=document.getElementById('ob');
+  const track=ob.querySelector('.ob-track');
+  const dots=[...ob.querySelectorAll('.ob-dots i')];
+  const next=document.getElementById('ob-next');
+  const labels=['Continue','Continue','Continue','Sign in with Google','Start using ReplyMint'];
+  const perms={overlay:false,a11y:false};
+  let idx=0;
+  function go(i){
+    idx=Math.max(0,Math.min(4,i));
+    track.style.transform=`translateX(-${idx*100}%)`;
+    dots.forEach((d,j)=>d.classList.toggle('on',j===idx));
+    next.textContent=labels[idx];
+    updateCta();
+  }
+  function updateCta(){
+    next.classList.toggle('disabled', idx===4 && !(perms.overlay&&perms.a11y));
+  }
+  next.addEventListener('click',()=>{ go(idx===4?0:idx+1); });
+  dots.forEach((d,j)=>d.addEventListener('click',()=>go(j)));
+  ob.querySelectorAll('.perm').forEach(p=>{
+    p.addEventListener('click',()=>{
+      const k=p.dataset.perm;
+      perms[k]=!perms[k];
+      p.classList.toggle('granted',perms[k]);
+      p.querySelector('.pstate').textContent=perms[k]?'Allowed':'Tap to allow';
+      updateCta();
+    });
+  });
+  go(0);
+})();
+
+/* ================= DASHBOARD ================= */
+(function(){
+  const db=document.getElementById('db');
+  new IntersectionObserver((es,obs)=>{
+    if(es[0].isIntersecting){ db.classList.add('seen'); obs.disconnect(); }
+  },{threshold:.12}).observe(db);
+  const seg=document.getElementById('seg');
+  const note=document.getElementById('segnote');
+  seg.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      seg.classList.toggle('pro', b.dataset.mode==='pro');
+      seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+      note.textContent = b.dataset.mode==='pro'
+        ? 'Polished and precise — meetings, clients, LinkedIn.'
+        : 'Warm, casual, sounds like you texting a friend.';
+    });
+  });
+})();
+</script>
+</body>
+</html>

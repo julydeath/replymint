@@ -1,12 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- App chrome only. The glass_* / mint tokens are intentionally absent here — the overlay
-         is dark in both themes, so overriding them would be a bug, not an omission. -->
-    <color name="surface">#111417</color>
-    <color name="surface_dim">#1B1F24</color>
-    <color name="text_primary">#F2F5F7FA</color>
-    <color name="text_secondary">#9AA4AF</color>
-    <color name="brand_container">#173229</color>
-    <color name="on_brand_container">#6EE7B7</color>
-    <color name="card_stroke">#2A3139</color>
-</resources>
+<!-- The elevated-mint redesign is dark-first: values/colors.xml IS the dark palette, in both
+     system themes. Nothing to override here; the file stays so the qualifier's history is clear. -->
+<resources />

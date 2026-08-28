@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Story-ring approximation: linear gradient stands in for Instagram's conic ring. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:angle="45"
+        android:centerColor="#EE2A7B"
+        android:endColor="#6228D7"
+        android:startColor="#F9CE34" />
+</shape>

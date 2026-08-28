@@ -12,6 +12,30 @@
     <string name="onb_next">Next</string>
     <string name="onb_welcome_title">The perfect reply,\nin one tap</string>
     <string name="onb_welcome_body">ReplyMint is a tiny floating bubble that lives inside your chat apps. Tap it and a great reply appears in the text box — written for you, in your tone, ready to send.</string>
+    <!-- Tour demo page: a staged, looping simulation of the bubble inside other apps.
+         Chat content is fictional demo copy, deliberately not translatable. -->
+    <string name="onb_demo_title">See it in action</string>
+    <string name="demo_caption_wa" translatable="false">WhatsApp · Auto Reply</string>
+    <string name="demo_caption_ig" translatable="false">Instagram · Voice</string>
+    <string name="demo_caption_gm" translatable="false">Gmail · Fix</string>
+    <string name="demo_wa_name" translatable="false">Priya</string>
+    <string name="demo_wa_presence" translatable="false">online</string>
+    <string name="demo_wa_in1" translatable="false">Hey! Are we still on for dinner tonight? 🍜</string>
+    <string name="demo_wa_in2" translatable="false">I found this new ramen place near the station</string>
+    <string name="demo_wa_reply" translatable="false">Yes, absolutely! Ramen sounds perfect — I can be there by 7:30. Want me to book us a table?</string>
+    <string name="demo_ig_name" translatable="false">alex.j</string>
+    <string name="demo_ig_presence" translatable="false">Active now</string>
+    <string name="demo_ig_in1" translatable="false">yo the concert got moved to saturday 😭</string>
+    <string name="demo_ig_in2" translatable="false">can you still make it?</string>
+    <string name="demo_ig_voice" translatable="false">Tell him Saturday works, and ask about parking</string>
+    <string name="demo_ig_reply" translatable="false">Saturday actually works better for me 🙌 Is parking easy near the venue?</string>
+    <string name="demo_gm_to" translatable="false">To&#160;&#160;sarah@acme.co</string>
+    <string name="demo_gm_subject" translatable="false">Re: Q3 budget report</string>
+    <string name="demo_gm_rough" translatable="false">hey got ur mail. report not done yet maybe friday. sry</string>
+    <string name="demo_gm_reply" translatable="false">Hi Sarah,\n\nThanks for following up — the Q3 report is nearly complete and I\'ll have it with you by Friday. Apologies for the delay.</string>
+    <string name="demo_hint_message" translatable="false">Message</string>
+    <string name="pill_polishing">Polishing…</string>
+
     <string name="onb_how_title">How it works</string>
     <string name="onb_how_1_title">The bubble appears</string>
     <string name="onb_how_1_sub">Only in your chat apps, only on screens with a reply box.</string>
@@ -43,7 +67,16 @@
     <string name="home_status_setup_sub">A permission below still needs your OK.</string>
     <string name="home_usage_title">Today\'s drafts</string>
     <string name="home_usage_fmt">%1$d of %2$d free drafts used</string>
+    <string name="home_usage_left_fmt">%1$d drafts left today</string>
+    <string name="home_usage_reset">Free plan resets at midnight.</string>
+    <string name="usage_ring_fmt">%1$d/%2$d</string>
+    <string name="usage_ring_used">used</string>
+    <string name="greeting_morning">Good morning,</string>
+    <string name="greeting_afternoon">Good afternoon,</string>
+    <string name="greeting_evening">Good evening,</string>
     <string name="home_mode_title">Reply style</string>
+    <string name="mode_personal_sub">Warm and casual — sounds like you texting a friend.</string>
+    <string name="mode_professional_sub">Polished and precise — meetings, clients, LinkedIn.</string>
     <string name="home_apps_title">Works inside</string>
     <string name="home_replay">Replay the tour</string>
     <string name="home_sign_out">Sign out</string>
@@ -52,7 +85,6 @@
 
     <!-- Supported apps -->
     <string name="app_whatsapp">WhatsApp</string>
-    <string name="app_whatsapp_business">WA Business</string>
     <string name="app_instagram">Instagram</string>
     <string name="app_gmail">Gmail</string>
     <string name="app_linkedin">LinkedIn</string>
@@ -62,6 +94,11 @@
     <string name="action_voice">Voice</string>
     <string name="action_fix">Fix</string>
     <string name="action_undo">Undo</string>
+
+    <!-- In-overlay status pill (replaces system toasts). -->
+    <string name="pill_writing">Writing…</string>
+    <string name="pill_ready">Draft ready — review &amp; send</string>
+    <string name="voice_none">Didn\'t catch that</string>
 
     <string name="voice_listening">Listening…</string>
     <string name="voice_hint">Speak your instruction, then tap Stop</string>

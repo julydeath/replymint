@@ -1,15 +1,17 @@
-<!-- ViewPager2 progress dots: TabLayout with tabBackground=this and indicator height 0. -->
+<!-- ViewPager2 progress dots: TabLayout with tabBackground=this and indicator height 0.
+     The selected dot stretches into a mint pill. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_selected="true">
-        <shape android:shape="oval">
-            <solid android:color="@color/brand" />
-            <size android:width="8dp" android:height="8dp" />
+        <shape android:shape="rectangle">
+            <solid android:color="@color/mint" />
+            <corners android:radius="4dp" />
+            <size android:width="22dp" android:height="7dp" />
         </shape>
     </item>
     <item>
         <shape android:shape="oval">
-            <solid android:color="@color/card_stroke" />
-            <size android:width="8dp" android:height="8dp" />
+            <solid android:color="#2EFFFFFF" />
+            <size android:width="7dp" android:height="7dp" />
         </shape>
     </item>
 </selector>

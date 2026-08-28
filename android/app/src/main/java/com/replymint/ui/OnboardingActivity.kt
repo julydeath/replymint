@@ -31,6 +31,7 @@ class OnboardingActivity : AppCompatActivity() {
     private lateinit var primary: MaterialButton
     private val pageViews = HashMap<Int, View>()
     private var signingIn = false
+    private var demo: TourDemoController? = null
 
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
@@ -38,6 +39,7 @@ class OnboardingActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_onboarding)
+        findViewById<View>(R.id.onboarding_root).padSystemBars()
         store = ModeStore(this)
 
         pager = findViewById(R.id.pager)
@@ -58,11 +60,28 @@ class OnboardingActivity : AppCompatActivity() {
         pageViews[PAGE_PERMISSIONS]?.let(::updatePermissionsPage)
         pageViews[PAGE_SIGNIN]?.let(::updateSignInPage)
         updatePrimaryButton()
+        if (pager.currentItem == PAGE_DEMO) demo?.start()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        demo?.stop()
+    }
+
+    override fun onDestroy() {
+        demo?.destroy()
+        demo = null
+        super.onDestroy()
     }
 
     private fun bindPage(position: Int, view: View) {
         pageViews[position] = view
         when (position) {
+            PAGE_DEMO -> {
+                demo?.destroy()
+                demo = TourDemoController(view)
+                if (pager.currentItem == PAGE_DEMO) demo?.start()
+            }
             PAGE_SIGNIN -> updateSignInPage(view)
             PAGE_PERMISSIONS -> {
                 view.findViewById<View>(R.id.row_overlay)
@@ -76,6 +95,7 @@ class OnboardingActivity : AppCompatActivity() {
 
     private fun onPageShown(position: Int) {
         if (position == PAGE_PERMISSIONS) requestRuntimePermissions()
+        if (position == PAGE_DEMO) demo?.start() else demo?.stop()
         updatePrimaryButton()
     }
 
@@ -176,12 +196,14 @@ class OnboardingActivity : AppCompatActivity() {
     private companion object {
         val PAGES = listOf(
             R.layout.onboarding_page_welcome,
+            R.layout.onboarding_page_demo,
             R.layout.onboarding_page_how,
             R.layout.onboarding_page_apps,
             R.layout.onboarding_page_signin,
             R.layout.onboarding_page_permissions,
         )
-        const val PAGE_SIGNIN = 3
-        const val PAGE_PERMISSIONS = 4
+        const val PAGE_DEMO = 1
+        const val PAGE_SIGNIN = 4
+        const val PAGE_PERMISSIONS = 5
     }
 }

@@ -8,140 +8,130 @@
     android:padding="32dp">
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/DisplayTitle"
         android:text="@string/onb_perms_title"
-        android:textColor="@color/text_primary"
-        android:textSize="28sp"
-        android:textStyle="bold" />
+        android:textSize="28sp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:lineSpacingExtra="3dp"
         android:text="@string/onb_perms_sub"
         android:textColor="@color/text_secondary"
-        android:textSize="15sp" />
+        android:textSize="14sp" />
 
-    <com.google.android.material.card.MaterialCardView
+    <LinearLayout
         android:id="@+id/row_overlay"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="28dp"
-        app:cardBackgroundColor="@color/surface_dim"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="0dp">
+        android:background="@drawable/bg_card"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="16dp">
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="16dp">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/perm_overlay_title"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/perm_overlay_sub"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
-            </LinearLayout>
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/overlay_state"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:text="@string/perm_needed"
+                android:fontFamily="@font/inter_semibold"
+                android:text="@string/perm_overlay_title"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/perm_overlay_sub"
                 android:textColor="@color/text_secondary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <ImageView
-                android:id="@+id/overlay_check"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_marginStart="6dp"
-                android:contentDescription="@string/perm_granted"
-                android:src="@drawable/ic_check_circle"
-                android:visibility="gone"
-                app:tint="@color/brand" />
+                android:textSize="12.5sp" />
         </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
 
-    <com.google.android.material.card.MaterialCardView
+        <TextView
+            android:id="@+id/overlay_state"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:fontFamily="@font/inter_semibold"
+            android:text="@string/perm_needed"
+            android:textColor="@color/mint"
+            android:textSize="13sp" />
+
+        <ImageView
+            android:id="@+id/overlay_check"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginStart="6dp"
+            android:contentDescription="@string/perm_granted"
+            android:src="@drawable/ic_check_circle"
+            android:visibility="gone"
+            app:tint="@color/mint" />
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/row_a11y"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        app:cardBackgroundColor="@color/surface_dim"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="0dp">
+        android:background="@drawable/bg_card"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="16dp">
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="16dp">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/perm_a11y_title"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/perm_a11y_sub"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
-            </LinearLayout>
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/a11y_state"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:text="@string/perm_needed"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:fontFamily="@font/inter_semibold"
+                android:text="@string/perm_a11y_title"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp" />
 
-            <ImageView
-                android:id="@+id/a11y_check"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_marginStart="6dp"
-                android:contentDescription="@string/perm_granted"
-                android:src="@drawable/ic_check_circle"
-                android:visibility="gone"
-                app:tint="@color/brand" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/perm_a11y_sub"
+                android:textColor="@color/text_secondary"
+                android:textSize="12.5sp" />
         </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/a11y_state"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:fontFamily="@font/inter_semibold"
+            android:text="@string/perm_needed"
+            android:textColor="@color/mint"
+            android:textSize="13sp" />
+
+        <ImageView
+            android:id="@+id/a11y_check"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginStart="6dp"
+            android:contentDescription="@string/perm_granted"
+            android:src="@drawable/ic_check_circle"
+            android:visibility="gone"
+            app:tint="@color/mint" />
+    </LinearLayout>
 </LinearLayout>

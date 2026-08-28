@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "See it in action": a looping, staged simulation of the bubble working inside WhatsApp /
+     Instagram / Gmail, driven by TourDemoController. All overlay props reuse the real overlay's
+     drawables so the demo is a faithful miniature of the product. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        style="@style/DisplayTitle"
+        android:text="@string/onb_demo_title"
+        android:textSize="24sp" />
+
+    <FrameLayout
+        android:layout_width="238dp"
+        android:layout_height="400dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/bg_demo_phone"
+        android:elevation="12dp"
+        android:outlineProvider="background"
+        android:padding="7dp">
+
+        <FrameLayout
+            android:id="@+id/demo_screen"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_demo_screen">
+
+            <include
+                android:id="@+id/demo_skin_wa"
+                layout="@layout/view_demo_chat_wa" />
+
+            <include
+                android:id="@+id/demo_skin_ig"
+                layout="@layout/view_demo_chat_ig"
+                android:visibility="gone" />
+
+            <include
+                android:id="@+id/demo_skin_gm"
+                layout="@layout/view_demo_chat_gm"
+                android:visibility="gone" />
+
+            <!-- Overlay props -->
+            <FrameLayout
+                android:id="@+id/demo_bubble"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="8dp"
+                android:alpha="0"
+                android:background="@drawable/bg_bubble"
+                android:elevation="6dp"
+                android:outlineProvider="background"
+                android:translationY="-30dp">
+
+                <ImageView
+                    android:layout_width="19dp"
+                    android:layout_height="19dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_bubble" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:id="@+id/demo_menu"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="10dp"
+                android:alpha="0"
+                android:background="@drawable/bg_glass_panel"
+                android:elevation="8dp"
+                android:minWidth="140dp"
+                android:orientation="vertical"
+                android:outlineProvider="background"
+                android:padding="5dp"
+                android:translationY="44dp">
+
+                <LinearLayout
+                    android:id="@+id/demo_row_auto"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="8dp">
+
+                    <ImageView
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_auto_reply"
+                        android:tint="@color/mint" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="9dp"
+                        android:text="@string/action_auto"
+                        android:textColor="@color/glass_text"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/demo_row_voice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="8dp">
+
+                    <ImageView
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_mic"
+                        android:tint="@color/mint" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="9dp"
+                        android:text="@string/action_voice"
+                        android:textColor="@color/glass_text"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/demo_row_fix"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="8dp">
+
+                    <ImageView
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_fix"
+                        android:tint="@color/mint" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="9dp"
+                        android:text="@string/action_fix"
+                        android:textColor="@color/glass_text"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/demo_voice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:layout_margin="9dp"
+                android:layout_marginBottom="48dp"
+                android:alpha="0"
+                android:background="@drawable/bg_glass_panel"
+                android:elevation="8dp"
+                android:orientation="vertical"
+                android:outlineProvider="background"
+                android:padding="11dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:background="@drawable/bg_micdot">
+
+                        <ImageView
+                            android:layout_width="11dp"
+                            android:layout_height="11dp"
+                            android:layout_gravity="center"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_mic"
+                            android:tint="@color/mint" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="7dp"
+                        android:fontFamily="@font/inter_semibold"
+                        android:text="@string/voice_listening"
+                        android:textColor="@color/mint"
+                        android:textSize="11.5sp" />
+                </LinearLayout>
+
+                <com.replymint.bubble.WaveformView
+                    android:id="@+id/demo_wave"
+                    android:layout_width="match_parent"
+                    android:layout_height="18dp"
+                    android:layout_marginTop="8dp" />
+
+                <TextView
+                    android:id="@+id/demo_transcript"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:minLines="2"
+                    android:textColor="@color/glass_text"
+                    android:textSize="10.5sp" />
+
+                <TextView
+                    android:id="@+id/demo_voice_stop"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="9dp"
+                    android:background="@drawable/bg_cta"
+                    android:fontFamily="@font/inter_bold"
+                    android:gravity="center"
+                    android:paddingVertical="7dp"
+                    android:text="@string/voice_stop"
+                    android:textColor="@color/on_mint"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/demo_pill"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|center_horizontal"
+                android:layout_marginBottom="46dp"
+                android:alpha="0"
+                android:background="@drawable/bg_pill"
+                android:elevation="9dp"
+                android:gravity="center_vertical"
+                android:minHeight="28dp"
+                android:orientation="horizontal"
+                android:outlineProvider="background"
+                android:paddingStart="9dp"
+                android:paddingEnd="12dp">
+
+                <ProgressBar
+                    android:id="@+id/demo_pill_spinner"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:indeterminateTint="@color/mint" />
+
+                <ImageView
+                    android:id="@+id/demo_pill_icon"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_check_circle"
+                    android:tint="@color/mint"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/demo_pill_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:fontFamily="@font/inter_semibold"
+                    android:textColor="@color/glass_text"
+                    android:textSize="10sp" />
+            </LinearLayout>
+        </FrameLayout>
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/demo_caption_icon"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_app_whatsapp" />
+
+        <TextView
+            android:id="@+id/demo_caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="9dp"
+            android:fontFamily="@font/inter_semibold"
+            android:text="@string/demo_caption_wa"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The five apps the bubble appears in — mirrors TARGET_APPS in ReplyMintAccessibilityService. -->
+<!-- The apps the bubble appears in — mirrors TARGET_APPS in ReplyMintAccessibilityService.
+     WA Business is covered by the WhatsApp tile; full-color brand marks, labels for recognition. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal">
@@ -9,125 +9,99 @@
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
         android:layout_weight="1"
+        android:background="@drawable/bg_app_tile"
         android:gravity="center_horizontal"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingVertical="13dp">
 
         <ImageView
-            android:layout_width="46dp"
-            android:layout_height="46dp"
-            android:background="@drawable/bg_icon_badge"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:contentDescription="@string/app_whatsapp"
-            android:padding="11dp"
-            android:src="@drawable/ic_app_whatsapp"
-            app:tint="@color/on_brand_container" />
+            android:src="@drawable/ic_app_whatsapp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="8dp"
             android:text="@string/app_whatsapp"
             android:textColor="@color/text_secondary"
-            android:textSize="11sp" />
+            android:textSize="10.5sp" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
         android:layout_weight="1"
+        android:background="@drawable/bg_app_tile"
         android:gravity="center_horizontal"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingVertical="13dp">
 
         <ImageView
-            android:layout_width="46dp"
-            android:layout_height="46dp"
-            android:background="@drawable/bg_icon_badge"
-            android:contentDescription="@string/app_whatsapp_business"
-            android:padding="11dp"
-            android:src="@drawable/ic_app_whatsapp"
-            app:tint="@color/on_brand_container" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="@string/app_whatsapp_business"
-            android:textColor="@color/text_secondary"
-            android:textSize="11sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:gravity="center_horizontal"
-        android:orientation="vertical">
-
-        <ImageView
-            android:layout_width="46dp"
-            android:layout_height="46dp"
-            android:background="@drawable/bg_icon_badge"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:contentDescription="@string/app_instagram"
-            android:padding="11dp"
-            android:src="@drawable/ic_app_instagram"
-            app:tint="@color/on_brand_container" />
+            android:src="@drawable/ic_app_instagram" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="8dp"
             android:text="@string/app_instagram"
             android:textColor="@color/text_secondary"
-            android:textSize="11sp" />
+            android:textSize="10.5sp" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
         android:layout_weight="1"
+        android:background="@drawable/bg_app_tile"
         android:gravity="center_horizontal"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingVertical="13dp">
 
         <ImageView
-            android:layout_width="46dp"
-            android:layout_height="46dp"
-            android:background="@drawable/bg_icon_badge"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:contentDescription="@string/app_gmail"
-            android:padding="11dp"
-            android:src="@drawable/ic_app_gmail"
-            app:tint="@color/on_brand_container" />
+            android:src="@drawable/ic_app_gmail" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="8dp"
             android:text="@string/app_gmail"
             android:textColor="@color/text_secondary"
-            android:textSize="11sp" />
+            android:textSize="10.5sp" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:background="@drawable/bg_app_tile"
         android:gravity="center_horizontal"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingVertical="13dp">
 
         <ImageView
-            android:layout_width="46dp"
-            android:layout_height="46dp"
-            android:background="@drawable/bg_icon_badge"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:contentDescription="@string/app_linkedin"
-            android:padding="11dp"
-            android:src="@drawable/ic_app_linkedin"
-            app:tint="@color/on_brand_container" />
+            android:src="@drawable/ic_app_linkedin" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="8dp"
             android:text="@string/app_linkedin"
             android:textColor="@color/text_secondary"
-            android:textSize="11sp" />
+            android:textSize="10.5sp" />
     </LinearLayout>
 </LinearLayout>

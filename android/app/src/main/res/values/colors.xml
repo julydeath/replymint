@@ -2,26 +2,35 @@
 <resources>
     <color name="brand">#10B981</color>
     <color name="brand_dark">#0E9F6E</color>
-    <color name="on_brand">#FFFFFF</color>
+    <color name="on_brand">#07130E</color>
 
-    <!-- App chrome (activity_main). These ARE overridden in values-night. -->
-    <color name="surface">#FFFFFF</color>
-    <color name="surface_dim">#F3F4F6</color>
-    <color name="text_primary">#111827</color>
-    <color name="text_secondary">#6B7280</color>
-    <!-- Soft mint chip behind icons; readable pair for text on it. Overridden in values-night. -->
-    <color name="brand_container">#D1FAE5</color>
-    <color name="on_brand_container">#065F46</color>
-    <color name="card_stroke">#E5E7EB</color>
+    <!-- App chrome — the "elevated mint" system is dark-first: one palette in both themes
+         (values-night no longer overrides anything). -->
+    <color name="surface">#0B0F13</color>
+    <color name="surface_dim">#141B22</color>
+    <color name="text_primary">#F2F5F7</color>
+    <color name="text_secondary">#9AA6B2</color>
+    <color name="text_faint">#5D6873</color>
+    <!-- Soft mint chip behind icons; mint reads on it. -->
+    <color name="brand_container">#17322A</color>
+    <color name="on_brand_container">#2BE6A0</color>
+    <color name="card_stroke">#212932</color>
+    <color name="mint_stroke">#4D2BE6A0</color>
+    <color name="cta_hi">#3EF0AE</color>
+    <color name="avatar_start">#5D6DF0</color>
+    <color name="avatar_end">#31B3C4</color>
+    <color name="error">#FF6B6B</color>
+    <color name="error_stroke">#66FF6B6B</color>
 
-    <!-- Overlay "dark glass". Deliberately NOT overridden in values-night: the bubble floats over
-         other apps and stays dark whatever the phone theme is. Night-invariant by construction. -->
-    <color name="glass_surface">#E6141A1F</color>
+    <!-- Overlay "dark glass". The bubble floats over other apps and stays dark whatever the
+         host app looks like. -->
+    <color name="glass_surface">#EE12181E</color>
     <color name="glass_surface_press">#F21C232A</color>
-    <color name="glass_stroke">#26FFFFFF</color>
+    <color name="glass_stroke">#24FFFFFF</color>
     <color name="glass_text">#F2F5F7FA</color>
     <color name="glass_text_dim">#99EAF0F5</color>
     <color name="mint">#2BE6A0</color>
     <color name="mint_dim">#332BE6A0</color>
-    <color name="on_mint">#08130E</color>
+    <color name="mint_faint">#242BE6A0</color>
+    <color name="on_mint">#07130E</color>
 </resources>

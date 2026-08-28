@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A real filled button. The old bg_menu_button was a ripple over a transparent shape, so the
-     Stop control had no resting appearance and looked like unstyled text until pressed. -->
+<!-- Filled mint CTA with a light→deep gradient (voice "Stop & use", plain-View buttons). -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="#33FFFFFF">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/mint" />
+            <gradient
+                android:angle="0"
+                android:endColor="@color/brand"
+                android:startColor="@color/cta_hi" />
             <corners android:radius="@dimen/row_radius" />
         </shape>
     </item>

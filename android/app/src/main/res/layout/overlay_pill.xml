@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Floating glass status pill — replaces every system toast the overlay used to raise.
+     Its window is FLAG_NOT_TOUCHABLE: it informs, it never intercepts. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:padding="@dimen/overlay_shadow_pad">
+
+    <LinearLayout
+        android:id="@+id/pill_card"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_pill"
+        android:elevation="12dp"
+        android:gravity="center_vertical"
+        android:minHeight="40dp"
+        android:orientation="horizontal"
+        android:outlineProvider="background"
+        android:paddingStart="12dp"
+        android:paddingEnd="16dp">
+
+        <ProgressBar
+            android:id="@+id/pill_spinner"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:indeterminateTint="@color/mint" />
+
+        <ImageView
+            android:id="@+id/pill_icon"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:importantForAccessibility="no"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/pill_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="9dp"
+            android:fontFamily="@font/inter_semibold"
+            android:textColor="@color/glass_text"
+            android:textSize="13sp" />
+    </LinearLayout>
+</FrameLayout>

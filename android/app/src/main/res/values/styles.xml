@@ -27,5 +27,27 @@
         <item name="android:textColor">@color/glass_text</item>
         <item name="android:textSize">15sp</item>
         <item name="android:letterSpacing">0.01</item>
+        <item name="android:fontFamily">@font/inter</item>
+    </style>
+
+    <!-- Small all-caps section label inside a home card ("TODAY'S DRAFTS", "REPLY STYLE"…). -->
+    <style name="CardEyebrow">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:letterSpacing">0.13</item>
+        <item name="android:textColor">@color/text_faint</item>
+        <item name="android:fontFamily">@font/inter_semibold</item>
+    </style>
+
+    <!-- Display titles (onboarding headlines, home greeting). -->
+    <style name="DisplayTitle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">@font/space_grotesk</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">-0.02</item>
     </style>
 </resources>

@@ -7,23 +7,26 @@
     android:orientation="vertical"
     android:padding="32dp">
 
-    <ImageView
+    <FrameLayout
         android:layout_width="88dp"
         android:layout_height="88dp"
-        android:background="@drawable/bg_icon_badge"
-        android:contentDescription="@string/onb_signin_title"
-        android:padding="22dp"
-        android:src="@drawable/ic_google"
-        app:tint="@color/on_brand_container" />
+        android:background="@drawable/bg_micdot">
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:contentDescription="@string/onb_signin_title"
+            android:src="@drawable/ic_google"
+            app:tint="@color/mint" />
+    </FrameLayout>
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/DisplayTitle"
         android:layout_marginTop="28dp"
+        android:gravity="center"
         android:text="@string/onb_signin_title"
-        android:textColor="@color/text_primary"
-        android:textSize="28sp"
-        android:textStyle="bold" />
+        android:textSize="28sp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -33,15 +36,15 @@
         android:lineSpacingExtra="4dp"
         android:text="@string/onb_signin_sub"
         android:textColor="@color/text_secondary"
-        android:textSize="15sp" />
+        android:textSize="14sp" />
 
     <TextView
         android:id="@+id/signin_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:textColor="@color/brand"
-        android:textSize="15sp"
-        android:textStyle="bold"
+        android:fontFamily="@font/inter_semibold"
+        android:textColor="@color/mint"
+        android:textSize="14sp"
         android:visibility="gone" />
 </LinearLayout>

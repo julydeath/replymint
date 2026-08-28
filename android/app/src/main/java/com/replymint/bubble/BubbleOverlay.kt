@@ -16,8 +16,8 @@ import android.view.WindowInsets
 import android.view.WindowManager
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
+import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import com.replymint.R
 import com.replymint.accessibility.ReplyMintAccessibilityService
 import com.replymint.core.EngineResult
@@ -62,6 +62,8 @@ class BubbleOverlay(private val context: Context) {
     private var menuView: View? = null
     private var voicePanelView: View? = null
     private var voiceInput: VoiceInput? = null
+    private var pillView: View? = null
+    private var pillHideRunnable: Runnable? = null
 
     /** Guards the reopen-on-dismiss race — see [toggleMenu]. */
     private var menuClosedAtMs = 0L
@@ -89,6 +91,7 @@ class BubbleOverlay(private val context: Context) {
         // leak the window if the service tore down before it finished.
         hideMenu(animate = false)
         hideVoicePanel()
+        hidePill(animate = false)
         voiceInput?.release()
         voiceInput = null
         bubbleView?.let { runCatching { windowManager.removeView(it) } }
@@ -210,14 +213,15 @@ class BubbleOverlay(private val context: Context) {
     private fun onUndo() {
         hideMenu()
         val service = ReplyMintAccessibilityService.instance
-            ?: return toast(context.getString(R.string.undo_none))
+            ?: return showPill(Pill.ERROR, context.getString(R.string.undo_none))
         val snapshot = UndoStore.peek(service.currentPackage())
-            ?: return toast(context.getString(R.string.undo_none))
+            ?: return showPill(Pill.ERROR, context.getString(R.string.undo_none))
 
         val restored = service.restoreDraft(snapshot.draft, snapshot.previousText)
         UndoStore.clear()
         // If the box no longer holds our draft the user has typed since — their edit wins.
-        toast(context.getString(if (restored) R.string.undo_done else R.string.undo_changed))
+        if (restored) showPill(Pill.OK, context.getString(R.string.undo_done))
+        else showPill(Pill.ERROR, context.getString(R.string.undo_changed))
     }
 
     // ---- Voice ------------------------------------------------------------------------------
@@ -226,7 +230,7 @@ class BubbleOverlay(private val context: Context) {
         showVoicePanel()
         smoothedLevel = 0f
         val transcript = voicePanelView?.findViewById<TextView>(R.id.voice_transcript)
-        val level = voicePanelView?.findViewById<View>(R.id.voice_level)
+        val wave = voicePanelView?.findViewById<WaveformView>(R.id.voice_wave)
         voiceInput = VoiceInput(context).also { vi ->
             vi.start(object : VoiceInput.Listener {
                 override fun onPartial(text: String) {
@@ -235,26 +239,23 @@ class BubbleOverlay(private val context: Context) {
                 }
 
                 override fun onLevel(rms: Float) {
-                    // Fast attack, slow release. Assigning each 40 ms frame straight to scaleX
+                    // Fast attack, slow release. Feeding each 40 ms frame straight to the wave
                     // reads as noise; smoothing symmetrically reads as lag.
                     val target = rms.coerceIn(0f, 10f) / 10f
                     val alpha = if (target > smoothedLevel) 0.5f else 0.12f
                     smoothedLevel += (target - smoothedLevel) * alpha
-                    level?.apply {
-                        pivotX = 0f
-                        scaleX = smoothedLevel.coerceAtLeast(0.06f)
-                    }
+                    wave?.push(smoothedLevel)
                 }
 
                 override fun onFinal(result: VoiceResult) {
                     hideVoicePanel()
-                    if (result.text.isBlank()) toast("Didn't catch that")
+                    if (result.text.isBlank()) showPill(Pill.ERROR, context.getString(R.string.voice_none))
                     else runReply(ReplyAction.VOICE, result)
                 }
 
                 override fun onError(message: String) {
                     hideVoicePanel()
-                    toast(message)
+                    showPill(Pill.ERROR, message)
                 }
             })
         }
@@ -279,13 +280,87 @@ class BubbleOverlay(private val context: Context) {
     }
 
     private fun runReply(action: ReplyAction, voice: VoiceResult?) {
-        toast("Writing…")
+        showPill(Pill.WRITING, context.getString(R.string.pill_writing))
         scope.launch {
             when (val result = ReplyEngine.run(context.applicationContext, action, voice)) {
-                is EngineResult.Success -> { /* draft is already in the box */ }
-                is EngineResult.Error -> toast(result.message)
+                is EngineResult.Success -> showPill(Pill.OK, context.getString(R.string.pill_ready))
+                is EngineResult.Error -> showPill(Pill.ERROR, result.message)
             }
         }
+    }
+
+    // ---- Status pill (replaces system toasts) -----------------------------------------------
+
+    private enum class Pill { WRITING, OK, ERROR }
+
+    /**
+     * Glass pill floating above the host app's composer. Its window is NOT_TOUCHABLE so it can
+     * never swallow a tap meant for the app underneath. Only one pill exists at a time — a new
+     * state replaces the old one in place.
+     */
+    private fun showPill(kind: Pill, message: String) {
+        hidePill(animate = false)
+        val view = inflater.inflate(R.layout.overlay_pill, null)
+        val card = view.findViewById<View>(R.id.pill_card)
+        val spinner = view.findViewById<View>(R.id.pill_spinner)
+        val icon = view.findViewById<ImageView>(R.id.pill_icon)
+        spinner.visibility = if (kind == Pill.WRITING) View.VISIBLE else View.GONE
+        icon.visibility = if (kind == Pill.WRITING) View.GONE else View.VISIBLE
+        when (kind) {
+            Pill.WRITING -> card.setBackgroundResource(R.drawable.bg_pill)
+            Pill.OK -> {
+                card.setBackgroundResource(R.drawable.bg_pill_ok)
+                icon.setImageResource(R.drawable.ic_check_circle)
+                icon.setColorFilter(context.getColor(R.color.mint))
+            }
+            Pill.ERROR -> {
+                card.setBackgroundResource(R.drawable.bg_pill_err)
+                icon.setImageResource(R.drawable.ic_alert)
+                icon.setColorFilter(context.getColor(R.color.error))
+            }
+        }
+        view.findViewById<TextView>(R.id.pill_text).text = message
+
+        val params = overlayParams().apply {
+            flags = flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+            gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+            y = context.dp(PILL_BOTTOM_DP)
+        }
+        runCatching { windowManager.addView(view, params) }
+        pillView = view
+
+        view.alpha = 0f
+        view.translationY = context.dp(12).toFloat()
+        view.animate().alpha(1f).translationY(0f)
+            .setDuration(180)
+            .setInterpolator(DecelerateInterpolator(1.4f))
+            .start()
+
+        // WRITING keeps a long fuse purely as a watchdog: the engine result normally replaces it.
+        val ttl = when (kind) {
+            Pill.WRITING -> 20_000L
+            Pill.OK -> 2_200L
+            Pill.ERROR -> 3_000L
+        }
+        val hide = Runnable { hidePill() }
+        pillHideRunnable = hide
+        view.postDelayed(hide, ttl)
+    }
+
+    private fun hidePill(animate: Boolean = true) {
+        val view = pillView ?: return
+        pillView = null
+        pillHideRunnable?.let(view::removeCallbacks)
+        pillHideRunnable = null
+        if (!animate) {
+            runCatching { windowManager.removeView(view) }
+            return
+        }
+        view.animate().alpha(0f).translationY(context.dp(10).toFloat())
+            .setDuration(150)
+            .setInterpolator(AccelerateInterpolator())
+            .withEndAction { runCatching { windowManager.removeView(view) } }
+            .start()
     }
 
     // ---- Positioning ------------------------------------------------------------------------
@@ -394,12 +469,11 @@ class BubbleOverlay(private val context: Context) {
         flags = flags or WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
     }
 
-    private fun toast(message: String) =
-        Toast.makeText(context.applicationContext, message, Toast.LENGTH_SHORT).show()
-
     private companion object {
         /** Must match @dimen/overlay_shadow_pad. */
         const val SHADOW_PAD_DP = 10
         const val REOPEN_GUARD_MS = 250L
+        /** Pill offset from the bottom edge — floats above the host app's composer. */
+        const val PILL_BOTTOM_DP = 96
     }
 }

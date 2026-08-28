@@ -7,12 +7,9 @@
     android:padding="32dp">
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/DisplayTitle"
         android:text="@string/onb_apps_title"
-        android:textColor="@color/text_primary"
-        android:textSize="28sp"
-        android:textStyle="bold" />
+        android:textSize="28sp" />
 
     <include
         layout="@layout/view_supported_apps"
@@ -27,5 +24,5 @@
         android:lineSpacingExtra="4dp"
         android:text="@string/onb_apps_sub"
         android:textColor="@color/text_secondary"
-        android:textSize="15sp" />
+        android:textSize="14sp" />
 </LinearLayout>
