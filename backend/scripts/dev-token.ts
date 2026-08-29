@@ -15,10 +15,11 @@ const url = process.env.DATABASE_URL;
 if (!url) throw new Error("DATABASE_URL is not set (run with --env-file=.env)");
 const sql = postgres(url, { prepare: false, max: 1 });
 
+// Pro plan: the desktop app's cloud STT is pro-gated, and this token exists to test it.
 const [user] = await sql<{ id: string }[]>`
-  insert into users (google_sub, email, name)
-  values ('dev-local', 'dev-local@test.invalid', 'Local Dev')
-  on conflict (google_sub) do update set email = excluded.email
+  insert into users (google_sub, email, name, plan)
+  values ('dev-local', 'dev-local@test.invalid', 'Local Dev', 'pro')
+  on conflict (google_sub) do update set email = excluded.email, plan = 'pro'
   returning id
 `;
 if (!user) throw new Error("failed to upsert dev user");

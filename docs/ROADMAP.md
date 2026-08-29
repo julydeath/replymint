@@ -67,3 +67,7 @@ Shared business Reply Brains, admin controls, seat billing, custom pricing.
 | Personal | Free / $4.99/mo |
 | Professional | $19–$49/mo |
 | Team / Enterprise | Custom |
+
+Any paid tier sets `users.plan = 'pro'`, which is a separate, server-enforced axis from
+mode: it gates **cloud STT** (`/v1/stt/stream`, Deepgram). Free accounts in either mode
+use native on-device transcription (V2 context correction included — that stays free).

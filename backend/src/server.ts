@@ -2,7 +2,14 @@ import { serve } from "@hono/node-server";
 import { createNodeWebSocket } from "@hono/node-ws";
 import { Hono } from "hono";
 import { exchangeGoogleToken, requireAuth, signOut, type AuthEnv } from "./auth.js";
-import { bumpSttSeconds, bumpUsage, pingDb, todayUsage } from "./db.js";
+import {
+  bumpSttSeconds,
+  bumpUsage,
+  pingDb,
+  todaySttSeconds,
+  todayUsage,
+  type User,
+} from "./db.js";
 import { generateReply } from "./llm.js";
 import { buildSystem, buildUser } from "./prompts.js";
 import { openSttSession, type SttSession } from "./stt.js";
@@ -23,6 +30,14 @@ const exemptEmails = new Set(
 );
 const isExempt = (email: string) => exemptEmails.has(email.toLowerCase());
 
+// Cloud STT (V3) is pro-only. Exempt dev emails count as pro so testing needs no DB edits;
+// the users.plan column stays the durable source of truth until billing (B4) writes it.
+const isPro = (user: User) => user.plan === "pro" || isExempt(user.email);
+
+// Daily ceiling on proxied STT audio per pro user (seconds) — bounds vendor spend.
+// Exempt emails bypass it; MAX_AUDIO_SECONDS already bounds any single session.
+const STT_DAILY_SECONDS = Number(process.env.STT_DAILY_SECONDS ?? 1800);
+
 app.get("/health", (c) => c.json({ ok: true }));
 
 // DB connectivity probe (error message only, never credentials) — for diagnosing deploys.
@@ -40,6 +55,7 @@ app.get("/v1/me", requireAuth, async (c) => {
   return c.json({
     email: user.email,
     name: user.name,
+    plan: isPro(user) ? "pro" : "free", // effective plan — clients only care about entitlement
     todayCount: await todayUsage(user.id),
     dailyLimit: FREE_DAILY_LIMIT,
   });
@@ -107,17 +123,34 @@ const MAX_AUDIO_SECONDS = 300;
  *   → text  {"type":"finish"}                                      no more audio
  *   ← {"type":"ready"} | {"type":"partial","text"} | {"type":"final","text"}
  *   ← {"type":"done","text","seconds"}  full transcript, then we close
- *   ← {"type":"error","message"}
+ *   ← {"type":"error","message","code"?}  code "pro_required" (close 4403) means the
+ *     account isn't entitled — stop retrying and refresh /v1/me; "stt_quota" (close
+ *     4429) means today's STT allowance is spent. Other errors close 1011.
  */
 app.get(
   "/v1/stt/stream",
   requireAuth,
   upgradeWebSocket((c) => {
-    const userId = c.var.user.id;
+    const user = c.var.user;
+    const userId = user.id;
     let cfg: SttConfig = SttConfigSchema.parse({ type: "config" });
     let session: SttSession | null = null;
     let audioBytes = 0;
     const finals: string[] = [];
+
+    // Entitlement gate, resolved in onOpen. The plan check is synchronous; the daily
+    // quota read is one async query, so audio racing ahead of it is buffered and
+    // replayed — the first syllables of an utterance must not be lost to a DB round trip.
+    let gate: "pending" | "ok" | "denied" = "pending";
+    const earlyAudio: Buffer[] = [];
+    let earlyBytes = 0;
+    let finishWhileEarly = false;
+    const EARLY_AUDIO_CAP = 1024 * 1024; // ~32s at 16kHz — far beyond any quota-check RTT
+
+    type Ws = {
+      send: (data: string) => void;
+      close: (code?: number, reason?: string) => void;
+    };
 
     const meter = () => {
       const seconds = Math.round(audioBytes / (cfg.sampleRate * 2));
@@ -127,7 +160,43 @@ app.get(
       );
     };
 
+    const deny = (ws: Ws, code: string, message: string, closeCode: number) => {
+      gate = "denied";
+      earlyAudio.length = 0;
+      ws.send(JSON.stringify({ type: "error", code, message }));
+      ws.close(closeCode, code);
+    };
+
+    const admit = (ws: Ws) => {
+      if (gate === "denied") return;
+      gate = "ok";
+      for (const chunk of earlyAudio.splice(0)) handleAudio(chunk, ws);
+      if (finishWhileEarly) session?.finish();
+    };
+
     return {
+      onOpen(_evt, ws) {
+        if (!isPro(user)) {
+          return deny(ws, "pro_required", "Cloud transcription requires ReplyMint Pro", 4403);
+        }
+        // Exempt devs bypass the daily cap (their usage is still metered, like /v1/reply).
+        if (isExempt(user.email)) return admit(ws);
+        todaySttSeconds(userId).then(
+          (seconds) => {
+            if (seconds >= STT_DAILY_SECONDS) {
+              deny(ws, "stt_quota", "Daily transcription limit reached", 4429);
+            } else {
+              admit(ws);
+            }
+          },
+          (e) => {
+            // Fail open: a metering-read hiccup shouldn't kill dictation, and spend
+            // is still bounded per session by MAX_AUDIO_SECONDS.
+            console.error("stt quota check failed:", (e as Error).message);
+            admit(ws);
+          }
+        );
+      },
       onMessage(evt, ws) {
         const send = (msg: object) => ws.send(JSON.stringify(msg));
 
@@ -138,6 +207,11 @@ app.get(
             if (session) return send({ type: "error", message: "config must precede audio" });
             cfg = parsed.data;
           } else {
+            if (gate === "pending" && earlyAudio.length > 0) {
+              // Quota check still in flight but audio is buffered: finish once admitted.
+              finishWhileEarly = true;
+              return;
+            }
             // finish with no audio ever sent: nothing to flush, report an empty transcript.
             if (!session) return send({ type: "done", text: "", seconds: 0 });
             session.finish();
@@ -145,18 +219,31 @@ app.get(
           return;
         }
 
+        if (gate === "denied") return;
         const chunk = Buffer.from(evt.data as ArrayBuffer);
-        session ??= startSession(ws, send);
-        if (!session) return; // startSession already reported the error and closed
-        audioBytes += chunk.length;
-        session.sendAudio(chunk);
-        if (audioBytes >= MAX_AUDIO_SECONDS * cfg.sampleRate * 2) session.finish();
+        if (gate === "pending") {
+          if (earlyBytes + chunk.length <= EARLY_AUDIO_CAP) {
+            earlyAudio.push(chunk);
+            earlyBytes += chunk.length;
+          }
+          return;
+        }
+        handleAudio(chunk, ws);
       },
       onClose() {
         session?.destroy();
         meter();
       },
     };
+
+    function handleAudio(chunk: Buffer, ws: Ws) {
+      const send = (msg: object) => ws.send(JSON.stringify(msg));
+      session ??= startSession(ws, send);
+      if (!session) return; // startSession already reported the error and closed
+      audioBytes += chunk.length;
+      session.sendAudio(chunk);
+      if (audioBytes >= MAX_AUDIO_SECONDS * cfg.sampleRate * 2) session.finish();
+    }
 
     function startSession(
       ws: { close: (code?: number, reason?: string) => void },

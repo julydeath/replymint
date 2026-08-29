@@ -16,6 +16,9 @@ field. You review and tap **Send** yourself. ReplyMint never sends anything.
 | Memory | None (stateless) | Private, editable, deletable Reply Brain |
 | Price | Free / $4.99/mo | $19–$49/mo |
 
+Paying (either mode) also unlocks **cloud transcription** (Deepgram, pro-gated server-side);
+free accounts dictate with the on-device engine — audio never leaves the phone.
+
 ## The three actions
 
 1. **Auto Reply Draft** — reads the visible conversation, writes one best reply.

@@ -22,15 +22,27 @@ if (!url) throw new Error("DATABASE_URL is not set (run with --env-file=.env)");
 const sql = postgres(url, { prepare: false, max: 2 });
 const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
 
+// The main smoke user is pro — /v1/stt/stream is pro-gated.
 const [user] = await sql<{ id: string }[]>`
-  insert into users (google_sub, email, name)
-  values ('smoke-test-stt', 'stt-smoke@test.invalid', 'STT Smoke')
-  on conflict (google_sub) do update set email = excluded.email
+  insert into users (google_sub, email, name, plan)
+  values ('smoke-test-stt', 'stt-smoke@test.invalid', 'STT Smoke', 'pro')
+  on conflict (google_sub) do update set email = excluded.email, plan = 'pro'
   returning id
 `;
 if (!user) throw new Error("failed to create smoke user");
 const token = "rt_" + randomBytes(32).toString("base64url");
 await sql`insert into tokens (token_hash, user_id) values (${sha256(token)}, ${user.id})`;
+
+// A second, free-plan user to assert the pro gate.
+const [freeUser] = await sql<{ id: string }[]>`
+  insert into users (google_sub, email, name, plan)
+  values ('smoke-test-stt-free', 'stt-smoke-free@test.invalid', 'STT Smoke Free', 'free')
+  on conflict (google_sub) do update set email = excluded.email, plan = 'free'
+  returning id
+`;
+if (!freeUser) throw new Error("failed to create free smoke user");
+const freeToken = "rt_" + randomBytes(32).toString("base64url");
+await sql`insert into tokens (token_hash, user_id) values (${sha256(freeToken)}, ${freeUser.id})`;
 
 try {
   // 1 — no token must be rejected at the upgrade.
@@ -77,8 +89,31 @@ try {
     select count, stt_seconds from usage_daily where user_id = ${user.id}
   `;
   console.log("usage_daily:", usage);
+
+  // 4 — a free-plan user must be turned away with a typed pro_required error + close 4403.
+  await new Promise<void>((resolve, reject) => {
+    const ws = new WebSocket(`${BASE}/v1/stt/stream`, {
+      headers: { Authorization: `Bearer ${freeToken}` },
+    });
+    let sawProRequired = false;
+    ws.on("message", (d) => {
+      const msg = JSON.parse(d.toString());
+      sawProRequired = msg.type === "error" && msg.code === "pro_required";
+      console.log("<- (free)", d.toString());
+    });
+    ws.on("close", (code) => {
+      if (code === 4403 && sawProRequired) {
+        console.log("free user rejected as expected: pro_required, close", code);
+      } else {
+        console.error(`FAIL: free user close=${code}, pro_required frame=${sawProRequired}`);
+      }
+      resolve();
+    });
+    ws.on("error", reject);
+  });
 } finally {
   await sql`delete from users where id = ${user.id}`;
-  console.log("smoke user cleaned up");
+  await sql`delete from users where id = ${freeUser.id}`;
+  console.log("smoke users cleaned up");
   await sql.end();
 }

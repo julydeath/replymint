@@ -24,3 +24,9 @@ create table if not exists usage_daily (
 
 -- V3 cloud STT metering: seconds of audio proxied per day (content is never stored).
 alter table usage_daily add column if not exists stt_seconds int not null default 0;
+
+-- Plan gates cloud STT (V3): 'pro' unlocks /v1/stt/stream. Orthogonal to mode
+-- (personal/professional). Until billing (B4) lands this is flipped by hand;
+-- FREE_LIMIT_EXEMPT_EMAILS accounts are treated as pro at runtime.
+alter table users add column if not exists plan text not null default 'free'
+  check (plan in ('free', 'pro'));

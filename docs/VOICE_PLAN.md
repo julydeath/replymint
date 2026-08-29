@@ -289,19 +289,30 @@ ships in the free tier.** (Keep `voiceInstruction` accepted server-side for old 
 **Status (2026-08-29): backend proxy shipped and smoke-tested** — `GET /v1/stt/stream`
 WebSocket in `backend/src/server.ts`, provider switch in `stt.ts` (`deepgram` | `mock`),
 Deepgram streaming client in `deepgram.ts`, per-user seconds metering in `usage_daily.stt_seconds`.
-Verified end-to-end with the mock provider (`npm run stt:smoke`). Remaining: a Deepgram
-account + key (+ zero-retention agreement — launch gate), real-audio WER check against the
-gate below, and the Android dual-engine client.
+Verified end-to-end with the mock provider (`npm run stt:smoke`), and later the same day
+with real Deepgram speech via the Mac desktop app. Remaining: the zero-retention agreement
+(launch gate — checklist in PRIVACY.md), real-audio WER check against the gate below, and
+the Android dual-engine client.
+
+**Tier axes, reconciled:** `plan` (`free`/`pro`, `users.plan`, server-enforced) gates
+*transcription quality* — cloud STT is pro-only, native + V2 context correction are free.
+`mode` (personal/professional) prices the *reply product* (memory, model tier). The two are
+orthogonal: a $4.99 Personal subscriber and a Professional subscriber both get `plan='pro'`;
+free accounts of either mode stay on native STT. Until billing (B4) writes `users.plan`,
+it is flipped by hand and exempt dev emails count as pro at runtime.
 
 - Provider: **Deepgram** streaming (lowest latency, keyword boosting, ~$0.005/min).
   Same pattern as `llm.ts`: an `stt.ts` with `STT_PROVIDER` switch so we can swap.
 - Route: device → **backend WebSocket proxy** → Deepgram. Keys stay server-side, usage
   metering is trivial. (Later: short-lived direct tokens if proxy latency ever matters.)
 - **Dual-engine UX**: native partials paint the panel instantly; cloud transcript arrives
-  a beat later and wins if it differs. If the draft was already written from the native
-  transcript and the cloud one materially differs, silently regenerate and replace the
-  draft in the box. For dictation apps a changing transcript is a bug; for us the
-  transcript is an intermediate — the *draft* is the product.
+  a beat later and wins if it differs. For dictation apps a changing transcript is a bug;
+  for us the transcript is an intermediate — the *draft* is the product.
+  *v1 ships pre-draft reconciliation only*: at finish, wait ≤1.2s for the cloud `done`
+  and build the reply request from it if it lands; otherwise the native transcript ships.
+  Silent post-draft regeneration ("cloud arrived late and materially differs → replace the
+  draft in the box") is a documented follow-up — it doubles LLM cost per utterance and
+  races the undo store / user edits, so it needs its own design pass.
 - Contract requirement: **zero-retention agreement** with the STT vendor, or the privacy
   promise in README/PRIVACY.md is false the day this ships.
 

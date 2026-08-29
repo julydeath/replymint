@@ -22,6 +22,7 @@ export interface User {
   id: string;
   email: string;
   name: string | null;
+  plan: "free" | "pro";
 }
 
 export async function upsertUserByGoogle(
@@ -33,7 +34,7 @@ export async function upsertUserByGoogle(
     insert into users (google_sub, email, name)
     values (${googleSub}, ${email}, ${name})
     on conflict (google_sub) do update set email = excluded.email, name = excluded.name
-    returning id, email, name
+    returning id, email, name, plan
   `;
   const user = rows[0];
   if (!user) throw new Error("user upsert returned no row");
@@ -50,7 +51,7 @@ export async function userForTokenHash(tokenHash: string): Promise<User | null> 
     update tokens set last_used_at = now()
     from users
     where tokens.token_hash = ${tokenHash} and users.id = tokens.user_id
-    returning users.id, users.email, users.name
+    returning users.id, users.email, users.name, users.plan
   `;
   return rows[0] ?? null;
 }
@@ -65,6 +66,15 @@ export async function todayUsage(userId: string): Promise<number> {
     where user_id = ${userId} and day = (now() at time zone 'utc')::date
   `;
   return rows[0]?.count ?? 0;
+}
+
+/** Seconds of cloud-STT audio already proxied for this user today (0 if no row). */
+export async function todaySttSeconds(userId: string): Promise<number> {
+  const rows = await sql()<{ stt_seconds: number }[]>`
+    select stt_seconds from usage_daily
+    where user_id = ${userId} and day = (now() at time zone 'utc')::date
+  `;
+  return rows[0]?.stt_seconds ?? 0;
 }
 
 /** Connectivity probe for /health/db — returns the error message on failure, never throws. */
