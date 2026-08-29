@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Settings window talks to the Rust core via invoke/events only.",
-  "windows": ["settings"],
+  "description": "Settings window talks to the Rust core via invoke/events only; the overlay pill listens to the same dictation events.",
+  "windows": ["settings", "overlay"],
   "permissions": ["core:default"]
 }

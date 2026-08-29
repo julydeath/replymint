@@ -101,14 +101,28 @@
       $("mode-note").textContent = MODE_NOTES[mode];
       $("clean-row").style.opacity = mode === "dictation" ? "1" : "0.4";
     };
-    $("mode-dictation").onclick = () => { mode = "dictation"; renderMode(); };
-    $("mode-assistant").onclick = () => { mode = "assistant"; renderMode(); };
+    // Mode and polish apply IMMEDIATELY — only mutating their own fields, so
+    // half-edited URL/token inputs are not persisted as a side effect. (The
+    // old behavior — mode waits for Save with no unsaved-state hint — had the
+    // user testing "Assistant" while dictation mode was still saved.)
+    const applyNow = async (patch, msg) => {
+      try {
+        const s = await invoke("get_settings");
+        await invoke("save_settings", { new: { ...s, ...patch } });
+        status(msg, "", true);
+      } catch (e) { status(String(e), "err"); }
+    };
+    $("mode-dictation").onclick = () => { mode = "dictation"; renderMode(); applyNow({ mode }, "Dictation mode on."); };
+    $("mode-assistant").onclick = () => { mode = "assistant"; renderMode(); applyNow({ mode }, "Assistant mode on."); };
 
     invoke("get_settings").then((s) => {
       $("url").value = s.backend_url;
       $("token").value = s.token;
       $("hotkey").value = s.hotkey;
       $("clean").checked = s.clean_dictation !== false;
+      $("clean").onchange = () =>
+        applyNow({ clean_dictation: $("clean").checked },
+                 $("clean").checked ? "Dictation polish on." : "Dictation polish off.");
       mode = s.mode === "assistant" ? "assistant" : "dictation";
       renderMode();
     });
@@ -148,13 +162,17 @@
       draft: "Draft inserted.",
       clean: "Polished & inserted.",
     };
+    // Live transcript accumulates: partial/final events carry only the current
+    // utterance segment, so keep the finished segments and append the partial.
+    let finals = [];
     listen("dictation", ({ payload }) => {
       const { kind, text } = payload;
       if (kind === "state") {
-        if (text === "recording") sticky = false; // new session: clear old warnings
+        if (text === "recording") { sticky = false; finals = []; } // new session
         status(text === "idle" ? "" : `● ${text}`);
       }
-      else if (kind === "partial" || kind === "final") $("transcript").textContent = text;
+      else if (kind === "partial") $("transcript").textContent = [...finals, text].filter(Boolean).join(" ");
+      else if (kind === "final") { if (text) finals.push(text); $("transcript").textContent = finals.join(" "); }
       else if (kind === "done") $("transcript").textContent = text;
       else if (kind === "inserted") status(INSERT_LABELS[text] || "Inserted.");
       else if (kind === "warn") status(text, "warn");

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ReplyMint Overlay</title>
+  <style>
+    /* The window is transparent and click-through; the pill is the only visual. */
+    :root {
+      --bg: rgba(15, 26, 20, 0.92); --line: rgba(74, 222, 128, 0.25);
+      --text: #e7f3ec; --dim: #8fa89b; --mint: #4ade80;
+      --err: #f87171; --warn: #fbbf24;
+    }
+    * { box-sizing: border-box; margin: 0; }
+    html, body { background: transparent; height: 100%; overflow: hidden; }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      font: 14px/1.4 -apple-system, "Inter", sans-serif;
+      user-select: none; cursor: default;
+    }
+    #pill {
+      display: flex; align-items: center; gap: 10px;
+      max-width: 560px; min-width: 220px; height: 44px;
+      padding: 0 18px 0 14px; border-radius: 22px;
+      background: var(--bg); border: 1px solid var(--line);
+      color: var(--text);
+      opacity: 0; transform: translateY(6px);
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+    #pill.show { opacity: 1; transform: none; }
+    #dot {
+      width: 10px; height: 10px; border-radius: 50%; flex: none;
+      background: var(--mint);
+    }
+    #dot.recording { background: var(--err); animation: pulse 1.2s ease-in-out infinite; }
+    #dot.busy { background: var(--mint); animation: pulse 0.8s ease-in-out infinite; }
+    #dot.warn { background: var(--warn); }
+    #dot.err { background: var(--err); }
+    @keyframes pulse { 50% { opacity: 0.35; } }
+    #text {
+      overflow: hidden; white-space: nowrap;
+      /* rtl container + ltr content keeps the END of long text visible. */
+      direction: rtl; text-align: left;
+    }
+    #text bdo { direction: ltr; unicode-bidi: bidi-override; }
+    #text .dim { color: var(--dim); }
+    #text.warn bdo { color: var(--warn); }
+    #text.err bdo { color: var(--err); }
+  </style>
+</head>
+<body>
+  <div id="pill">
+    <div id="dot"></div>
+    <div id="text"><bdo class="dim">Listening…</bdo></div>
+  </div>
+
+  <script>
+    const { listen } = window.__TAURI__.event;
+    const pill = document.getElementById("pill");
+    const dot = document.getElementById("dot");
+    const text = document.getElementById("text");
+
+    const set = (dotCls, html, textCls = "") => {
+      dot.className = dotCls;
+      text.className = textCls;
+      text.innerHTML = html;
+    };
+    const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+    const MODE_LABELS = {
+      "assistant": "Listening (Assistant)…",
+      "dictation+polish": "Listening (Dictation, polish on)…",
+      "dictation": "Listening (Dictation)…",
+    };
+    let listeningLabel = "Listening…";
+    const STATES = {
+      transcribing: ["busy", '<bdo class="dim">Transcribing…</bdo>'],
+      polishing:    ["busy", '<bdo class="dim">Polishing…</bdo>'],
+      writing:      ["busy", '<bdo class="dim">Writing your draft…</bdo>'],
+    };
+    const INSERTED = {
+      ax: "Inserted",
+      paste: "Inserted",
+      draft: "Draft inserted",
+      clean: "Polished & inserted",
+    };
+
+    // warn/err hold the pill for a few seconds so fallbacks are actually seen,
+    // instead of vanishing with the idle state right after.
+    let holdTimer = null;
+    const hold = (dotCls, t, textCls, ms) => {
+      pill.classList.add("show");
+      set(dotCls, `<bdo>${esc(t)}</bdo>`, textCls);
+      clearTimeout(holdTimer);
+      holdTimer = setTimeout(() => { holdTimer = null; pill.classList.remove("show"); }, ms);
+    };
+
+    // Live transcript accumulates across utterance pauses: each STT partial/
+    // final event carries only the current segment, so keep the finals and
+    // append the in-flight partial.
+    let finals = [];
+    const live = (partial) => [...finals, partial].filter(Boolean).join(" ");
+
+    listen("dictation", ({ payload }) => {
+      const { kind, text: t } = payload;
+      if (kind === "mode") { listeningLabel = MODE_LABELS[t] || "Listening…"; return; }
+      if (kind === "warn") return hold("warn", t, "warn", 6000);
+      if (kind === "error") return hold("err", t, "err", 6000);
+      if (kind === "state" && t === "recording") {
+        finals = [];
+        clearTimeout(holdTimer); holdTimer = null;
+        pill.classList.add("show");
+      }
+      if (holdTimer) return; // a warn/error (or ✓) is on screen — don't overwrite it
+      if (kind === "state") {
+        if (t === "idle") pill.classList.remove("show");
+        else if (t === "recording") set("recording", `<bdo class="dim">${esc(listeningLabel)}</bdo>`);
+        else if (STATES[t]) set(...STATES[t]);
+      } else if (kind === "partial") {
+        set(dot.className, `<bdo>${esc(live(t))}</bdo>`);
+      } else if (kind === "final") {
+        if (t) finals.push(t);
+        set(dot.className, `<bdo>${esc(live(""))}</bdo>`);
+      } else if (kind === "done") {
+        if (t) set(dot.className, `<bdo>${esc(t)}</bdo>`);
+      } else if (kind === "inserted") {
+        hold("", `✓ ${INSERTED[t] || "Inserted"}`, "", 1500);
+      }
+    });
+  </script>
+</body>
+</html>

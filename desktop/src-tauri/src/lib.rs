@@ -127,6 +127,27 @@ fn emit_ui(app: &AppHandle, kind: &str, text: &str) {
     let _ = app.emit("dictation", json!({ "kind": kind, "text": text }));
 }
 
+/// Show the transcript pill bottom-center on the monitor the user is working on
+/// (the one with the cursor). The window is click-through and never focused, so
+/// the target field keeps focus; the page fades the pill in/out via CSS on the
+/// same "dictation" events the settings window listens to.
+fn show_overlay(app: &AppHandle) {
+    let Some(w) = app.get_webview_window("overlay") else { return };
+    let _ = w.set_ignore_cursor_events(true);
+    let monitor = app
+        .cursor_position()
+        .ok()
+        .and_then(|p| app.monitor_from_point(p.x, p.y).ok().flatten())
+        .or_else(|| app.primary_monitor().ok().flatten());
+    if let (Some(m), Ok(size)) = (monitor, w.outer_size()) {
+        let margin = (60.0 * m.scale_factor()) as i32;
+        let x = m.position().x + (m.size().width.saturating_sub(size.width) / 2) as i32;
+        let y = m.position().y + m.size().height as i32 - size.height as i32 - margin;
+        let _ = w.set_position(tauri::PhysicalPosition::new(x, y));
+    }
+    let _ = w.show();
+}
+
 /// The hotkey. Idle → start recording; recording → stop, transcribe, paste.
 fn toggle_dictation(app: &AppHandle) {
     let state = app.state::<AppState>();
@@ -171,6 +192,17 @@ fn toggle_dictation(app: &AppHandle) {
     };
     *state.session.lock().unwrap() = Some(recorder);
     set_tray_title(app, Some("●"));
+    show_overlay(app);
+    // Tell the UIs which mode this session runs in — a session in the wrong
+    // mode must be visible, not a mystery ("assistant was never on").
+    let mode_label = if cfg.mode == "assistant" {
+        "assistant"
+    } else if cfg.clean_dictation {
+        "dictation+polish"
+    } else {
+        "dictation"
+    };
+    emit_ui(app, "mode", mode_label);
     emit_ui(app, "state", "recording");
 
     let app = app.clone();

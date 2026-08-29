@@ -8,13 +8,30 @@
   },
   "app": {
     "withGlobalTauri": true,
+    "macOSPrivateApi": true,
     "windows": [
       {
         "label": "settings",
         "title": "ReplyMint",
         "width": 420,
-        "height": 460,
+        "height": 480,
         "resizable": false,
+        "visible": false
+      },
+      {
+        "label": "overlay",
+        "title": "ReplyMint Overlay",
+        "url": "overlay.html",
+        "width": 600,
+        "height": 72,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "visibleOnAllWorkspaces": true,
+        "skipTaskbar": true,
+        "focus": false,
         "visible": false
       }
     ],
