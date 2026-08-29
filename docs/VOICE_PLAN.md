@@ -405,7 +405,7 @@ You cannot perfect what you don't measure. Before V2 lands, build the eval harne
 | V4 | Offline honesty | 3 days | Airplane-mode dictation works |
 | V5 | Voice UX (smart intent, edit-in-place) | 1 wk | — |
 | D1 | Mac tray app (dictation parity) | scaffolded ✅ · on-Mac run-through pending | Hotkey→text in any Mac app |
-| D2 | Mac context read (differentiation) | 1–2 wk | Instruction mode works on Mac |
+| D2 | Mac context read (differentiation) | built ✅ · on-Mac run-through pending | Instruction mode works on Mac |
 | D3 | Windows port | 2–3 wk | — |
 
 Android voice reaches "perfect" in ~5–6 weeks; Mac lands ~4 weeks after that; Windows

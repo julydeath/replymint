@@ -4,6 +4,8 @@
 <dict>
   <key>NSMicrophoneUsageDescription</key>
   <string>ReplyMint records your voice only while dictation is active, to turn it into text.</string>
+  <key>NSAppleEventsUsageDescription</key>
+  <string>ReplyMint simulates a paste keystroke to insert your dictated text when direct insertion isn't available.</string>
   <key>LSUIElement</key>
   <true/>
 </dict>

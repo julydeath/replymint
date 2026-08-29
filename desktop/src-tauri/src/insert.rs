@@ -2,14 +2,35 @@ use std::process::Command;
 use std::thread::sleep;
 use std::time::Duration;
 
-/// Inserts text into whatever field has focus, Wispr-style: set the clipboard,
-/// synthesize ⌘V, restore the old clipboard. The AX-API insertion (and reading
-/// the focused window for context) is D2.
+/// How the text landed in the focused field. The enum is the D3 seam — Windows
+/// adds a SendInput variant behind the same `insert_text` call.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Insertion {
+    /// Direct AX insertion at the cursor — no clipboard touched.
+    Ax,
+    /// Clipboard + synthesized ⌘V fallback (apps with no settable AX text:
+    /// many Electron apps, terminals, Java UIs).
+    Paste,
+}
+
+/// Insert into whatever field has focus: AX first, paste fallback.
+pub fn insert_text(text: &str) -> Result<Insertion, String> {
+    match crate::ax::insert_via_ax(text) {
+        Ok(()) => Ok(Insertion::Ax),
+        Err(ax_err) => {
+            eprintln!("AX insertion unavailable ({ax_err}); falling back to paste");
+            paste_text(text).map(|()| Insertion::Paste)
+        }
+    }
+}
+
+/// The D1 path, now the fallback: set the clipboard, synthesize ⌘V, restore the
+/// old clipboard (text-only, best-effort).
 ///
-/// macOS-only for D1 — the ⌘V comes from `osascript`/System Events, which asks
-/// the user for Automation + Accessibility permission on first use. D3 swaps
-/// this for a cross-platform synthesizer (enigo / SendInput).
-pub fn paste_text(text: &str) -> Result<(), String> {
+/// macOS-only — the ⌘V comes from `osascript`/System Events, which asks the
+/// user for Automation + Accessibility permission on first use. D3 swaps this
+/// for a cross-platform synthesizer (enigo / SendInput).
+fn paste_text(text: &str) -> Result<(), String> {
     let mut clipboard = arboard::Clipboard::new().map_err(|e| format!("clipboard: {e}"))?;
     let previous = clipboard.get_text().ok();
 

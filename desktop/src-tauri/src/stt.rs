@@ -33,6 +33,7 @@ struct WireMsg {
 pub async fn run_session(
     backend_url: &str,
     token: &str,
+    keywords: &[String],
     mut audio_rx: Receiver<Vec<u8>>,
     mut on_event: impl FnMut(SttEvent),
 ) -> Result<(), String> {
@@ -52,11 +53,16 @@ pub async fn run_session(
         .map_err(|e| format!("connect: {e}"))?;
     let (mut sink, mut stream) = ws.split();
 
-    sink.send(Message::Text(format!(
-        r#"{{"type":"config","sampleRate":{SAMPLE_RATE},"language":"en"}}"#
-    )))
-    .await
-    .map_err(|e| format!("send config: {e}"))?;
+    // json! rather than format! — keywords come from screen text and need escaping.
+    let config = serde_json::json!({
+        "type": "config",
+        "sampleRate": SAMPLE_RATE,
+        "language": "en",
+        "keywords": keywords,
+    });
+    sink.send(Message::Text(config.to_string()))
+        .await
+        .map_err(|e| format!("send config: {e}"))?;
 
     let mut finished = false;
     loop {
@@ -123,7 +129,7 @@ pub async fn silence_session(backend_url: &str, token: &str, seconds: u32) -> Re
     drop(tx);
 
     let mut transcript = String::new();
-    run_session(backend_url, token, rx, |ev| {
+    run_session(backend_url, token, &[], rx, |ev| {
         if let SttEvent::Done(text) = ev {
             transcript = text;
         }

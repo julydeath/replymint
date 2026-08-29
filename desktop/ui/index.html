@@ -52,9 +52,17 @@
   <label for="hotkey">Hotkey</label>
   <input id="hotkey" spellcheck="false" placeholder="alt+space" />
 
+  <label>Mode</label>
+  <div class="row" style="margin-top:0">
+    <button id="mode-dictation">Dictation</button>
+    <button id="mode-assistant">Assistant</button>
+  </div>
+  <div class="sub" id="mode-note" style="margin:6px 0 0"></div>
+
   <div class="row">
     <button id="save" class="primary">Save</button>
     <button id="test">Test backend</button>
+    <button id="ax">Grant Accessibility</button>
   </div>
 
   <div id="status"></div>
@@ -69,10 +77,25 @@
       $("status").className = err ? "err" : "";
     };
 
+    let mode = "dictation";
+    const MODE_NOTES = {
+      dictation: "Your words land verbatim in the focused field.",
+      assistant: "Your words are an instruction — ReplyMint reads the focused window and writes the reply for you.",
+    };
+    const renderMode = () => {
+      $("mode-dictation").className = mode === "dictation" ? "primary" : "";
+      $("mode-assistant").className = mode === "assistant" ? "primary" : "";
+      $("mode-note").textContent = MODE_NOTES[mode];
+    };
+    $("mode-dictation").onclick = () => { mode = "dictation"; renderMode(); };
+    $("mode-assistant").onclick = () => { mode = "assistant"; renderMode(); };
+
     invoke("get_settings").then((s) => {
       $("url").value = s.backend_url;
       $("token").value = s.token;
       $("hotkey").value = s.hotkey;
+      mode = s.mode === "assistant" ? "assistant" : "dictation";
+      renderMode();
     });
 
     $("save").onclick = async () => {
@@ -81,9 +104,17 @@
           backend_url: $("url").value.trim(),
           token: $("token").value.trim(),
           hotkey: $("hotkey").value.trim() || "alt+space",
+          mode,
         }});
         status("Saved.");
       } catch (e) { status(String(e), true); }
+    };
+
+    $("ax").onclick = async () => {
+      const trusted = await invoke("request_ax");
+      status(trusted
+        ? "Accessibility granted — direct insertion and screen context active."
+        : "Not granted yet — enable ReplyMint in the System Settings pane that just opened, then quit and reopen the app.");
     };
 
     $("test").onclick = async () => {
@@ -94,11 +125,17 @@
       } catch (e) { status(String(e), true); }
     };
 
+    const INSERT_LABELS = {
+      ax: "Inserted (direct).",
+      paste: "Inserted (paste fallback).",
+      draft: "Draft inserted.",
+    };
     listen("dictation", ({ payload }) => {
       const { kind, text } = payload;
       if (kind === "state") status(text === "idle" ? "" : `● ${text}`);
       else if (kind === "partial" || kind === "final") $("transcript").textContent = text;
-      else if (kind === "done") { $("transcript").textContent = text; status("Inserted."); }
+      else if (kind === "done") $("transcript").textContent = text;
+      else if (kind === "inserted") status(INSERT_LABELS[text] || "Inserted.");
       else if (kind === "error") status(text, true);
     });
   </script>

@@ -11,6 +11,10 @@ pub struct Settings {
     pub backend_url: String,
     pub token: String,
     pub hotkey: String,
+    /// "dictation" inserts the transcript verbatim; "assistant" treats speech as
+    /// an instruction — the focused window's AX text + transcript go to /v1/reply
+    /// and the generated draft is inserted instead (D2 instruction mode).
+    pub mode: String,
 }
 
 impl Default for Settings {
@@ -19,6 +23,7 @@ impl Default for Settings {
             backend_url: "http://localhost:8787".into(),
             token: String::new(),
             hotkey: "alt+space".into(),
+            mode: "dictation".into(),
         }
     }
 }

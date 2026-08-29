@@ -1,9 +1,13 @@
-//! ReplyMint desktop (VOICE_PLAN D1): a menu-bar app whose whole product is
-//! one loop — global hotkey → record mic → stream to the backend STT proxy →
-//! paste the transcript into the focused field of whatever app is frontmost.
+//! ReplyMint desktop (VOICE_PLAN D1+D2): a menu-bar app whose whole product is
+//! one loop — global hotkey → read the focused window (AX) → record mic →
+//! stream to the backend STT proxy (screen keywords boost accuracy) → insert
+//! into the focused field via AX (clipboard-paste fallback). In Assistant mode
+//! the transcript is an instruction: /v1/reply writes the draft that lands.
 
+mod ax;
 mod audio;
 mod insert;
+mod reply;
 mod settings;
 mod stt;
 
@@ -24,6 +28,8 @@ const TRAY_ID: &str = "main";
 /// on any session end, so a server-side close also stops the mic.
 struct AppState {
     session: Mutex<Option<audio::Recorder>>,
+    /// Focused-window snapshot taken at recording start (D2 context).
+    context: Mutex<Option<ax::AxContext>>,
 }
 
 pub fn run() {
@@ -34,7 +40,7 @@ pub fn run() {
     }
 
     tauri::Builder::default()
-        .manage(AppState { session: Mutex::new(None) })
+        .manage(AppState { session: Mutex::new(None), context: Mutex::new(None) })
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, _shortcut, event| {
@@ -48,7 +54,8 @@ pub fn run() {
             get_settings,
             save_settings,
             test_backend,
-            toggle
+            toggle,
+            request_ax
         ])
         .on_window_event(|window, event| {
             // Closing the settings window hides it; the app lives in the tray.
@@ -139,6 +146,21 @@ fn toggle_dictation(app: &AppHandle) {
         return;
     }
 
+    // D2: snapshot the focused window BEFORE the mic starts — the target app is
+    // frontmost right now (we're an Accessory app and never take focus). The
+    // first hotkey press also triggers the one-time Accessibility grant prompt.
+    if !ax::ensure_trusted(true) {
+        emit_ui(
+            app,
+            "error",
+            "For direct insertion and screen context, grant ReplyMint Accessibility \
+             in System Settings → Privacy & Security → Accessibility (dictation still works)",
+        );
+    }
+    let context = ax::read_context();
+    let keywords = context.as_ref().map(ax::extract_keywords).unwrap_or_default();
+    *state.context.lock().unwrap() = context;
+
     let (tx, rx) = tokio::sync::mpsc::channel::<Vec<u8>>(64);
     let recorder = match audio::start(tx) {
         Ok(r) => r,
@@ -154,7 +176,7 @@ fn toggle_dictation(app: &AppHandle) {
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
         let mut done_text: Option<String> = None;
-        let result = stt::run_session(&cfg.backend_url, &cfg.token, rx, |ev| match ev {
+        let result = stt::run_session(&cfg.backend_url, &cfg.token, &keywords, rx, |ev| match ev {
             SttEvent::Partial(t) => emit_ui(&app, "partial", &t),
             SttEvent::Final(t) => emit_ui(&app, "final", &t),
             SttEvent::Done(text) => done_text = Some(text),
@@ -169,17 +191,62 @@ fn toggle_dictation(app: &AppHandle) {
 
         match result {
             Ok(()) => {
-                let text = done_text.unwrap_or_default();
-                if text.is_empty() {
+                let transcript = done_text.unwrap_or_default();
+                if transcript.is_empty() {
                     emit_ui(&app, "done", "");
                 } else {
-                    emit_ui(&app, "done", &text);
-                    let pasted =
-                        tauri::async_runtime::spawn_blocking(move || insert::paste_text(&text))
+                    emit_ui(&app, "done", &transcript);
+                    let context = app.state::<AppState>().context.lock().unwrap().take();
+
+                    // Assistant mode: the transcript is an instruction — insert the
+                    // backend's draft. On any failure fall back to the transcript
+                    // itself: the user's words are never lost.
+                    let mut is_draft = false;
+                    let text = if cfg.mode == "assistant" {
+                        match &context {
+                            Some(ctx) => {
+                                emit_ui(&app, "state", "writing");
+                                match reply::generate_draft(
+                                    &cfg.backend_url,
+                                    &cfg.token,
+                                    ctx,
+                                    &transcript,
+                                )
+                                .await
+                                {
+                                    Ok(draft) => {
+                                        is_draft = true;
+                                        draft
+                                    }
+                                    Err(e) => {
+                                        emit_ui(&app, "error", &format!("draft failed ({e}) — inserted your words instead"));
+                                        transcript
+                                    }
+                                }
+                            }
+                            None => {
+                                emit_ui(&app, "error", "no screen context (Accessibility not granted?) — inserted your words instead");
+                                transcript
+                            }
+                        }
+                    } else {
+                        transcript
+                    };
+
+                    let inserted =
+                        tauri::async_runtime::spawn_blocking(move || insert::insert_text(&text))
                             .await
                             .unwrap_or_else(|e| Err(e.to_string()));
-                    if let Err(e) = pasted {
-                        emit_ui(&app, "error", &e);
+                    match inserted {
+                        Ok(how) => {
+                            let label = match (is_draft, how) {
+                                (true, _) => "draft",
+                                (false, insert::Insertion::Ax) => "ax",
+                                (false, insert::Insertion::Paste) => "paste",
+                            };
+                            emit_ui(&app, "inserted", label);
+                        }
+                        Err(e) => emit_ui(&app, "error", &e),
                     }
                 }
                 set_tray_title(&app, None);
@@ -223,6 +290,20 @@ async fn test_backend() -> Result<String, String> {
 #[tauri::command]
 fn toggle(app: AppHandle) {
     toggle_dictation(&app);
+}
+
+/// Settings → "Grant Accessibility": returns whether we're trusted. If not,
+/// prompts and opens the System Settings pane (macOS shows its own dialog at
+/// most once, so the deep link is the reliable path afterwards).
+#[tauri::command]
+fn request_ax() -> bool {
+    let trusted = ax::ensure_trusted(true);
+    if !trusted {
+        let _ = std::process::Command::new("open")
+            .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
+            .spawn();
+    }
+    trusted
 }
 
 fn smoke() {
