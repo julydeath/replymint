@@ -77,11 +77,25 @@ class ReplyMintAccessibilityService : AccessibilityService() {
          * have a text field. Also serves as the implicit "not our own app" filter.
          */
         private val TARGET_APPS = setOf(
-            "com.whatsapp",            // WhatsApp
-            "com.whatsapp.w4b",        // WhatsApp Business
-            "com.instagram.android",   // Instagram
-            "com.google.android.gm",   // Gmail
-            "com.linkedin.android"     // LinkedIn
+            "com.whatsapp",                        // WhatsApp
+            "com.whatsapp.w4b",                    // WhatsApp Business
+            "com.instagram.android",               // Instagram
+            "com.google.android.gm",               // Gmail
+            "com.linkedin.android",                // LinkedIn
+            "com.Slack",                           // Slack
+            "com.microsoft.teams",                 // Microsoft Teams
+            "com.facebook.katana",                 // Facebook
+            "com.facebook.orca",                   // Facebook Messenger
+            "com.google.android.apps.dynamite",    // Google Chat
+            "com.discord",                         // Discord
+            "org.telegram.messenger",              // Telegram (Play Store build)
+            "org.telegram.messenger.web",          // Telegram (direct-APK build)
+            "org.thoughtcrime.securesms",          // Signal
+            "com.google.android.apps.messaging",   // Google Messages (SMS/RCS)
+            "com.samsung.android.messaging",       // Samsung Messages
+            "com.snapchat.android",                // Snapchat
+            "com.twitter.android",                 // X (Twitter DMs)
+            "com.microsoft.office.outlook"         // Outlook
         )
 
         @Volatile

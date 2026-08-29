@@ -1,0 +1,11 @@
+<!-- Brand-colored marks: white O on Outlook blue. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#0F6CBD"
+        android:pathData="M12,12m-12,0a12,12 0,1 1,24 0a12,12 0,1 1,-24 0" />
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M12,6.8c-3,0 -5.2,2.2 -5.2,5.2s2.2,5.2 5.2,5.2s5.2,-2.2 5.2,-5.2S15,6.8 12,6.8z" />
+    <path android:fillColor="#0F6CBD"
+        android:pathData="M12,9.3c1.55,0 2.7,1.15 2.7,2.7s-1.15,2.7 -2.7,2.7s-2.7,-1.15 -2.7,-2.7S10.45,9.3 12,9.3z" />
+</vector>

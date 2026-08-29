@@ -1,0 +1,15 @@
+<!-- Brand-colored marks: white bubble on Google Messages blue. Also covers Samsung Messages. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#1A73E8"
+        android:pathData="M12,12m-12,0a12,12 0,1 1,24 0a12,12 0,1 1,-24 0" />
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M12,4.7c4.3,0 7.8,3.13 7.8,7s-3.5,7 -7.8,7c-0.9,0 -1.77,-0.14 -2.57,-0.39L4.6,19.4l1.44,-3.35C4.9,14.87 4.2,13.4 4.2,11.7C4.2,7.83 7.7,4.7 12,4.7z" />
+    <path android:fillColor="#1A73E8"
+        android:pathData="M8.8,10.7m-1,0a1,1 0,1 1,2 0a1,1 0,1 1,-2 0" />
+    <path android:fillColor="#1A73E8"
+        android:pathData="M12,10.7m-1,0a1,1 0,1 1,2 0a1,1 0,1 1,-2 0" />
+    <path android:fillColor="#1A73E8"
+        android:pathData="M15.2,10.7m-1,0a1,1 0,1 1,2 0a1,1 0,1 1,-2 0" />
+</vector>

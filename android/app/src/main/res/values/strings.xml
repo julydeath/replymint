@@ -88,6 +88,18 @@
     <string name="app_instagram">Instagram</string>
     <string name="app_gmail">Gmail</string>
     <string name="app_linkedin">LinkedIn</string>
+    <string name="app_telegram">Telegram</string>
+    <string name="app_messenger">Messenger</string>
+    <string name="app_messages">Messages</string>
+    <string name="app_snapchat">Snapchat</string>
+    <string name="app_slack">Slack</string>
+    <string name="app_teams">Teams</string>
+    <string name="app_outlook">Outlook</string>
+    <string name="app_gchat">Google Chat</string>
+    <string name="app_facebook">Facebook</string>
+    <string name="app_discord">Discord</string>
+    <string name="app_signal">Signal</string>
+    <string name="app_x">X</string>
 
     <!-- Icons are vector drawables now; emoji rendered differently on every OEM and never tinted. -->
     <string name="action_auto">Auto Reply</string>

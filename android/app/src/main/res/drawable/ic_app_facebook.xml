@@ -1,0 +1,9 @@
+<!-- Brand-colored marks: white f on Facebook blue. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#1877F2"
+        android:pathData="M12,12m-12,0a12,12 0,1 1,24 0a12,12 0,1 1,-24 0" />
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M13.5,20v-6.5h2.2l0.33,-2.55H13.5V9.32c0,-0.74 0.2,-1.24 1.26,-1.24h1.35V5.8c-0.23,-0.03 -1.03,-0.1 -1.96,-0.1c-1.94,0 -3.27,1.18 -3.27,3.36v1.87H8.7v2.55h2.18V20H13.5z" />
+</vector>

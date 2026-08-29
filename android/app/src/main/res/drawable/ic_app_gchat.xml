@@ -1,0 +1,9 @@
+<!-- Brand-colored marks: white bubble on Google Chat green. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#00AC47"
+        android:pathData="M12,12m-12,0a12,12 0,1 1,24 0a12,12 0,1 1,-24 0" />
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M7.6,6h8.8c0.88,0 1.6,0.72 1.6,1.6v6c0,0.88 -0.72,1.6 -1.6,1.6H9.2l-2.9,2.9c-0.19,0.19 -0.51,0.06 -0.51,-0.21V7.6C5.79,6.72 6.72,6 7.6,6z" />
+</vector>
