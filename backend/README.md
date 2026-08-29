@@ -42,6 +42,36 @@ Response:
 { "draft": "I understand where you're coming from. I can offer a 10% adjustment, but I wouldn't want to reduce the scope or quality beyond that. If that works for you, we can confirm with 50% advance and get started." }
 ```
 
+## Cloud STT proxy (VOICE_PLAN V3)
+
+`GET /v1/stt/stream` — WebSocket, same `Authorization: Bearer rt_...` header as REST.
+The device streams raw PCM16 mono audio through us to the STT vendor; the vendor key
+never leaves the server and per-user usage is metered in seconds (never content).
+
+Protocol:
+
+```
+→ {"type":"config","sampleRate":16000,"language":"en","keywords":["Sanjay"]}   optional, before audio
+→ <binary PCM16 frames>
+→ {"type":"finish"}
+← {"type":"ready"} / {"type":"partial","text"} / {"type":"final","text"}
+← {"type":"done","text":"<full transcript>","seconds":12}                      then the socket closes
+```
+
+Provider is chosen by `STT_PROVIDER` ([src/stt.ts](src/stt.ts), same pattern as the LLM switch):
+`deepgram` (production, needs `DEEPGRAM_API_KEY`) or `mock` (dev/test — fake transcripts, no
+key, no network). `keywords` should carry names/terms read from the screen; they become
+Deepgram keyterms so recognition is biased toward the words actually in the conversation.
+
+Smoke test (creates and removes its own DB user; run `npm run db:schema` once first):
+
+```bash
+npm run stt:smoke
+```
+
+> **Launch gate:** a zero-retention agreement with Deepgram must be in place before this
+> ships to real users, or the privacy promise in PRIVACY.md is false.
+
 ## Model tiering
 
 | Mode | Model | Why |

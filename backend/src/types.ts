@@ -56,6 +56,24 @@ export const VoiceSchema = z.object({
   lang: z.string().default(""), // BCP-47, e.g. "en-IN"
 });
 
+/**
+ * V3: control messages on the /v1/stt/stream WebSocket. The config message is
+ * optional and must precede audio; audio-first sessions get the defaults.
+ * `keywords` carries names/terms read from the screen so the STT engine is
+ * biased toward the words actually in the conversation (the V2 trick, earlier).
+ */
+export const SttConfigSchema = z.object({
+  type: z.literal("config"),
+  sampleRate: z.number().int().min(8000).max(48000).default(16000),
+  language: z.string().max(16).default("en"),
+  keywords: z.array(z.string().min(1).max(60)).max(50).default([]),
+});
+
+export const SttControlSchema = z.discriminatedUnion("type", [
+  SttConfigSchema,
+  z.object({ type: z.literal("finish") }),
+]);
+
 export const ReplyRequestSchema = z.object({
   mode: z.enum(["personal", "professional"]),
   action: z.enum(["auto_reply", "voice", "fix"]),
@@ -65,6 +83,7 @@ export const ReplyRequestSchema = z.object({
   brain: ReplyBrainSchema.nullish(), // used only in professional mode
 });
 
+export type SttConfig = z.infer<typeof SttConfigSchema>;
 export type ScreenPayload = z.infer<typeof ScreenSchema>;
 export type VoicePayload = z.infer<typeof VoiceSchema>;
 export type ReplyBrain = z.infer<typeof ReplyBrainSchema>;

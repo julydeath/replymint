@@ -77,6 +77,16 @@ export async function pingDb(): Promise<{ ok: boolean; error?: string }> {
   }
 }
 
+/** Adds cloud-STT audio seconds to today's usage row (duration only — content is never stored). */
+export async function bumpSttSeconds(userId: string, seconds: number): Promise<void> {
+  if (seconds <= 0) return;
+  await sql()`
+    insert into usage_daily (user_id, day, count, stt_seconds)
+    values (${userId}, (now() at time zone 'utc')::date, 0, ${seconds})
+    on conflict (user_id, day) do update set stt_seconds = usage_daily.stt_seconds + ${seconds}
+  `;
+}
+
 export async function bumpUsage(userId: string): Promise<number> {
   const rows = await sql()<{ count: number }[]>`
     insert into usage_daily (user_id, day, count)

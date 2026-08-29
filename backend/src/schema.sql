@@ -21,3 +21,6 @@ create table if not exists usage_daily (
   count   int  not null default 0,
   primary key (user_id, day)
 );
+
+-- V3 cloud STT metering: seconds of audio proxied per day (content is never stored).
+alter table usage_daily add column if not exists stt_seconds int not null default 0;

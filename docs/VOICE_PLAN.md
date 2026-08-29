@@ -286,6 +286,13 @@ ships in the free tier.** (Keep `voiceInstruction` accepted server-side for old 
 
 ### V3 · Cloud STT — the paid accuracy tier (~1–2 weeks)
 
+**Status (2026-08-29): backend proxy shipped and smoke-tested** — `GET /v1/stt/stream`
+WebSocket in `backend/src/server.ts`, provider switch in `stt.ts` (`deepgram` | `mock`),
+Deepgram streaming client in `deepgram.ts`, per-user seconds metering in `usage_daily.stt_seconds`.
+Verified end-to-end with the mock provider (`npm run stt:smoke`). Remaining: a Deepgram
+account + key (+ zero-retention agreement — launch gate), real-audio WER check against the
+gate below, and the Android dual-engine client.
+
 - Provider: **Deepgram** streaming (lowest latency, keyword boosting, ~$0.005/min).
   Same pattern as `llm.ts`: an `stt.ts` with `STT_PROVIDER` switch so we can swap.
 - Route: device → **backend WebSocket proxy** → Deepgram. Keys stay server-side, usage
@@ -376,7 +383,7 @@ You cannot perfect what you don't measure. Before V2 lands, build the eval harne
 | V1 | `AudioPipeline` (fixes clipping) | ✅ verified | Gapless with pauses on Nothing A059 |
 | — | Eval harness (Part 4, parallel) | 1 wk | WER baseline recorded |
 | V2 | N-best + screen-context correction | ✅ shipped | Name/currency correction verified on device |
-| V3 | Cloud STT proxy + dual-engine (paid) | 1–2 wk | Cloud beats native WER; <1.5s final transcript |
+| V3 | Cloud STT proxy + dual-engine (paid) | backend ✅ · client pending | Cloud beats native WER; <1.5s final transcript |
 | V4 | Offline honesty | 3 days | Airplane-mode dictation works |
 | V5 | Voice UX (smart intent, edit-in-place) | 1 wk | — |
 | D1 | Mac tray app (dictation parity) | 2–3 wk | Hotkey→text in any Mac app |
