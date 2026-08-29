@@ -96,7 +96,7 @@ app.post("/v1/reply", requireAuth, async (c) => {
   try {
     const draft = await generateReply({
       mode: req.mode,
-      system: buildSystem(req.mode),
+      system: buildSystem(req.mode, req.action),
       user: buildUser(req, brain),
     });
     if (!draft) return c.json({ error: "empty draft" }, 502);

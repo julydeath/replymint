@@ -7,7 +7,7 @@
     :root {
       color-scheme: dark;
       --bg: #0f1a14; --card: #16241c; --line: #24382c;
-      --text: #e7f3ec; --dim: #8fa89b; --mint: #4ade80; --err: #f87171;
+      --text: #e7f3ec; --dim: #8fa89b; --mint: #4ade80; --err: #f87171; --warn: #fbbf24;
     }
     * { box-sizing: border-box; margin: 0; }
     body {
@@ -32,6 +32,9 @@
     button.primary { background: var(--mint); border-color: var(--mint); color: #06130b; font-weight: 600; }
     #status { margin-top: 14px; font-size: 12px; color: var(--dim); min-height: 34px; }
     #status.err { color: var(--err); }
+    #status.warn { color: var(--warn); }
+    .check { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; }
+    .check input { width: auto; accent-color: var(--mint); }
     #transcript {
       margin-top: 6px; padding: 10px; border-radius: 8px; background: var(--card);
       border: 1px solid var(--line); font-size: 13px; min-height: 42px;
@@ -59,6 +62,11 @@
   </div>
   <div class="sub" id="mode-note" style="margin:6px 0 0"></div>
 
+  <label class="check" id="clean-row">
+    <input type="checkbox" id="clean" />
+    Polish dictation — fix grammar, drop stutters and filler words before inserting
+  </label>
+
   <div class="row">
     <button id="save" class="primary">Save</button>
     <button id="test">Test backend</button>
@@ -72,20 +80,26 @@
     const { invoke } = window.__TAURI__.core;
     const { listen } = window.__TAURI__.event;
     const $ = (id) => document.getElementById(id);
-    const status = (msg, err = false) => {
+    // warn/err messages stick until the next recording starts (or a button is
+    // pressed) so a fallback isn't instantly overwritten by "Inserted."
+    let sticky = false;
+    const status = (msg, cls = "", force = false) => {
+      if (sticky && !cls && !force) return;
       $("status").textContent = msg;
-      $("status").className = err ? "err" : "";
+      $("status").className = cls;
+      sticky = cls === "err" || cls === "warn";
     };
 
     let mode = "dictation";
     const MODE_NOTES = {
-      dictation: "Your words land verbatim in the focused field.",
+      dictation: "Your words land in the focused field (polished first, if enabled below).",
       assistant: "Your words are an instruction — ReplyMint reads the focused window and writes the reply for you.",
     };
     const renderMode = () => {
       $("mode-dictation").className = mode === "dictation" ? "primary" : "";
       $("mode-assistant").className = mode === "assistant" ? "primary" : "";
       $("mode-note").textContent = MODE_NOTES[mode];
+      $("clean-row").style.opacity = mode === "dictation" ? "1" : "0.4";
     };
     $("mode-dictation").onclick = () => { mode = "dictation"; renderMode(); };
     $("mode-assistant").onclick = () => { mode = "assistant"; renderMode(); };
@@ -94,6 +108,7 @@
       $("url").value = s.backend_url;
       $("token").value = s.token;
       $("hotkey").value = s.hotkey;
+      $("clean").checked = s.clean_dictation !== false;
       mode = s.mode === "assistant" ? "assistant" : "dictation";
       renderMode();
     });
@@ -105,38 +120,45 @@
           token: $("token").value.trim(),
           hotkey: $("hotkey").value.trim() || "alt+space",
           mode,
+          clean_dictation: $("clean").checked,
         }});
-        status("Saved.");
-      } catch (e) { status(String(e), true); }
+        status("Saved.", "", true);
+      } catch (e) { status(String(e), "err"); }
     };
 
     $("ax").onclick = async () => {
       const trusted = await invoke("request_ax");
       status(trusted
         ? "Accessibility granted — direct insertion and screen context active."
-        : "Not granted yet — enable ReplyMint in the System Settings pane that just opened, then quit and reopen the app.");
+        : "Not granted yet — enable ReplyMint in the System Settings pane that just opened, then quit and reopen the app.",
+        "", true);
     };
 
     $("test").onclick = async () => {
-      status("Testing — streaming 2s of silence through the proxy…");
+      status("Testing — streaming 2s of silence through the proxy…", "", true);
       try {
         const text = await invoke("test_backend");
-        status(`Backend OK. Transcript: ${JSON.stringify(text)}`);
-      } catch (e) { status(String(e), true); }
+        status(`Backend OK. Transcript: ${JSON.stringify(text)}`, "", true);
+      } catch (e) { status(String(e), "err"); }
     };
 
     const INSERT_LABELS = {
       ax: "Inserted (direct).",
       paste: "Inserted (paste fallback).",
       draft: "Draft inserted.",
+      clean: "Polished & inserted.",
     };
     listen("dictation", ({ payload }) => {
       const { kind, text } = payload;
-      if (kind === "state") status(text === "idle" ? "" : `● ${text}`);
+      if (kind === "state") {
+        if (text === "recording") sticky = false; // new session: clear old warnings
+        status(text === "idle" ? "" : `● ${text}`);
+      }
       else if (kind === "partial" || kind === "final") $("transcript").textContent = text;
       else if (kind === "done") $("transcript").textContent = text;
       else if (kind === "inserted") status(INSERT_LABELS[text] || "Inserted.");
-      else if (kind === "error") status(text, true);
+      else if (kind === "warn") status(text, "warn");
+      else if (kind === "error") status(text, "err");
     });
   </script>
 </body>

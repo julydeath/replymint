@@ -152,7 +152,7 @@ fn toggle_dictation(app: &AppHandle) {
     if !ax::ensure_trusted(true) {
         emit_ui(
             app,
-            "error",
+            "warn",
             "For direct insertion and screen context, grant ReplyMint Accessibility \
              in System Settings → Privacy & Security → Accessibility (dictation still works)",
         );
@@ -196,36 +196,62 @@ fn toggle_dictation(app: &AppHandle) {
                     emit_ui(&app, "done", "");
                 } else {
                     emit_ui(&app, "done", &transcript);
-                    let context = app.state::<AppState>().context.lock().unwrap().take();
+                    let mut context = app.state::<AppState>().context.lock().unwrap().take();
 
-                    // Assistant mode: the transcript is an instruction — insert the
-                    // backend's draft. On any failure fall back to the transcript
-                    // itself: the user's words are never lost.
-                    let mut is_draft = false;
+                    // Second chance at the screen: Electron/Chromium apps build
+                    // their AX tree lazily, so the snapshot at recording start
+                    // often comes back empty — by now the tree is warm.
+                    if context.is_none() {
+                        context = tauri::async_runtime::spawn_blocking(ax::read_context)
+                            .await
+                            .ok()
+                            .flatten();
+                    }
+
+                    // Assistant mode: the transcript is an instruction — insert
+                    // the backend's draft (with or without screen context).
+                    // Dictation mode: optionally clean the transcript up first.
+                    // On any failure fall back to the transcript itself: the
+                    // user's words are never lost.
+                    let mut label_ok = "";
                     let text = if cfg.mode == "assistant" {
-                        match &context {
-                            Some(ctx) => {
-                                emit_ui(&app, "state", "writing");
-                                match reply::generate_draft(
-                                    &cfg.backend_url,
-                                    &cfg.token,
-                                    ctx,
-                                    &transcript,
-                                )
-                                .await
-                                {
-                                    Ok(draft) => {
-                                        is_draft = true;
-                                        draft
-                                    }
-                                    Err(e) => {
-                                        emit_ui(&app, "error", &format!("draft failed ({e}) — inserted your words instead"));
-                                        transcript
-                                    }
-                                }
+                        if context.is_none() {
+                            emit_ui(&app, "warn", "couldn't read the screen — drafting from your words alone");
+                        }
+                        emit_ui(&app, "state", "writing");
+                        match reply::generate_draft(
+                            &cfg.backend_url,
+                            &cfg.token,
+                            context.as_ref(),
+                            &transcript,
+                        )
+                        .await
+                        {
+                            Ok(draft) => {
+                                label_ok = "draft";
+                                draft
                             }
-                            None => {
-                                emit_ui(&app, "error", "no screen context (Accessibility not granted?) — inserted your words instead");
+                            Err(e) => {
+                                emit_ui(&app, "warn", &format!("draft failed ({e}) — inserted your words instead"));
+                                transcript
+                            }
+                        }
+                    } else if cfg.clean_dictation {
+                        emit_ui(&app, "state", "polishing");
+                        match reply::clean_dictation(
+                            &cfg.backend_url,
+                            &cfg.token,
+                            context.as_ref(),
+                            &transcript,
+                        )
+                        .await
+                        {
+                            Ok(cleaned) => {
+                                label_ok = "clean";
+                                cleaned
+                            }
+                            Err(e) => {
+                                emit_ui(&app, "warn", &format!("cleanup failed ({e}) — inserted your words as heard"));
                                 transcript
                             }
                         }
@@ -239,10 +265,10 @@ fn toggle_dictation(app: &AppHandle) {
                             .unwrap_or_else(|e| Err(e.to_string()));
                     match inserted {
                         Ok(how) => {
-                            let label = match (is_draft, how) {
-                                (true, _) => "draft",
-                                (false, insert::Insertion::Ax) => "ax",
-                                (false, insert::Insertion::Paste) => "paste",
+                            let label = match (label_ok, how) {
+                                ("", insert::Insertion::Ax) => "ax",
+                                ("", insert::Insertion::Paste) => "paste",
+                                (label, _) => label,
                             };
                             emit_ui(&app, "inserted", label);
                         }

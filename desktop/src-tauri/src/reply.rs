@@ -1,6 +1,8 @@
-//! Instruction mode (D2): the transcript is an instruction, not the text — the
-//! focused window's AX context + the instruction go to POST /v1/reply and the
-//! generated draft is what gets inserted. Mirrors android/core/ReplyEngine.
+//! Backend text generation (D2): POST /v1/reply with the focused window's AX
+//! context. Two actions — "voice" (Assistant mode: the transcript is an
+//! instruction, the draft is what lands) and "dictate" (Dictation cleanup: the
+//! transcript comes back with grammar fixed and stutters/self-corrections
+//! resolved). Mirrors android/core/ReplyEngine.
 
 use serde::Deserialize;
 use serde_json::json;
@@ -14,34 +16,64 @@ struct ReplyResponse {
     error: Option<String>,
 }
 
-/// One draft from the backend. Personal mode: stateless, nothing persisted.
+/// Assistant mode: the transcript is an instruction; the backend's draft is the
+/// text to insert. Works without context — the instruction alone still drafts.
 pub async fn generate_draft(
     backend_url: &str,
     token: &str,
-    ctx: &AxContext,
+    ctx: Option<&AxContext>,
     instruction: &str,
+) -> Result<String, String> {
+    post_reply(backend_url, token, ctx, "voice", instruction).await
+}
+
+/// Dictation cleanup: same endpoint, `dictate` action — the transcript comes
+/// back lightly edited (grammar, fillers, stutters, self-corrections).
+pub async fn clean_dictation(
+    backend_url: &str,
+    token: &str,
+    ctx: Option<&AxContext>,
+    transcript: &str,
+) -> Result<String, String> {
+    post_reply(backend_url, token, ctx, "dictate", transcript).await
+}
+
+/// One draft from the backend. Personal mode: stateless, nothing persisted.
+async fn post_reply(
+    backend_url: &str,
+    token: &str,
+    ctx: Option<&AxContext>,
+    action: &str,
+    transcript: &str,
 ) -> Result<String, String> {
     // The window title leads the visible text — it's often the conversation's
     // subject ("Re: Invoice…") and the AX tree doesn't always repeat it inside.
-    let mut visible: Vec<&str> = Vec::with_capacity(ctx.lines.len() + 1);
-    if !ctx.window_title.is_empty() {
-        visible.push(&ctx.window_title);
+    let mut visible: Vec<&str> = Vec::new();
+    let mut app_name = "";
+    let mut typed: Option<&str> = None;
+    if let Some(ctx) = ctx {
+        visible.reserve(ctx.lines.len() + 1);
+        if !ctx.window_title.is_empty() {
+            visible.push(&ctx.window_title);
+        }
+        visible.extend(ctx.lines.iter().map(String::as_str));
+        app_name = &ctx.app_name;
+        typed = ctx.focused_text.as_deref();
     }
-    visible.extend(ctx.lines.iter().map(String::as_str));
 
     let body = json!({
         "mode": "personal",
-        "action": "voice",
+        "action": action,
         "screen": {
             // No bundle ids on the AX path — the app name serves the same
             // "which app is this" purpose in the prompt.
-            "appPackage": ctx.app_name,
+            "appPackage": app_name,
             "visibleText": visible,
-            "typedText": ctx.focused_text,
+            "typedText": typed,
         },
-        "voiceInstruction": instruction,
+        "voiceInstruction": transcript,
         "voice": {
-            "hypotheses": [instruction],
+            "hypotheses": [transcript],
             "source": "cloud",
             "lang": "en",
         },

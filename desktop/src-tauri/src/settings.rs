@@ -15,6 +15,10 @@ pub struct Settings {
     /// an instruction — the focused window's AX text + transcript go to /v1/reply
     /// and the generated draft is inserted instead (D2 instruction mode).
     pub mode: String,
+    /// Dictation mode: run the transcript through the backend's `dictate` action
+    /// (grammar, stutters, self-corrections) before inserting. On any failure the
+    /// raw transcript is inserted instead — the user's words are never lost.
+    pub clean_dictation: bool,
 }
 
 impl Default for Settings {
@@ -24,6 +28,7 @@ impl Default for Settings {
             token: String::new(),
             hotkey: "alt+space".into(),
             mode: "dictation".into(),
+            clean_dictation: true,
         }
     }
 }

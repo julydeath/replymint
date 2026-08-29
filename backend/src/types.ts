@@ -76,7 +76,7 @@ export const SttControlSchema = z.discriminatedUnion("type", [
 
 export const ReplyRequestSchema = z.object({
   mode: z.enum(["personal", "professional"]),
-  action: z.enum(["auto_reply", "voice", "fix"]),
+  action: z.enum(["auto_reply", "voice", "fix", "dictate"]),
   screen: ScreenSchema,
   voiceInstruction: z.string().nullish(), // legacy flat form; still accepted from old clients
   voice: VoiceSchema.nullish(),
