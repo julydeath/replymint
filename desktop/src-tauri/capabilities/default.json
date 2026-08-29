@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Settings window talks to the Rust core via invoke/events only.",
+  "windows": ["settings"],
+  "permissions": ["core:default"]
+}

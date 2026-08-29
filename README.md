@@ -47,6 +47,7 @@ Tap bubble → Accessibility reads screen → pick action → backend → LLM �
 replymint/
 ├── docs/            Architecture, roadmap, privacy, Reply Brain spec, dev setup
 ├── android/         Native Kotlin app (the product)
+├── desktop/         Tauri menu-bar app (Mac first): hotkey dictation into any app
 └── backend/         Lightweight Hono + Claude API server
 ```
 

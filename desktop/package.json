@@ -1,0 +1,15 @@
+{
+  "name": "replymint-desktop",
+  "version": "1.0.0",
+  "description": "ReplyMint desktop tray app (Tauri) — hotkey dictation into any app",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri",
+    "smoke": "cd src-tauri && cargo run -- smoke"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4"
+  },
+  "private": true
+}

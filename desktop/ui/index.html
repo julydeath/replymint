@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ReplyMint</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f1a14; --card: #16241c; --line: #24382c;
+      --text: #e7f3ec; --dim: #8fa89b; --mint: #4ade80; --err: #f87171;
+    }
+    * { box-sizing: border-box; margin: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font: 14px/1.5 -apple-system, "Inter", sans-serif;
+      padding: 20px; user-select: none;
+    }
+    h1 { font-size: 16px; margin-bottom: 2px; }
+    .sub { color: var(--dim); font-size: 12px; margin-bottom: 16px; }
+    label { display: block; font-size: 12px; color: var(--dim); margin: 12px 0 4px; }
+    input {
+      width: 100%; padding: 8px 10px; border-radius: 8px;
+      border: 1px solid var(--line); background: var(--card); color: var(--text);
+      font: inherit;
+    }
+    input:focus { outline: none; border-color: var(--mint); }
+    .row { display: flex; gap: 8px; margin-top: 16px; }
+    button {
+      flex: 1; padding: 8px 0; border-radius: 8px; border: 1px solid var(--line);
+      background: var(--card); color: var(--text); font: inherit; cursor: pointer;
+    }
+    button.primary { background: var(--mint); border-color: var(--mint); color: #06130b; font-weight: 600; }
+    #status { margin-top: 14px; font-size: 12px; color: var(--dim); min-height: 34px; }
+    #status.err { color: var(--err); }
+    #transcript {
+      margin-top: 6px; padding: 10px; border-radius: 8px; background: var(--card);
+      border: 1px solid var(--line); font-size: 13px; min-height: 42px;
+      user-select: text; white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>ReplyMint</h1>
+  <div class="sub">Press the hotkey in any app: speak, press again, the text lands in the box.</div>
+
+  <label for="url">Backend URL</label>
+  <input id="url" spellcheck="false" placeholder="http://localhost:8787" />
+
+  <label for="token">Access token (rt_…)</label>
+  <input id="token" type="password" spellcheck="false" placeholder="paste a token — sign-in comes later" />
+
+  <label for="hotkey">Hotkey</label>
+  <input id="hotkey" spellcheck="false" placeholder="alt+space" />
+
+  <div class="row">
+    <button id="save" class="primary">Save</button>
+    <button id="test">Test backend</button>
+  </div>
+
+  <div id="status"></div>
+  <div id="transcript"></div>
+
+  <script>
+    const { invoke } = window.__TAURI__.core;
+    const { listen } = window.__TAURI__.event;
+    const $ = (id) => document.getElementById(id);
+    const status = (msg, err = false) => {
+      $("status").textContent = msg;
+      $("status").className = err ? "err" : "";
+    };
+
+    invoke("get_settings").then((s) => {
+      $("url").value = s.backend_url;
+      $("token").value = s.token;
+      $("hotkey").value = s.hotkey;
+    });
+
+    $("save").onclick = async () => {
+      try {
+        await invoke("save_settings", { new: {
+          backend_url: $("url").value.trim(),
+          token: $("token").value.trim(),
+          hotkey: $("hotkey").value.trim() || "alt+space",
+        }});
+        status("Saved.");
+      } catch (e) { status(String(e), true); }
+    };
+
+    $("test").onclick = async () => {
+      status("Testing — streaming 2s of silence through the proxy…");
+      try {
+        const text = await invoke("test_backend");
+        status(`Backend OK. Transcript: ${JSON.stringify(text)}`);
+      } catch (e) { status(String(e), true); }
+    };
+
+    listen("dictation", ({ payload }) => {
+      const { kind, text } = payload;
+      if (kind === "state") status(text === "idle" ? "" : `● ${text}`);
+      else if (kind === "partial" || kind === "final") $("transcript").textContent = text;
+      else if (kind === "done") { $("transcript").textContent = text; status("Inserted."); }
+      else if (kind === "error") status(text, true);
+    });
+  </script>
+</body>
+</html>

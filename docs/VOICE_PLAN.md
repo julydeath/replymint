@@ -349,6 +349,13 @@ global hotkey → record mic → stream to backend STT proxy → (optional LLM p
 
 ### Order
 
+**Status (2026-08-29): D1 scaffolded in `desktop/`** — Tauri tray app builds and runs:
+global hotkey (⌥Space) → cpal mic capture → 16kHz resample → WS to `/v1/stt/stream` →
+clipboard-paste into the focused field. Headless `cargo run -- smoke` verified against the
+backend mock provider. Auth is a pasted dev token (`backend/scripts/dev-token.ts`) until
+accounts (A3). Remaining for D1: on-Mac hotkey/mic/paste run-through with permissions, and
+real STT once the Deepgram key exists.
+
 1. **D1** Mac tray app: hotkey → record → cloud STT → paste into focused field. (Dictation parity with Wispr.)
 2. **D2** Focused-window context read → context correction + instruction mode. (Differentiation.)
 3. **D3** Windows port of the same core.
@@ -386,7 +393,7 @@ You cannot perfect what you don't measure. Before V2 lands, build the eval harne
 | V3 | Cloud STT proxy + dual-engine (paid) | backend ✅ · client pending | Cloud beats native WER; <1.5s final transcript |
 | V4 | Offline honesty | 3 days | Airplane-mode dictation works |
 | V5 | Voice UX (smart intent, edit-in-place) | 1 wk | — |
-| D1 | Mac tray app (dictation parity) | 2–3 wk | Hotkey→text in any Mac app |
+| D1 | Mac tray app (dictation parity) | scaffolded ✅ · on-Mac run-through pending | Hotkey→text in any Mac app |
 | D2 | Mac context read (differentiation) | 1–2 wk | Instruction mode works on Mac |
 | D3 | Windows port | 2–3 wk | — |
 
