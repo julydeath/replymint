@@ -76,6 +76,8 @@
     <string name="greeting_evening">Good evening,</string>
     <string name="home_mode_title">Reply style</string>
     <string name="mode_personal_sub">Warm and casual — sounds like you texting a friend.</string>
+    <string name="cloud_stt_title">Cloud transcription</string>
+    <string name="cloud_stt_sub">Pro — higher accuracy; audio is processed in the cloud, never stored.</string>
     <string name="mode_professional_sub">Polished and precise — meetings, clients, LinkedIn.</string>
     <string name="home_apps_title">Works inside</string>
     <string name="home_replay">Replay the tour</string>

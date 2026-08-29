@@ -18,12 +18,15 @@ import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
+import com.replymint.BuildConfig
 import com.replymint.R
 import com.replymint.accessibility.ReplyMintAccessibilityService
 import com.replymint.core.EngineResult
 import com.replymint.core.ReplyEngine
 import com.replymint.core.UndoStore
+import com.replymint.data.ModeStore
 import com.replymint.model.ReplyAction
+import com.replymint.voice.Keywords
 import com.replymint.voice.VoiceInput
 import com.replymint.voice.VoiceResult
 import kotlinx.coroutines.CoroutineScope
@@ -226,13 +229,33 @@ class BubbleOverlay(private val context: Context) {
 
     // ---- Voice ------------------------------------------------------------------------------
 
+    /**
+     * V3 dual-engine: for pro accounts that keep the switch on, the cloud engine runs beside
+     * the native one from the same capture. The screen is read here — BEFORE dictation — so
+     * on-screen names ride the STT config as keyword bias; ReplyEngine still takes its own,
+     * fresher capture when the reply request is built.
+     */
+    private fun cloudConfig(): VoiceInput.CloudConfig? {
+        val store = ModeStore(context)
+        if (store.plan != "pro" || !store.cloudStt) return null
+        val token = store.token ?: return null
+        val screen = ReplyMintAccessibilityService.instance?.captureScreen()
+        return VoiceInput.CloudConfig(
+            baseUrl = BuildConfig.BASE_URL,
+            token = token,
+            keywords = screen?.let(Keywords::from).orEmpty(),
+            // Server says the cached tier is stale; the switch hides on the next dashboard visit.
+            onNotEntitled = { store.plan = "free" },
+        )
+    }
+
     private fun startVoiceThenReply() {
         showVoicePanel()
         smoothedLevel = 0f
         val transcript = voicePanelView?.findViewById<TextView>(R.id.voice_transcript)
         val wave = voicePanelView?.findViewById<WaveformView>(R.id.voice_wave)
         voiceInput = VoiceInput(context).also { vi ->
-            vi.start(object : VoiceInput.Listener {
+            vi.start(cloud = cloudConfig(), listener = object : VoiceInput.Listener {
                 override fun onPartial(text: String) {
                     transcript?.text =
                         if (text.isBlank()) context.getString(R.string.voice_hint) else text

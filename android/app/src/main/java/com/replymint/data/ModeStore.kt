@@ -42,12 +42,26 @@ class ModeStore(context: Context) {
 
     val isSignedIn: Boolean get() = token != null
 
+    /**
+     * Effective plan, cached from /v1/me on every app open. The server is authoritative —
+     * /v1/stt/stream re-checks it, so a stale "pro" here costs one rejected connect, nothing more.
+     */
+    var plan: String
+        get() = prefs.getString(KEY_PLAN, "free") ?: "free"
+        set(value) = prefs.edit().putString(KEY_PLAN, value).apply()
+
+    /** Pro-only opt-OUT: cloud transcription is on by default for pro accounts. */
+    var cloudStt: Boolean
+        get() = prefs.getBoolean(KEY_CLOUD_STT, true)
+        set(value) = prefs.edit().putBoolean(KEY_CLOUD_STT, value).apply()
+
     fun clearAuth() {
         prefs.edit()
             .remove(KEY_TOKEN_ENC)
             .remove(KEY_TOKEN_LEGACY)
             .remove(KEY_EMAIL)
             .remove(KEY_NAME)
+            .remove(KEY_PLAN)
             .apply()
     }
 
@@ -64,5 +78,7 @@ class ModeStore(context: Context) {
         const val KEY_EMAIL = "email"
         const val KEY_NAME = "name"
         const val KEY_ONBOARDED = "onboarded"
+        const val KEY_PLAN = "plan"
+        const val KEY_CLOUD_STT = "cloud_stt"
     }
 }

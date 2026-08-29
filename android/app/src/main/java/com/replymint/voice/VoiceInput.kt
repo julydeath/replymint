@@ -48,6 +48,20 @@ class VoiceInput(private val context: Context) {
         fun onError(message: String)
     }
 
+    /**
+     * Everything needed to run the cloud engine beside the native one (V3, pro-gated).
+     * Only attaches on the pipe path — on the legacy path the recognizer owns the mic
+     * and there are no frames to fan out.
+     */
+    data class CloudConfig(
+        val baseUrl: String,
+        val token: String,
+        /** Screen keywords for STT biasing; see [Keywords]. */
+        val keywords: List<String>,
+        /** Server said pro_required — the caller's cached plan is stale. Main thread. */
+        val onNotEntitled: (() -> Unit)? = null,
+    )
+
     private class Segment(
         val hypotheses: List<String>,
         val confidences: List<Float>,
@@ -65,6 +79,23 @@ class VoiceInput(private val context: Context) {
     private var bridge: Bridge? = null
     private var session: RecognizerSession? = null
     private var feeder: PipeFeeder? = null
+
+    // ---- Cloud engine state (V3 dual-engine). Cloud never blocks native: any failure marks
+    // it dead and the native flow proceeds untouched; at finish we wait at most CLOUD_WAIT_MS.
+    private var cloudConfig: CloudConfig? = null
+    private var cloudStt: CloudStt? = null
+    /** Set when the cloud "done" transcript arrives; null until then. */
+    private var cloudText: String? = null
+    private var cloudDead = false
+    /** True while finishAll() is parked waiting for the cloud transcript. */
+    private var awaitingCloud = false
+    private val cloudWaitRunnable = Runnable {
+        log("cloud transcript not in time (${CLOUD_WAIT_MS}ms) — shipping native")
+        awaitingCloud = false
+        cloudDead = true
+        cloudStt?.cancel()
+        finishAll()
+    }
 
     private val segments = mutableListOf<Segment>()
     /**
@@ -95,12 +126,18 @@ class VoiceInput(private val context: Context) {
 
     private val maxDurationRunnable = Runnable { stop() }
 
-    fun start(listener: Listener) {
+    @JvmOverloads
+    fun start(listener: Listener, cloud: CloudConfig? = null) {
         if (!SpeechRecognizer.isRecognitionAvailable(context)) {
             listener.onError("Voice input isn't available on this device")
             return
         }
         this.listener = listener
+        this.cloudConfig = cloud
+        cloudStt = null
+        cloudText = null
+        cloudDead = false
+        awaitingCloud = false
         stopped = false
         finished = false
         segments.clear()
@@ -128,6 +165,8 @@ class VoiceInput(private val context: Context) {
         main.removeCallbacks(maxDurationRunnable)
 
         if (usingPipe) {
+            // No more audio for the cloud either — ask for its flush before the mic closes.
+            cloudStt?.finish()
             // Closing the write end is the EOF that ends the session — `stopListening()` is the
             // wrong lever here. Measured on device: the final result follows within ~400 ms.
             bridge?.detach()?.finish()
@@ -143,6 +182,8 @@ class VoiceInput(private val context: Context) {
 
     fun release() {
         main.removeCallbacksAndMessages(null)
+        cloudStt?.cancel()
+        cloudStt = null
         endSession()
         bridge?.clear()
         bridge = null
@@ -167,10 +208,43 @@ class VoiceInput(private val context: Context) {
         pipeline.addSink(bridge)
         pipeline.setLevelSink { level -> main.post { listener?.onLevel(level) } }
 
+        // V3: the cloud engine is just a second sink on the same capture. Its whole
+        // lifecycle is independent of the recognizer session chain beside it.
+        cloudConfig?.let { cfg ->
+            val cloud = CloudStt(cfg.baseUrl, cfg.token, cfg.keywords, CloudCallbacks(cfg))
+            cloudStt = cloud
+            pipeline.addSink(cloud)
+            cloud.start()
+        }
+
         this.pipeline = pipeline
         this.bridge = bridge
         main.postDelayed(silenceWatch, SILENCE_POLL_MS)
         return true
+    }
+
+    /** Cloud events, already on the main thread (CloudStt marshals). */
+    private inner class CloudCallbacks(private val cfg: CloudConfig) : CloudStt.Listener {
+        override fun onDone(text: String) {
+            log("cloud done (${text.length} chars) · awaiting=$awaitingCloud")
+            cloudText = text
+            if (awaitingCloud && !finished) {
+                main.removeCallbacks(cloudWaitRunnable)
+                awaitingCloud = false
+                finishAll()
+            }
+        }
+
+        override fun onFailed(code: String?) {
+            log("cloud out of this utterance (code=$code) — native continues")
+            cloudDead = true
+            if (code == "pro_required") cfg.onNotEntitled?.invoke()
+            if (awaitingCloud && !finished) {
+                main.removeCallbacks(cloudWaitRunnable)
+                awaitingCloud = false
+                finishAll()
+            }
+        }
     }
 
     /**
@@ -381,6 +455,10 @@ class VoiceInput(private val context: Context) {
     private fun demoteFromPipe(persist: Boolean = true) {
         log("PIPE ABANDONED (persist=$persist) — falling back to the legacy mic path mid-utterance")
         if (persist) caps.rejectPipe()
+        // The pipeline is going away, so the cloud loses its frame source with it.
+        cloudStt?.cancel()
+        cloudStt = null
+        cloudDead = true
         usingPipe = false
         barrenPipedSessions = 0
         main.removeCallbacks(silenceWatch)
@@ -516,6 +594,19 @@ class VoiceInput(private val context: Context) {
 
     private fun finishAll() {
         if (finished) return
+        // Already parked on the cloud wait (a stop-fallback or second final can land here) —
+        // the cloud callbacks or the wait timeout will resume; completing now would drop it.
+        if (awaitingCloud) return
+        // Dual-engine reconciliation (V3): if the cloud transcript is close behind, wait for
+        // it — bounded, once — so the better transcript wins BEFORE the draft is written.
+        // Past the window the native result ships; a late cloud transcript is dropped (the
+        // silent draft-regeneration follow-up is documented in VOICE_PLAN).
+        if (cloudStt != null && cloudText == null && !cloudDead && !awaitingCloud) {
+            awaitingCloud = true
+            main.postDelayed(cloudWaitRunnable, CLOUD_WAIT_MS)
+            log("waiting ≤${CLOUD_WAIT_MS}ms for the cloud transcript")
+            return
+        }
         finished = true
         val result = buildResult()
         val captured = (pipeline?.bytesCaptured ?: 0L) /
@@ -539,14 +630,32 @@ class VoiceInput(private val context: Context) {
     }
 
     private fun buildResult(): VoiceResult {
-        val text = combined()
+        val native = combined()
+
+        // Cloud wins when it arrived with text (VOICE_PLAN V3: "cloud … wins if it differs").
+        // The native transcript rides along as a second hypothesis — extra signal for the V2
+        // screen-context corrector, exactly like a native n-best alternative.
+        val cloud = cloudText?.trim().orEmpty()
+        if (cloud.isNotEmpty()) {
+            return VoiceResult(
+                text = cloud,
+                hypotheses = listOfNotNull(
+                    cloud,
+                    native.takeIf { it.isNotBlank() && normalize(it) != normalize(cloud) },
+                ),
+                confidences = emptyList(),
+                source = VoiceSource.CLOUD,
+                lang = Locale.getDefault().toLanguageTag(),
+            )
+        }
+
         // n-best only survives a single-segment utterance. Across segments the alternatives are
         // combinatorial, and a synthesized list would be worse than none — V2 must treat
         // hypotheses beyond the first as a bonus, never a guarantee.
         val single = segments.singleOrNull()?.takeIf { !it.salvaged && lastPartial.isBlank() }
         return VoiceResult(
-            text = text,
-            hypotheses = single?.hypotheses ?: listOfNotNull(text.takeIf { it.isNotBlank() }),
+            text = native,
+            hypotheses = single?.hypotheses ?: listOfNotNull(native.takeIf { it.isNotBlank() }),
             confidences = single?.confidences.orEmpty(),
             source = if (onDevice) VoiceSource.NATIVE_ON_DEVICE else VoiceSource.NATIVE_NETWORK,
             lang = Locale.getDefault().toLanguageTag(),
@@ -623,5 +732,12 @@ class VoiceInput(private val context: Context) {
         const val MIN_SHARED_PREFIX_CHARS = 6
         /** ~4 s of backlog between sessions; a normal changeover uses three or four frames. */
         const val MAX_PENDING_FRAMES = 100
+
+        /**
+         * How long finishAll() waits for the cloud transcript after the native path is done.
+         * Deepgram's post-finish flush measures ~300-800 ms; past this the native result ships
+         * (cloud must improve accuracy, never add perceptible latency).
+         */
+        const val CLOUD_WAIT_MS = 1_200L
     }
 }

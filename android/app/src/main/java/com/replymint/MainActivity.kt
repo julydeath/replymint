@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButtonToggleGroup
+import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.replymint.auth.SignInManager
 import com.replymint.data.ModeStore
@@ -65,6 +66,12 @@ class MainActivity : AppCompatActivity() {
             bindModeNote()
         }
 
+        findViewById<MaterialSwitch>(R.id.cloud_stt_switch).apply {
+            isChecked = store.cloudStt
+            setOnCheckedChangeListener { _, checked -> store.cloudStt = checked }
+        }
+        bindCloudSttRow()
+
         findViewById<View>(R.id.row_overlay).setOnClickListener { PermissionsUi.requestOverlay(this) }
         findViewById<View>(R.id.row_a11y).setOnClickListener { PermissionsUi.openAccessibilitySettings(this) }
         findViewById<View>(R.id.btn_replay).setOnClickListener {
@@ -100,6 +107,12 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.greeting_line).text =
             if (name.isEmpty()) greeting.trimEnd(',') else "$greeting\n$name"
         findViewById<TextView>(R.id.avatar_badge).text = name.take(1).ifEmpty { "•" }
+    }
+
+    /** The cloud-transcription switch is a pro-only surface; free plans never see it. */
+    private fun bindCloudSttRow() {
+        findViewById<View>(R.id.cloud_stt_row).visibility =
+            if (store.plan == "pro") View.VISIBLE else View.GONE
     }
 
     private fun bindModeNote() {
@@ -142,6 +155,8 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             AuthClient(BuildConfig.BASE_URL).fetchMe(token).fold(
                 onSuccess = { me ->
+                    store.plan = me.plan   // server is authoritative for the tier
+                    bindCloudSttRow()
                     val used = me.todayCount.coerceAtMost(me.dailyLimit)
                     findViewById<View>(R.id.usage_card).visibility = View.VISIBLE
                     findViewById<CircularProgressIndicator>(R.id.usage_ring).apply {

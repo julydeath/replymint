@@ -59,6 +59,8 @@ data class AuthExchangeResponse(val token: String, val user: AuthUser)
 data class MeResponse(
     val email: String,
     val name: String? = null,
+    /** Effective plan: "pro" unlocks cloud STT. Default keeps old backends working. */
+    val plan: String = "free",
     val todayCount: Int,
     val dailyLimit: Int
 )

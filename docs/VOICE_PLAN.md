@@ -401,7 +401,7 @@ You cannot perfect what you don't measure. Before V2 lands, build the eval harne
 | V1 | `AudioPipeline` (fixes clipping) | ✅ verified | Gapless with pauses on Nothing A059 |
 | — | Eval harness (Part 4, parallel) | harness ✅ (`backend/scripts/eval/`, `npm run eval`) · clips + baseline pending | WER baseline recorded |
 | V2 | N-best + screen-context correction | ✅ shipped | Name/currency correction verified on device |
-| V3 | Cloud STT proxy + dual-engine (paid) | backend ✅ · client pending | Cloud beats native WER; <1.5s final transcript |
+| V3 | Cloud STT proxy + dual-engine (paid) | backend ✅ · Android + Mac clients built ✅ · gate run pending | Cloud beats native WER; <1.5s final transcript |
 | V4 | Offline honesty | 3 days | Airplane-mode dictation works |
 | V5 | Voice UX (smart intent, edit-in-place) | 1 wk | — |
 | D1 | Mac tray app (dictation parity) | scaffolded ✅ · on-Mac run-through pending | Hotkey→text in any Mac app |
