@@ -357,6 +357,17 @@ global hotkey → record mic → stream to backend STT proxy → (optional LLM p
 - **Context still wins on desktop**: macOS AX API / Windows UI Automation can read the
   focused window's visible text. Same trick as Android's screen read → context-corrected
   transcription and instruction mode work on desktop too. Wispr is blind there; we're not.
+- **Mac is pro-only for now** (decided 2026-08-29): the desktop app's only STT engine is
+  the cloud proxy, so `plan='free'` accounts get `pro_required` and Mac dictation simply
+  requires pro — same posture as Wispr Flow (paid-only). Beta testers get pro via tokens
+  (below). Two future levers, in order of likelihood:
+  - **Free metered taste (post-pricing-launch)**: let free accounts through the STT gate
+    with a small daily allowance (e.g. `STT_DAILY_SECONDS_FREE=300` vs pro's 1800) —
+    ~15 lines in server.ts since the quota machinery exists; costs ~2.5¢/free-user/day
+    at Deepgram rates, and gives Mac a natural daily upgrade nudge.
+  - **True free tier via Apple's native engine (post-beta, "V4 for Mac")**: mirror
+    Android's split with `SFSpeechRecognizer` free / Deepgram pro. A week-ish of
+    Rust↔Speech-framework work; also the offline-honesty story on desktop.
 
 ### Order
 

@@ -71,3 +71,8 @@ Shared business Reply Brains, admin controls, seat billing, custom pricing.
 Any paid tier sets `users.plan = 'pro'`, which is a separate, server-enforced axis from
 mode: it gates **cloud STT** (`/v1/stt/stream`, Deepgram). Free accounts in either mode
 use native on-device transcription (V2 context correction included — that stays free).
+
+**Mac is pro-only for now** — the desktop app has no native STT engine, so cloud STT is
+its only path (same posture as Wispr Flow). Future free options, noted in VOICE_PLAN
+(Part 3 → Decisions): a small metered daily STT allowance for free accounts when pricing
+launches, and eventually a true free tier via Apple's `SFSpeechRecognizer`.
