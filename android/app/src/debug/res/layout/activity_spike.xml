@@ -96,6 +96,14 @@
             android:text="C · Live mic + pipe together"
             tools:ignore="HardcodedText" />
 
+        <Button
+            android:id="@+id/spike_run_eval"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="E · Native eval baseline (Download/replymint-eval)"
+            tools:ignore="HardcodedText" />
+
         <TextView
             android:id="@+id/spike_status"
             android:layout_width="match_parent"

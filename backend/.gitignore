@@ -2,3 +2,8 @@ node_modules/
 .env
 dist/
 *.log
+
+# Eval fixtures are voice clips (personal data) and per-run results.
+scripts/eval/fixtures/*
+!scripts/eval/fixtures/README.md
+scripts/eval/out/

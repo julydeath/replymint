@@ -12,7 +12,8 @@
     "start": "tsx src/server.ts",
     "typecheck": "tsc --noEmit",
     "db:schema": "tsx --env-file=.env scripts/apply-schema.ts",
-    "stt:smoke": "tsx --env-file=.env scripts/stt-smoke.ts"
+    "stt:smoke": "tsx --env-file=.env scripts/stt-smoke.ts",
+    "eval": "tsx --env-file=.env scripts/eval/run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",

@@ -85,6 +85,7 @@ class SpikeActivity : AppCompatActivity() {
         button(R.id.spike_run_a) { runControl() }
         button(R.id.spike_run_b) { runReplay() }
         button(R.id.spike_run_c) { runLive() }
+        button(R.id.spike_run_eval) { runNativeEval() }
         button(R.id.spike_models) { checkModels() }
         button(R.id.spike_copy) { copyReport() }
 
@@ -284,6 +285,39 @@ class SpikeActivity : AppCompatActivity() {
             speech.stopListening()
         }
         watchStall(fed) {}
+    }
+
+    // ---- Test E · Native eval baseline (VOICE_PLAN Part 4) ---------------------------------
+
+    /**
+     * Streams the WER fixture clips (adb-pushed to Download/replymint-eval) through the piped
+     * recognizer and writes .hyp.txt files for `npm run eval -- --hyp-dir`. Needs the media-read
+     * permission to open WAVs another uid (adb) put in Download.
+     */
+    private fun runNativeEval() {
+        val perm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_AUDIO
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+        if (ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(perm), 2)
+            return
+        }
+        guard("E · native eval baseline") {
+            NativeEval(
+                context = this,
+                onDevice = onDeviceBox.isChecked,
+                preferOffline = offlineBox.isChecked,
+                segmented = segmentedBox.isChecked,
+                status = ::status,
+                done = { text ->
+                    running = false
+                    section("E · native eval [${config()}]", text.trim().lines())
+                    status("E · native eval finished — see report")
+                },
+            ).run()
+        }
     }
 
     // ---- On-device language models --------------------------------------------------------
