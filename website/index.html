@@ -71,6 +71,8 @@
       }
       html {
         scroll-behavior: smooth;
+        overflow-x: hidden;
+        overflow-x: clip;
       }
       body {
         background: var(--bg);
@@ -2256,6 +2258,16 @@
         .nav-links a.nl {
           display: none;
         }
+        /* round icon-only download button */
+        #nav-dl-label {
+          display: none;
+        }
+        .nav-dl {
+          padding: 10px;
+        }
+        header.hero.wrap::before {
+          width: 100vw;
+        }
         .phones {
           gap: 32px;
         }
@@ -2429,7 +2441,7 @@
           <span class="logo-orb">
             <img src="assets/logo-round-black.png" alt="" width="32" height="32" />
           </span>
-          Reply<span class="mint">Mint</span>
+          <span class="brand-name">Reply<span class="mint">Mint</span></span>
         </a>
         <div class="nav-links">
           <a class="nl" href="#how">How it works</a>
