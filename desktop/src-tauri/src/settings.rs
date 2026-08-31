@@ -2,14 +2,17 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
-/// Until desktop sign-in lands (Backlog A3), the token is an rt_ token pasted
-/// into Settings — mint one for dev with `npm run` scripts in backend/ (see
-/// desktop/README.md). The file lives in Application Support, not the repo.
+/// The token is an rt_ token minted at sign-in (auth.rs); a pasted dev token
+/// (backend `npm run` scripts, see desktop/README.md) still works via the
+/// Advanced section. The file lives in Application Support, not the repo.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Settings {
     pub backend_url: String,
     pub token: String,
+    /// Signed-in Google account, cached for instant/offline render in Settings.
+    /// Backfilled from /v1/me for legacy pasted tokens.
+    pub email: String,
     pub hotkey: String,
     /// "dictation" inserts the transcript verbatim; "assistant" treats speech as
     /// an instruction — the focused window's AX text + transcript go to /v1/reply
@@ -26,6 +29,7 @@ impl Default for Settings {
         Self {
             backend_url: "http://localhost:8787".into(),
             token: String::new(),
+            email: String::new(),
             hotkey: "alt+space".into(),
             mode: "dictation".into(),
             clean_dictation: true,

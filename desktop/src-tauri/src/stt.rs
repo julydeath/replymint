@@ -25,6 +25,9 @@ struct WireMsg {
     kind: Option<String>,
     text: Option<String>,
     message: Option<String>,
+    /// Machine-readable error code ("pro_required", "stt_quota") — mapped to
+    /// friendlier copy than the server's message.
+    code: Option<String>,
 }
 
 /// Streams audio chunks from `audio_rx` to the backend proxy and forwards
@@ -92,7 +95,15 @@ pub async fn run_session(
                         }
                         Some("error") => {
                             on_event(SttEvent::Error);
-                            return Err(m.message.unwrap_or_else(|| "stt error".into()));
+                            return Err(match m.code.as_deref() {
+                                Some("pro_required") => {
+                                    "Cloud dictation requires ReplyMint Pro".into()
+                                }
+                                Some("stt_quota") => {
+                                    "Daily dictation limit reached — resets at midnight UTC".into()
+                                }
+                                _ => m.message.unwrap_or_else(|| "stt error".into()),
+                            });
                         }
                         _ => {}
                     }

@@ -22,6 +22,10 @@ create table if not exists usage_daily (
   primary key (user_id, day)
 );
 
+-- Desktop sign-in (A3): which client minted a token, for future per-device management.
+alter table tokens add column if not exists platform text;      -- 'android' | 'macos' | 'windows'
+alter table tokens add column if not exists device_name text;
+
 -- V3 cloud STT metering: seconds of audio proxied per day (content is never stored).
 alter table usage_daily add column if not exists stt_seconds int not null default 0;
 

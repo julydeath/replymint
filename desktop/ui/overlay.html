@@ -4,25 +4,31 @@
   <meta charset="utf-8" />
   <title>ReplyMint Overlay</title>
   <style>
-    /* The window is transparent and click-through; the pill is the only visual. */
+    /* The window is transparent and click-through; the pill is the only visual.
+       Elevated-mint spec: the glass look comes from the semi-opaque fill —
+       backdrop-filter can't blur the desktop behind a transparent Tauri window. */
+    @font-face { font-family: "Inter"; font-weight: 400; src: url("fonts/inter_regular.ttf"); }
+    @font-face { font-family: "Inter"; font-weight: 500; src: url("fonts/inter_medium.ttf"); }
     :root {
-      --bg: rgba(15, 26, 20, 0.92); --line: rgba(74, 222, 128, 0.25);
-      --text: #e7f3ec; --dim: #8fa89b; --mint: #4ade80;
-      --err: #f87171; --warn: #fbbf24;
+      --bg: rgba(18, 24, 30, 0.86); --line: rgba(255, 255, 255, 0.08);
+      --text: #F2F5F7; --dim: #9AA6B2; --mint: #2BE6A0;
+      --err: #FF6B6B; --warn: #fbbf24;
     }
     * { box-sizing: border-box; margin: 0; }
     html, body { background: transparent; height: 100%; overflow: hidden; }
     body {
       display: flex; align-items: center; justify-content: center;
-      font: 14px/1.4 -apple-system, "Inter", sans-serif;
+      font: 14px/1.4 "Inter", -apple-system, sans-serif;
       user-select: none; cursor: default;
+      -webkit-font-smoothing: antialiased;
     }
     #pill {
       display: flex; align-items: center; gap: 10px;
       max-width: 560px; min-width: 220px; height: 44px;
-      padding: 0 18px 0 14px; border-radius: 22px;
+      padding: 0 18px 0 14px; border-radius: 999px;
       background: var(--bg); border: 1px solid var(--line);
       color: var(--text);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
       opacity: 0; transform: translateY(6px);
       transition: opacity 160ms ease, transform 160ms ease;
     }

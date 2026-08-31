@@ -38,7 +38,9 @@ Ordered roughly by dependency/priority. See [ROADMAP.md](ROADMAP.md) for the big
 - [x] A3.4 Backend: verify a real token on `/v1/reply` (`requireAuth` in `auth.ts`)
 - [x] A3.5 Backend: token issue/verify (`POST /v1/auth/google` exchanges Google ID token for opaque `rt_` token)
 - [x] A3.6 App handles signed-out / expired-token states (401 → clear auth → onboarding)
-- [ ] A3.7 USER SETUP: Google Cloud Console (consent screen + 3 OAuth clients), fill `replymint.googleWebClientId` + Render `GOOGLE_WEB_CLIENT_ID`
+- [ ] A3.7 USER SETUP: Google Cloud Console (consent screen + 3 OAuth clients), fill `replymint.googleWebClientId` + Render `GOOGLE_WEB_CLIENT_ID`; for Mac also a **Desktop app** client → `GOOGLE_CLIENT_IDS`/`GOOGLE_DESKTOP_CLIENT_ID`/`GOOGLE_DESKTOP_CLIENT_SECRET` on the backend + client id into the desktop build, and run the two `alter table tokens` lines (schema.sql) in Supabase
+- [x] A3.8 Mac: browser sign-in — loopback redirect + PKCE (`desktop/src-tauri/src/auth.rs`), backend code exchange (`POST /v1/auth/google/desktop`), `platform`/`device_name` on tokens; legacy pasted tokens still work (email backfilled via `/v1/me`)
+- [x] A3.9 Backend: pro users no longer capped at `FREE_DAILY_LIMIT` on `/v1/reply` (was `!isExempt`, now `!isPro`)
 
 ### A4 · Usage metering + free-tier limits
 - [x] A4.1 Backend: persist per-user request counts (`usage_daily` in Supabase)

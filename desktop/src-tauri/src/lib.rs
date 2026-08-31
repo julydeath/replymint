@@ -4,6 +4,7 @@
 //! into the focused field via AX (clipboard-paste fallback). In Assistant mode
 //! the transcript is an instruction: /v1/reply writes the draft that lands.
 
+mod auth;
 mod ax;
 mod audio;
 mod insert;
@@ -13,6 +14,7 @@ mod stt;
 
 use serde_json::json;
 use std::str::FromStr;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
@@ -55,7 +57,10 @@ pub fn run() {
             save_settings,
             test_backend,
             toggle,
-            request_ax
+            request_ax,
+            sign_in,
+            sign_out,
+            fetch_me
         ])
         .on_window_event(|window, event| {
             // Closing the settings window hides it; the app lives in the tray.
@@ -163,7 +168,7 @@ fn toggle_dictation(app: &AppHandle) {
     let cfg = settings::load();
     if cfg.token.is_empty() {
         show_settings(app);
-        emit_ui(app, "error", "no token set — paste one in Settings");
+        emit_ui(app, "error", "not signed in — open Settings to sign in");
         return;
     }
 
@@ -348,6 +353,62 @@ async fn test_backend() -> Result<String, String> {
 #[tauri::command]
 fn toggle(app: AppHandle) {
     toggle_dictation(&app);
+}
+
+/// One sign-in at a time — a second click while the browser tab is open must
+/// not spawn a second loopback listener + consent page.
+static SIGN_IN_RUNNING: AtomicBool = AtomicBool::new(false);
+
+/// Settings → "Sign in with Google": runs the loopback OAuth flow (auth.rs),
+/// saves the minted token + email, and returns /v1/me for immediate render.
+#[tauri::command]
+async fn sign_in() -> Result<auth::MeResponse, String> {
+    if SIGN_IN_RUNNING.swap(true, Ordering::SeqCst) {
+        return Err("sign-in already in progress — check your browser".into());
+    }
+    let result = async {
+        let cfg = settings::load();
+        let signed = auth::sign_in(&cfg.backend_url).await?;
+        let me = auth::fetch_me(&cfg.backend_url, &signed.token).await?;
+        let mut cfg = settings::load(); // reload: don't clobber edits made mid-flow
+        cfg.token = signed.token;
+        cfg.email = me.email.clone();
+        settings::save(&cfg)?;
+        Ok(me)
+    }
+    .await;
+    SIGN_IN_RUNNING.store(false, Ordering::SeqCst);
+    result
+}
+
+/// Best-effort server revoke, then clear local token + email.
+#[tauri::command]
+async fn sign_out() -> Result<(), String> {
+    let mut cfg = settings::load();
+    if !cfg.token.is_empty() {
+        auth::sign_out(&cfg.backend_url, &cfg.token).await;
+    }
+    cfg.token = String::new();
+    cfg.email = String::new();
+    settings::save(&cfg)
+}
+
+/// Plan + usage for the settings window. Errs "unauthorized" on a dead token
+/// (UI flips to signed-out). Backfills the cached email for legacy pasted
+/// tokens so they migrate to the signed-in UI with zero user action.
+#[tauri::command]
+async fn fetch_me() -> Result<auth::MeResponse, String> {
+    let cfg = settings::load();
+    if cfg.token.is_empty() {
+        return Err("unauthorized".into());
+    }
+    let me = auth::fetch_me(&cfg.backend_url, &cfg.token).await?;
+    if cfg.email != me.email {
+        let mut cfg = settings::load();
+        cfg.email = me.email.clone();
+        let _ = settings::save(&cfg);
+    }
+    Ok(me)
 }
 
 /// Settings → "Grant Accessibility": returns whether we're trusted. If not,

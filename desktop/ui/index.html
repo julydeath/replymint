@@ -4,74 +4,246 @@
   <meta charset="utf-8" />
   <title>ReplyMint</title>
   <style>
+    /* Elevated-mint spec (mockups/index.html) — same tokens Android ships. */
+    @font-face { font-family: "Inter"; font-weight: 400; src: url("fonts/inter_regular.ttf"); }
+    @font-face { font-family: "Inter"; font-weight: 500; src: url("fonts/inter_medium.ttf"); }
+    @font-face { font-family: "Inter"; font-weight: 600; src: url("fonts/inter_semibold.ttf"); }
+    @font-face { font-family: "Inter"; font-weight: 700; src: url("fonts/inter_bold.ttf"); }
+    @font-face { font-family: "Space Grotesk"; font-weight: 500; src: url("fonts/space_grotesk_medium.ttf"); }
+    @font-face { font-family: "Space Grotesk"; font-weight: 700; src: url("fonts/space_grotesk_bold.ttf"); }
+
     :root {
       color-scheme: dark;
-      --bg: #0f1a14; --card: #16241c; --line: #24382c;
-      --text: #e7f3ec; --dim: #8fa89b; --mint: #4ade80; --err: #f87171; --warn: #fbbf24;
+      --bg: #07090C; --bg2: #0B0F13; --panel: #10151B; --panel2: #141B22;
+      --stroke: rgba(255,255,255,.08);
+      --mint: #2BE6A0; --mint-deep: #10B981; --on-mint: #07130E;
+      --ink: #F2F5F7; --ink-dim: #9AA6B2; --ink-faint: #5D6873;
+      --err: #FF6B6B; --warn: #fbbf24;
     }
     * { box-sizing: border-box; margin: 0; }
     body {
-      background: var(--bg); color: var(--text);
-      font: 14px/1.5 -apple-system, "Inter", sans-serif;
-      padding: 20px; user-select: none;
+      background: radial-gradient(1200px 500px at 50% -200px, #0C1218 0%, var(--bg) 60%);
+      color: var(--ink);
+      font: 14px/1.5 "Inter", -apple-system, sans-serif;
+      padding: 18px 18px 24px; user-select: none;
+      -webkit-font-smoothing: antialiased;
     }
-    h1 { font-size: 16px; margin-bottom: 2px; }
-    .sub { color: var(--dim); font-size: 12px; margin-bottom: 16px; }
-    label { display: block; font-size: 12px; color: var(--dim); margin: 12px 0 4px; }
+
+    .card {
+      background: linear-gradient(170deg, var(--panel2), var(--panel));
+      border: 1px solid var(--stroke);
+      border-radius: 22px; padding: 19px; margin-bottom: 12px;
+    }
+    .eyebrow {
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .13em; color: var(--ink-faint); margin-bottom: 12px;
+    }
+
+    /* Brand row */
+    #brand { display: flex; align-items: center; gap: 10px; padding: 4px 2px 16px; }
+    #orb {
+      width: 26px; height: 26px; border-radius: 50%; flex: none;
+      background: radial-gradient(circle at 32% 30%, #3EF0AE, var(--mint-deep) 70%);
+      box-shadow: 0 0 18px rgba(43,230,160,.4);
+    }
+    #wordmark { font-family: "Space Grotesk"; font-weight: 700; font-size: 18px; letter-spacing: -.01em; }
+    #avatar {
+      margin-left: auto; width: 30px; height: 30px; border-radius: 50%;
+      display: none; align-items: center; justify-content: center;
+      background: var(--panel2); border: 1px solid var(--stroke);
+      font-family: "Space Grotesk"; font-weight: 700; font-size: 13px; color: var(--mint);
+    }
+
+    /* Hero (signed out) */
+    #hero h2 { font-family: "Space Grotesk"; font-weight: 700; font-size: 19px; margin-bottom: 4px; }
+    #hero p { color: var(--ink-dim); font-size: 13px; margin-bottom: 16px; }
+    #signin {
+      width: 100%; padding: 13px 0; border: none; border-radius: 16px;
+      background: linear-gradient(120deg, #3EF0AE, #10B981);
+      color: var(--on-mint); font: 600 14px "Inter"; cursor: pointer;
+      box-shadow: 0 6px 22px rgba(43,230,160,.28);
+    }
+    #signin:disabled { opacity: .6; cursor: default; box-shadow: none; }
+
+    /* Account */
+    #account-row { display: flex; align-items: center; gap: 10px; }
+    #email { font-weight: 500; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chip {
+      flex: none; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+      background: rgba(43,230,160,.12); color: var(--mint); border: 1px solid rgba(43,230,160,.25);
+    }
+    .chip.free { background: var(--bg2); color: var(--ink-dim); border-color: var(--stroke); }
+    .ghost {
+      padding: 7px 14px; border-radius: 12px; border: 1px solid var(--stroke);
+      background: transparent; color: var(--ink-dim); font: 500 12px "Inter"; cursor: pointer;
+    }
+    .ghost:hover { color: var(--ink); border-color: rgba(255,255,255,.18); }
+    #signout { margin-left: auto; flex: none; }
+
+    /* Usage */
+    #usage-body { display: flex; align-items: center; gap: 18px; }
+    #ring-wrap { position: relative; width: 88px; height: 88px; flex: none; }
+    #ring-wrap svg { transform: rotate(-90deg); }
+    #ring-count {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-family: "Space Grotesk"; font-weight: 700; font-size: 17px;
+    }
+    #usage-left { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+    #usage-sub { color: var(--ink-dim); font-size: 12px; }
+    #usage.unavailable #usage-body { opacity: .45; }
+
+    /* Mode segmented control */
+    #seg {
+      position: relative; display: flex; background: var(--bg2);
+      border: 1px solid var(--stroke); border-radius: 14px; padding: 3px;
+    }
+    #seg button {
+      flex: 1; padding: 9px 0; border: none; background: transparent; border-radius: 11px;
+      color: var(--ink-dim); font: 600 13px "Inter"; cursor: pointer;
+      position: relative; z-index: 1; transition: color 180ms ease;
+    }
+    #seg button.on { color: var(--on-mint); }
+    #thumb {
+      position: absolute; top: 3px; left: 3px; bottom: 3px; width: calc(50% - 3px);
+      border-radius: 11px; background: linear-gradient(120deg, #3EF0AE, var(--mint-deep));
+      transition: transform 200ms cubic-bezier(.4,0,.2,1);
+    }
+    #seg.assistant #thumb { transform: translateX(100%); }
+    #mode-note { color: var(--ink-dim); font-size: 12px; margin-top: 11px; min-height: 34px; }
+
+    /* Polish switch row */
+    #polish-row {
+      display: flex; align-items: center; gap: 12px; margin-top: 13px;
+      padding-top: 15px; border-top: 1px solid var(--stroke); cursor: pointer;
+    }
+    #polish-row .t { font-weight: 500; font-size: 13px; }
+    #polish-row .s { color: var(--ink-dim); font-size: 12px; }
+    .switch {
+      margin-left: auto; flex: none; width: 40px; height: 24px; border-radius: 999px;
+      background: var(--bg2); border: 1px solid var(--stroke); position: relative;
+      transition: background 160ms ease;
+    }
+    .switch::after {
+      content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+      border-radius: 50%; background: var(--ink-faint); transition: all 160ms ease;
+    }
+    .switch.on { background: var(--mint-deep); border-color: transparent; }
+    .switch.on::after { left: 18px; background: #fff; }
+    #polish-row.disabled { opacity: .4; pointer-events: none; }
+
+    label { display: block; font-size: 12px; color: var(--ink-dim); margin: 12px 0 5px; }
+    label:first-of-type { margin-top: 0; }
     input {
-      width: 100%; padding: 8px 10px; border-radius: 8px;
-      border: 1px solid var(--line); background: var(--card); color: var(--text);
-      font: inherit;
+      width: 100%; padding: 10px 12px; border-radius: 12px;
+      border: 1px solid var(--stroke); background: var(--bg2); color: var(--ink);
+      font: inherit; font-size: 13px;
     }
-    input:focus { outline: none; border-color: var(--mint); }
-    .row { display: flex; gap: 8px; margin-top: 16px; }
-    button {
-      flex: 1; padding: 8px 0; border-radius: 8px; border: 1px solid var(--line);
-      background: var(--card); color: var(--text); font: inherit; cursor: pointer;
+    input:focus { outline: none; border-color: rgba(43,230,160,.5); }
+
+    details { margin-bottom: 12px; }
+    details > summary {
+      list-style: none; cursor: pointer; padding: 12px 19px;
+      font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .13em;
+      color: var(--ink-faint); border: 1px solid var(--stroke); border-radius: 22px;
+      background: linear-gradient(170deg, var(--panel2), var(--panel));
     }
-    button.primary { background: var(--mint); border-color: var(--mint); color: #06130b; font-weight: 600; }
-    #status { margin-top: 14px; font-size: 12px; color: var(--dim); min-height: 34px; }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::after { content: "▸"; float: right; transition: transform 150ms; }
+    details[open] > summary { border-radius: 22px 22px 0 0; border-bottom: none; }
+    details[open] > summary::after { transform: rotate(90deg); }
+    details .card { border-radius: 0 0 22px 22px; margin-bottom: 0; }
+    .row { display: flex; gap: 8px; margin-top: 14px; }
+    .row .ghost { flex: 1; padding: 9px 0; }
+
+    #status { margin: 2px 2px 6px; font-size: 12px; color: var(--ink-dim); min-height: 20px; }
     #status.err { color: var(--err); }
     #status.warn { color: var(--warn); }
-    .check { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; }
-    .check input { width: auto; accent-color: var(--mint); }
     #transcript {
-      margin-top: 6px; padding: 10px; border-radius: 8px; background: var(--card);
-      border: 1px solid var(--line); font-size: 13px; min-height: 42px;
-      user-select: text; white-space: pre-wrap;
+      padding: 12px 14px; border-radius: 16px; background: var(--bg2);
+      border: 1px solid var(--stroke); font-size: 13px; min-height: 44px;
+      color: var(--ink-dim); user-select: text; white-space: pre-wrap;
     }
+    #transcript:not(:empty) { color: var(--ink); }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
-  <h1>ReplyMint</h1>
-  <div class="sub">Press the hotkey in any app: speak, press again, the text lands in the box.</div>
-
-  <label for="url">Backend URL</label>
-  <input id="url" spellcheck="false" placeholder="http://localhost:8787" />
-
-  <label for="token">Access token (rt_…)</label>
-  <input id="token" type="password" spellcheck="false" placeholder="paste a token — sign-in comes later" />
-
-  <label for="hotkey">Hotkey</label>
-  <input id="hotkey" spellcheck="false" placeholder="alt+space" />
-
-  <label>Mode</label>
-  <div class="row" style="margin-top:0">
-    <button id="mode-dictation">Dictation</button>
-    <button id="mode-assistant">Assistant</button>
+  <div id="brand">
+    <div id="orb"></div>
+    <div id="wordmark">ReplyMint</div>
+    <div id="avatar"></div>
   </div>
-  <div class="sub" id="mode-note" style="margin:6px 0 0"></div>
 
-  <label class="check" id="clean-row">
-    <input type="checkbox" id="clean" />
-    Polish dictation — fix grammar, drop stutters and filler words before inserting
-  </label>
-
-  <div class="row">
-    <button id="save" class="primary">Save</button>
-    <button id="test">Test backend</button>
-    <button id="ax">Grant Accessibility</button>
+  <div class="card hidden" id="hero">
+    <h2>Speak. It lands anywhere.</h2>
+    <p>Sign in to dictate into any Mac app — your free drafts are shared with your phone.</p>
+    <button id="signin">Sign in with Google</button>
   </div>
+
+  <div class="card hidden" id="account">
+    <div class="eyebrow">Account</div>
+    <div id="account-row">
+      <span id="email"></span>
+      <span class="chip free" id="plan-chip">Free</span>
+      <button class="ghost" id="signout">Sign out</button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="usage">
+    <div class="eyebrow">Today</div>
+    <div id="usage-body">
+      <div id="ring-wrap">
+        <svg width="88" height="88" viewBox="0 0 88 88">
+          <circle cx="44" cy="44" r="39" fill="none" stroke="var(--bg2)" stroke-width="8" />
+          <circle id="ring" cx="44" cy="44" r="39" fill="none" stroke="var(--mint)" stroke-width="8"
+                  stroke-linecap="round" stroke-dasharray="245.04" stroke-dashoffset="245.04"
+                  style="transition: stroke-dashoffset 400ms ease" />
+        </svg>
+        <div id="ring-count">–</div>
+      </div>
+      <div>
+        <div id="usage-left">…</div>
+        <div id="usage-sub"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">Mode</div>
+    <div id="seg">
+      <div id="thumb"></div>
+      <button id="mode-dictation">Dictation</button>
+      <button id="mode-assistant">Assistant</button>
+    </div>
+    <div id="mode-note"></div>
+    <div id="polish-row">
+      <div>
+        <div class="t">Polish dictation</div>
+        <div class="s">Fix grammar, drop stutters and fillers before inserting</div>
+      </div>
+      <div class="switch" id="polish"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">Hotkey</div>
+    <input id="hotkey" spellcheck="false" placeholder="alt+space" />
+  </div>
+
+  <details>
+    <summary>Advanced</summary>
+    <div class="card">
+      <label for="url">Backend URL</label>
+      <input id="url" spellcheck="false" placeholder="http://localhost:8787" />
+      <label for="token">Access token (rt_…) — dev escape hatch</label>
+      <input id="token" type="password" spellcheck="false" placeholder="paste a dev token instead of signing in" />
+      <div class="row">
+        <button class="ghost" id="save-adv">Save</button>
+        <button class="ghost" id="test">Test backend</button>
+        <button class="ghost" id="ax">Grant Accessibility</button>
+      </div>
+    </div>
+  </details>
 
   <div id="status"></div>
   <div id="transcript"></div>
@@ -90,21 +262,95 @@
       sticky = cls === "err" || cls === "warn";
     };
 
+    // ---- Account + usage -------------------------------------------------
+    const RING_C = 245.04; // 2π·39
+    const show = (id, on) => $(id).classList.toggle("hidden", !on);
+
+    const renderSignedOut = () => {
+      show("hero", true); show("account", false); show("usage", false);
+      $("avatar").style.display = "none";
+    };
+    const renderAccount = (email, me) => {
+      show("hero", false); show("account", true); show("usage", true);
+      $("email").textContent = email;
+      $("avatar").style.display = "flex";
+      $("avatar").textContent = (email[0] || "?").toUpperCase();
+      const usage = $("usage");
+      if (!me) { // offline / fetch failed: cached identity, dimmed usage
+        usage.classList.add("unavailable");
+        $("ring-count").textContent = "–";
+        $("ring").style.strokeDashoffset = RING_C;
+        $("usage-left").textContent = "usage unavailable";
+        $("usage-sub").textContent = "couldn't reach the backend";
+        return;
+      }
+      usage.classList.remove("unavailable");
+      const pro = me.plan === "pro";
+      $("plan-chip").textContent = pro ? "Pro" : "Free";
+      $("plan-chip").className = "chip" + (pro ? "" : " free");
+      if (pro) {
+        $("ring-count").textContent = me.todayCount;
+        $("ring").style.strokeDashoffset = 0;
+        $("usage-left").textContent = "Unlimited drafts";
+        $("usage-sub").textContent = "Pro plan";
+      } else {
+        const used = Math.min(me.todayCount, me.dailyLimit);
+        $("ring-count").textContent = `${me.todayCount}/${me.dailyLimit}`;
+        // dashoffset hides that fraction of the circle — offset by the UNUSED share.
+        $("ring").style.strokeDashoffset = RING_C * (1 - used / me.dailyLimit);
+        $("usage-left").textContent = `${Math.max(0, me.dailyLimit - me.todayCount)} drafts left today`;
+        $("usage-sub").textContent = "Free plan · resets at midnight";
+      }
+    };
+
+    const refreshMe = async () => {
+      const cached = (await invoke("get_settings")).email;
+      try {
+        const me = await invoke("fetch_me");
+        renderAccount(me.email, me);
+      } catch (e) {
+        if (String(e).includes("unauthorized")) renderSignedOut();
+        else if (cached) renderAccount(cached, null);
+        else renderSignedOut();
+      }
+    };
+
+    $("signin").onclick = async () => {
+      const btn = $("signin");
+      btn.disabled = true; btn.textContent = "Waiting for browser…";
+      status("Complete the sign-in in your browser.", "", true);
+      try {
+        const me = await invoke("sign_in");
+        renderAccount(me.email, me);
+        $("token").value = (await invoke("get_settings")).token;
+        status(`Signed in as ${me.email}.`, "", true);
+      } catch (e) { status(String(e), "err"); }
+      btn.disabled = false; btn.textContent = "Sign in with Google";
+    };
+
+    $("signout").onclick = async () => {
+      try {
+        await invoke("sign_out");
+        $("token").value = "";
+        renderSignedOut();
+        status("Signed out.", "", true);
+      } catch (e) { status(String(e), "err"); }
+    };
+
+    // ---- Mode + polish (apply immediately, patching only their own fields
+    // so half-edited Advanced inputs are never persisted as a side effect) --
     let mode = "dictation";
     const MODE_NOTES = {
       dictation: "Your words land in the focused field (polished first, if enabled below).",
       assistant: "Your words are an instruction — ReplyMint reads the focused window and writes the reply for you.",
     };
     const renderMode = () => {
-      $("mode-dictation").className = mode === "dictation" ? "primary" : "";
-      $("mode-assistant").className = mode === "assistant" ? "primary" : "";
+      $("seg").className = mode === "assistant" ? "assistant" : "";
+      $("mode-dictation").className = mode === "dictation" ? "on" : "";
+      $("mode-assistant").className = mode === "assistant" ? "on" : "";
       $("mode-note").textContent = MODE_NOTES[mode];
-      $("clean-row").style.opacity = mode === "dictation" ? "1" : "0.4";
+      $("polish-row").classList.toggle("disabled", mode !== "dictation");
     };
-    // Mode and polish apply IMMEDIATELY — only mutating their own fields, so
-    // half-edited URL/token inputs are not persisted as a side effect. (The
-    // old behavior — mode waits for Save with no unsaved-state hint — had the
-    // user testing "Assistant" while dictation mode was still saved.)
     const applyNow = async (patch, msg) => {
       try {
         const s = await invoke("get_settings");
@@ -115,30 +361,21 @@
     $("mode-dictation").onclick = () => { mode = "dictation"; renderMode(); applyNow({ mode }, "Dictation mode on."); };
     $("mode-assistant").onclick = () => { mode = "assistant"; renderMode(); applyNow({ mode }, "Assistant mode on."); };
 
-    invoke("get_settings").then((s) => {
-      $("url").value = s.backend_url;
-      $("token").value = s.token;
-      $("hotkey").value = s.hotkey;
-      $("clean").checked = s.clean_dictation !== false;
-      $("clean").onchange = () =>
-        applyNow({ clean_dictation: $("clean").checked },
-                 $("clean").checked ? "Dictation polish on." : "Dictation polish off.");
-      mode = s.mode === "assistant" ? "assistant" : "dictation";
-      renderMode();
-    });
-
-    $("save").onclick = async () => {
-      try {
-        await invoke("save_settings", { new: {
-          backend_url: $("url").value.trim(),
-          token: $("token").value.trim(),
-          hotkey: $("hotkey").value.trim() || "alt+space",
-          mode,
-          clean_dictation: $("clean").checked,
-        }});
-        status("Saved.", "", true);
-      } catch (e) { status(String(e), "err"); }
+    $("polish-row").onclick = () => {
+      const on = !$("polish").classList.contains("on");
+      $("polish").classList.toggle("on", on);
+      applyNow({ clean_dictation: on }, on ? "Dictation polish on." : "Dictation polish off.");
     };
+
+    // ---- Hotkey (applies on change) + Advanced ---------------------------
+    $("hotkey").onchange = () =>
+      applyNow({ hotkey: $("hotkey").value.trim() || "alt+space" }, "Hotkey saved.");
+
+    $("save-adv").onclick = () =>
+      applyNow(
+        { backend_url: $("url").value.trim() || "http://localhost:8787", token: $("token").value.trim() },
+        "Saved."
+      ).then(refreshMe);
 
     $("ax").onclick = async () => {
       const trusted = await invoke("request_ax");
@@ -156,6 +393,20 @@
       } catch (e) { status(String(e), "err"); }
     };
 
+    // ---- Load ------------------------------------------------------------
+    invoke("get_settings").then((s) => {
+      $("url").value = s.backend_url;
+      $("token").value = s.token;
+      $("hotkey").value = s.hotkey;
+      $("polish").classList.toggle("on", s.clean_dictation !== false);
+      mode = s.mode === "assistant" ? "assistant" : "dictation";
+      renderMode();
+      if (s.token && s.email) renderAccount(s.email, null); // instant, pre-network
+      refreshMe();
+    });
+    window.addEventListener("focus", refreshMe);
+
+    // ---- Live dictation events (unchanged wiring) ------------------------
     const INSERT_LABELS = {
       ax: "Inserted (direct).",
       paste: "Inserted (paste fallback).",

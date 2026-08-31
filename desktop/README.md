@@ -46,10 +46,22 @@ to `/v1/reply` and the generated draft is inserted instead (the Android bubble's
 voice flow, on Mac). Cloud STT is pro-gated server-side: the account behind the
 token needs `users.plan='pro'` (dev-token.ts mints one).
 
-## Auth (temporary)
+## Auth
 
-Desktop sign-in doesn't exist yet (Backlog A3). Mint a token against the dev DB
-and paste it into the tray menu → Settings…:
+**Sign in with Google** (Settings window) runs a browser-based OAuth flow with a
+loopback redirect + PKCE (`src/auth.rs`): the app binds an ephemeral 127.0.0.1
+port, opens the consent page, and hands the returned code to the backend
+(`POST /v1/auth/google/desktop`), which holds the Desktop client secret and
+mints the opaque `rt_` token. Free-draft counting is per Google account, so
+usage combines with the Android app automatically.
+
+Requires the Google console **Desktop app** OAuth client (Backlog A3.7): build
+with `REPLYMINT_GOOGLE_DESKTOP_CLIENT_ID=... cargo build` (or edit the const in
+`src/auth.rs`), and set `GOOGLE_CLIENT_IDS`, `GOOGLE_DESKTOP_CLIENT_ID`,
+`GOOGLE_DESKTOP_CLIENT_SECRET` on the backend.
+
+**Dev escape hatch** — mint a token against the dev DB and paste it into
+Settings → Advanced:
 
 ```bash
 cd backend && npx tsx --env-file=.env scripts/dev-token.ts

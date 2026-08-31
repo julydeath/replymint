@@ -41,8 +41,16 @@ export async function upsertUserByGoogle(
   return user;
 }
 
-export async function insertToken(tokenHash: string, userId: string): Promise<void> {
-  await sql()`insert into tokens (token_hash, user_id) values (${tokenHash}, ${userId})`;
+export async function insertToken(
+  tokenHash: string,
+  userId: string,
+  platform?: string,
+  deviceName?: string
+): Promise<void> {
+  await sql()`
+    insert into tokens (token_hash, user_id, platform, device_name)
+    values (${tokenHash}, ${userId}, ${platform ?? null}, ${deviceName ?? null})
+  `;
 }
 
 /** Look up the user for a token hash; touches last_used_at as a side effect. */

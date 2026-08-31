@@ -92,7 +92,7 @@ async fn post_reply(
         .map_err(|e| format!("reply request: {e}"))?;
 
     match resp.status().as_u16() {
-        401 => return Err("token rejected — paste a fresh one in Settings".into()),
+        401 => return Err("signed out — sign in again in Settings".into()),
         429 => return Err("daily draft limit reached".into()),
         _ => {}
     }

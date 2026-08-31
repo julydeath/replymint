@@ -1,7 +1,7 @@
 import { serve } from "@hono/node-server";
 import { createNodeWebSocket } from "@hono/node-ws";
 import { Hono } from "hono";
-import { exchangeGoogleToken, requireAuth, signOut, type AuthEnv } from "./auth.js";
+import { exchangeGoogleCode, exchangeGoogleToken, requireAuth, signOut, type AuthEnv } from "./auth.js";
 import {
   bumpSttSeconds,
   bumpUsage,
@@ -47,6 +47,7 @@ app.get("/health/db", async (c) => {
 });
 
 app.post("/v1/auth/google", exchangeGoogleToken);
+app.post("/v1/auth/google/desktop", exchangeGoogleCode);
 app.post("/v1/auth/signout", signOut);
 
 /** Feeds the home-screen usage card; also serves as a warm-up ping on app open. */
@@ -85,8 +86,9 @@ app.post("/v1/reply", requireAuth, async (c) => {
   const req = parsed.data;
 
   // Free-tier gate: check before spending an LLM call, increment only after success.
+  // Pro (which includes exempt emails) is unlimited on drafts — usage still counted.
   const user = c.var.user;
-  if (!isExempt(user.email) && (await todayUsage(user.id)) >= FREE_DAILY_LIMIT) {
+  if (!isPro(user) && (await todayUsage(user.id)) >= FREE_DAILY_LIMIT) {
     return c.json({ error: "daily limit reached" }, 429);
   }
 
