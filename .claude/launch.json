@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "mockups",
+      "name": "website",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8123", "--directory", "mockups"],
-      "port": 8123
+      "runtimeArgs": ["-m", "http.server", "8788", "-d", "website"],
+      "port": 8788
     }
   ]
 }

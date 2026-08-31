@@ -1,0 +1,85 @@
+name: Build Android APK
+
+# Manual runs upload the APK as a workflow artifact; pushing an `android-v*`
+# tag also attaches it to that tag's GitHub release AND refreshes the fixed
+# `android-latest` prerelease the website's download link points at (same
+# pattern as windows-desktop.yml).
+on:
+  workflow_dispatch:
+  push:
+    tags: ['android-v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Release signing: the keystore + passwords live in repo secrets, never
+      # in the tree. This must stay the SAME keystore as local builds
+      # (android/replymint-release.jks) — it is the app's install identity.
+      - name: Materialize release keystore
+        run: |
+          echo "$ANDROID_KEYSTORE_B64" | base64 -d > replymint-release.jks
+          cat > keystore.properties <<EOF
+          storeFile=replymint-release.jks
+          storePassword=$ANDROID_STORE_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          EOF
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - run: ./gradlew assembleRelease
+
+      - name: Stage APK under stable name
+        run: cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/ReplyMint-Android.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ReplyMint-Android-apk
+          path: ${{ runner.temp }}/ReplyMint-Android.apk
+          if-no-files-found: error
+
+      - name: Attach to release on tag
+        if: startsWith(github.ref, 'refs/tags/android-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ runner.temp }}/ReplyMint-Android.apk
+          prerelease: true
+
+      # Stable URL for the website: releases/download/android-latest/ReplyMint-Android.apk
+      # always serves the newest APK without touching website/index.html.
+      - name: Update android-latest release
+        if: startsWith(github.ref, 'refs/tags/android-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-latest
+          name: ReplyMint for Android (latest)
+          body: >
+            Moving release — always carries the newest Android APK as
+            `ReplyMint-Android.apk`. Versioned builds live on the
+            `android-v*` releases. Sideload: allow "install unknown apps"
+            when prompted.
+          prerelease: true
+          files: ${{ runner.temp }}/ReplyMint-Android.apk
