@@ -27,7 +27,14 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            backend_url: "http://localhost:8787".into(),
+            // Release builds must reach production out of the box — the Advanced URL
+            // field is hidden in the UI, so the default is the only path for new installs.
+            backend_url: if cfg!(debug_assertions) {
+                "http://localhost:8787"
+            } else {
+                "https://replymint-um33.onrender.com"
+            }
+            .into(),
             token: String::new(),
             email: String::new(),
             hotkey: "alt+space".into(),

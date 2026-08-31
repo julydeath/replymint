@@ -1,10 +1,13 @@
 import { serve } from "@hono/node-server";
 import { createNodeWebSocket } from "@hono/node-ws";
 import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { z } from "zod";
 import { exchangeGoogleCode, exchangeGoogleToken, requireAuth, signOut, type AuthEnv } from "./auth.js";
 import {
   bumpSttSeconds,
   bumpUsage,
+  insertBetaRequest,
   pingDb,
   todaySttSeconds,
   todayUsage,
@@ -49,6 +52,30 @@ app.get("/health/db", async (c) => {
 app.post("/v1/auth/google", exchangeGoogleToken);
 app.post("/v1/auth/google/desktop", exchangeGoogleCode);
 app.post("/v1/auth/signout", signOut);
+
+/**
+ * POST /v1/beta/request — email capture from the public website ("send me the APK").
+ * Unauthenticated and CORS-open by design: it accepts an email + platform and stores
+ * nothing else. Idempotent per (email, platform); replies never reveal whether the
+ * email was already registered.
+ */
+const BetaRequestSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(254),
+  platform: z.enum(["android", "windows"]).default("android"),
+});
+app.use("/v1/beta/*", cors());
+app.post("/v1/beta/request", async (c) => {
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "invalid_json" }, 400);
+  }
+  const parsed = BetaRequestSchema.safeParse(body);
+  if (!parsed.success) return c.json({ error: "invalid_email" }, 400);
+  await insertBetaRequest(parsed.data.email, parsed.data.platform);
+  return c.json({ ok: true });
+});
 
 /** Feeds the home-screen usage card; also serves as a warm-up ping on app open. */
 app.get("/v1/me", requireAuth, async (c) => {

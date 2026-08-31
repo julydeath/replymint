@@ -27,19 +27,25 @@ gh release create v0.1.0 --title "ReplyMint 0.1.0" \
 
 (The `path#name` syntax renames the asset on upload.)
 
-## Android beta flow
+## Android beta / Windows waitlist flow
 
-The Android card intentionally does **not** link an APK. Google sign-in only works for
-accounts added as OAuth test users while the consent screen is in Testing mode, so the
-button opens a prefilled email to `hello@replymint.app` requesting access. Flow: add their
-Google account as a test user → send them the APK (`android/app/build/outputs/apk/release/`).
+The Android and Windows buttons open an email-capture modal that POSTs to
+`https://replymint-um33.onrender.com/v1/beta/request` (unauthenticated, CORS-open).
+Signups land in the `beta_requests` table (email, platform, created_at) in Supabase —
+check it in the Supabase dashboard, or:
 
-When the consent screen is published (or the Play listing ships), swap the button for a
-direct link — upload the APK to the release as `ReplyMint-Android.apk` and use
+```sql
+select * from beta_requests order by created_at desc;
+```
+
+Manual follow-up per Android signup: add their Google account as an OAuth test user →
+email them the APK (`android/app/build/outputs/apk/release/`). When the consent screen
+is published (or the Play listing ships), swap the modal for a direct link — upload the
+APK to the release as `ReplyMint-Android.apk` and use
 `releases/latest/download/ReplyMint-Android.apk`.
 
-**Check the contact address**: the site uses `hello@replymint.app` (beta requests, Windows
-waitlist, footer). If that inbox isn't live, search-and-replace it with a real one.
+The footer still shows `hello@replymint.app` as a contact — replace it if that inbox
+isn't live.
 
 ## Hosting
 

@@ -230,7 +230,15 @@
     <input id="hotkey" spellcheck="false" placeholder="alt+space" />
   </div>
 
-  <details>
+  <div class="card">
+    <div class="row">
+      <button class="ghost" id="ax">Grant Accessibility</button>
+    </div>
+  </div>
+
+  <!-- Dev escape hatches (backend URL / raw token / probe). Hidden from users; the inputs
+       stay in the DOM so the settings JS keeps working. Remove `hidden` to use them. -->
+  <details hidden>
     <summary>Advanced</summary>
     <div class="card">
       <label for="url">Backend URL</label>
@@ -240,7 +248,6 @@
       <div class="row">
         <button class="ghost" id="save-adv">Save</button>
         <button class="ghost" id="test">Test backend</button>
-        <button class="ghost" id="ax">Grant Accessibility</button>
       </div>
     </div>
   </details>

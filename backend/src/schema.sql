@@ -34,3 +34,11 @@ alter table usage_daily add column if not exists stt_seconds int not null defaul
 -- FREE_LIMIT_EXEMPT_EMAILS accounts are treated as pro at runtime.
 alter table users add column if not exists plan text not null default 'free'
   check (plan in ('free', 'pro'));
+
+-- Website beta signups (created lazily by the backend as well; listed here for reference).
+create table if not exists beta_requests (
+  email      text not null,
+  platform   text not null,               -- 'android' | 'windows'
+  created_at timestamptz not null default now(),
+  primary key (email, platform)
+);

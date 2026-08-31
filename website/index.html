@@ -2072,6 +2072,139 @@
           transition-duration: 0.001s !important;
         }
       }
+      /* ============ BETA MODAL ============ */
+      .beta-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        background: rgba(4, 6, 8, 0.7);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s;
+      }
+      .beta-backdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .beta-modal {
+        width: 100%;
+        max-width: 440px;
+        background: linear-gradient(170deg, var(--panel2), var(--panel));
+        border: 1px solid var(--glass-stroke);
+        border-radius: var(--r-lg);
+        padding: 32px;
+        position: relative;
+        transform: translateY(14px) scale(0.97);
+        transition: transform 0.3s cubic-bezier(0.2, 1.2, 0.4, 1);
+        box-shadow: 0 40px 90px rgba(0, 0, 0, 0.6);
+      }
+      .beta-backdrop.open .beta-modal {
+        transform: none;
+      }
+      .beta-close {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        color: var(--ink-faint);
+        padding: 6px;
+        border-radius: 8px;
+        line-height: 0;
+      }
+      .beta-close:hover {
+        color: var(--ink);
+      }
+      .beta-modal h3 {
+        font-family: var(--font-disp);
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin-bottom: 8px;
+      }
+      .beta-modal .beta-copy {
+        color: var(--ink-dim);
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 20px;
+      }
+      .beta-form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .beta-input {
+        background: var(--bg2);
+        border: 1px solid var(--stroke);
+        border-radius: 14px;
+        padding: 13px 16px;
+        color: var(--ink);
+        font-size: 15px;
+        font-family: inherit;
+        outline: none;
+        width: 100%;
+      }
+      .beta-input::placeholder {
+        color: var(--ink-faint);
+      }
+      .beta-input:focus {
+        border-color: rgba(43, 230, 160, 0.5);
+      }
+      .beta-form .dl-btn {
+        justify-content: center;
+        font-size: 15px;
+        padding: 13px 20px;
+      }
+      .beta-form .dl-btn[disabled] {
+        opacity: 0.6;
+        pointer-events: none;
+      }
+      .beta-status {
+        font-size: 13px;
+        min-height: 18px;
+        color: var(--ink-dim);
+        line-height: 1.5;
+      }
+      .beta-status.err {
+        color: var(--err);
+      }
+      .beta-done {
+        display: none;
+        text-align: center;
+        padding: 10px 0 4px;
+      }
+      .beta-done .bigok {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: rgba(43, 230, 160, 0.14);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 14px;
+        color: var(--mint);
+      }
+      .beta-done b {
+        font-family: var(--font-disp);
+        font-size: 18px;
+        font-weight: 600;
+      }
+      .beta-done p {
+        color: var(--ink-dim);
+        font-size: 14px;
+        margin-top: 6px;
+      }
+      .beta-modal.done .beta-form,
+      .beta-modal.done .beta-copy {
+        display: none;
+      }
+      .beta-modal.done .beta-done {
+        display: block;
+      }
     </style>
   </head>
   <body>
@@ -2155,7 +2288,7 @@
           </svg>
           Download for Mac
         </a>
-        <a class="dl-btn ghost" href="#download">
+        <a class="dl-btn ghost beta-open" data-platform="android" href="#download">
           <svg width="17" height="19" viewBox="0 0 24 24" fill="currentColor">
             <path
               d="M17.5 8.3l1.9-3.3a.4.4 0 0 0-.7-.4l-1.9 3.3a11.4 11.4 0 0 0-9.6 0L5.3 4.6a.4.4 0 0 0-.7.4l1.9 3.3A11 11 0 0 0 1 17h22a11 11 0 0 0-5.5-8.7zM7 14a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm10 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"
@@ -3903,15 +4036,12 @@
             The floating bubble in WhatsApp, Instagram, Gmail and 15 more — Auto
             Reply, Voice, Fix and Undo, with free on-device voice recognition.
           </p>
-          <a
-            class="dl-btn ghost"
-            href="mailto:hello@replymint.app?subject=ReplyMint%20Android%20beta%20access&body=Hi!%20I%27d%20like%20to%20join%20the%20ReplyMint%20Android%20beta.%0A%0AMy%20Google%20account%20email%3A%20"
-            >Request beta access</a
-          >
+          <button class="dl-btn ghost beta-open" data-platform="android">
+            Request beta access
+          </button>
           <span class="fineprint"
-            >We enable your Google account and send you the install link the
-            same day. Direct install for now — Play Store listing in
-            progress.</span
+            >Leave your email and we'll send you the install link. Direct
+            install for now — Play Store listing in progress.</span
           >
         </div>
         <div class="dl-card muted">
@@ -3932,11 +4062,9 @@
             The same dictation and assistant experience — one hotkey, every app
             — is coming to Windows next.
           </p>
-          <a
-            class="dl-btn ghost"
-            href="mailto:hello@replymint.app?subject=ReplyMint%20Windows%20waitlist&body=Notify%20me%20when%20ReplyMint%20for%20Windows%20is%20ready."
-            >Get notified</a
-          >
+          <button class="dl-btn ghost beta-open" data-platform="windows">
+            Get notified
+          </button>
           <span class="fineprint"
             >Join the waitlist and you'll be first in when it ships.</span
           >
@@ -5077,6 +5205,152 @@
         } else if (!/Mac/i.test(ua)) {
           nav.href = "#download";
         }
+      })();
+    </script>
+    <!-- ================= BETA MODAL ================= -->
+    <div
+      class="beta-backdrop"
+      id="beta-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="beta-title"
+    >
+      <div class="beta-modal" id="beta-modal">
+        <button class="beta-close" id="beta-close" aria-label="Close">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+          >
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+        <h3 id="beta-title">Get the Android beta</h3>
+        <p class="beta-copy" id="beta-copy">
+          Drop your email and we'll send you the install link.
+        </p>
+        <form class="beta-form" id="beta-form">
+          <input
+            class="beta-input"
+            id="beta-email"
+            type="email"
+            required
+            placeholder="you@example.com"
+            autocomplete="email"
+          />
+          <button class="dl-btn" id="beta-submit" type="submit">
+            Send me the link
+          </button>
+          <span class="beta-status" id="beta-status"></span>
+        </form>
+        <div class="beta-done">
+          <div class="bigok">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          </div>
+          <b>You're on the list!</b>
+          <p id="beta-done-copy">We'll email you the download link shortly.</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* Beta modal — posts the email to the backend; no mailto, no page reload. */
+      (function () {
+        const API = "https://replymint-um33.onrender.com/v1/beta/request";
+        const $ = (id) => document.getElementById(id);
+        const bk = $("beta-backdrop"),
+          modal = $("beta-modal"),
+          form = $("beta-form"),
+          email = $("beta-email"),
+          statusEl = $("beta-status"),
+          submit = $("beta-submit"),
+          title = $("beta-title"),
+          copy = $("beta-copy"),
+          doneCopy = $("beta-done-copy");
+        let platform = "android";
+        const TEXTS = {
+          android: {
+            t: "Get the Android beta",
+            c: "Drop your email and we'll send you the install link.",
+            d: "We'll email you the install link shortly.",
+          },
+          windows: {
+            t: "Join the Windows waitlist",
+            c: "Drop your email and we'll let you know the moment ReplyMint for Windows ships.",
+            d: "We'll let you know as soon as Windows is ready.",
+          },
+        };
+        function open(p) {
+          platform = p;
+          const x = TEXTS[p] || TEXTS.android;
+          title.textContent = x.t;
+          copy.textContent = x.c;
+          doneCopy.textContent = x.d;
+          modal.classList.remove("done");
+          statusEl.textContent = "";
+          statusEl.classList.remove("err");
+          submit.disabled = false;
+          submit.textContent = "Send me the link";
+          bk.classList.add("open");
+          setTimeout(() => email.focus(), 250);
+        }
+        function close() {
+          bk.classList.remove("open");
+        }
+        document.querySelectorAll(".beta-open").forEach((b) =>
+          b.addEventListener("click", (e) => {
+            e.preventDefault();
+            open(b.dataset.platform || "android");
+          })
+        );
+        $("beta-close").addEventListener("click", close);
+        bk.addEventListener("click", (e) => {
+          if (e.target === bk) close();
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") close();
+        });
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const value = email.value.trim();
+          if (!value) return;
+          submit.disabled = true;
+          submit.textContent = "Sending…";
+          statusEl.classList.remove("err");
+          statusEl.textContent =
+            "One moment — our server may take a few seconds to wake up.";
+          try {
+            const res = await fetch(API, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: value, platform }),
+            });
+            if (!res.ok) throw new Error("bad status " + res.status);
+            statusEl.textContent = "";
+            modal.classList.add("done");
+          } catch (err) {
+            submit.disabled = false;
+            submit.textContent = "Try again";
+            statusEl.classList.add("err");
+            statusEl.textContent =
+              "That didn't go through — please try again in a minute.";
+          }
+        });
       })();
     </script>
   </body>

@@ -114,3 +114,23 @@ export async function bumpUsage(userId: string): Promise<number> {
   `;
   return rows[0]?.count ?? 0;
 }
+
+/**
+ * Website beta signups (email only, no account). The table is created lazily so a deploy
+ * never has to coordinate with a manual schema migration; schema.sql documents it too.
+ */
+export async function insertBetaRequest(email: string, platform: string): Promise<void> {
+  await sql()`
+    create table if not exists beta_requests (
+      email      text not null,
+      platform   text not null,
+      created_at timestamptz not null default now(),
+      primary key (email, platform)
+    )
+  `;
+  await sql()`
+    insert into beta_requests (email, platform)
+    values (${email}, ${platform})
+    on conflict (email, platform) do nothing
+  `;
+}
