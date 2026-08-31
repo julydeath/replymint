@@ -14,11 +14,11 @@ use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 
-/// Client ids are public identifiers, not secrets — a const is fine. Override
-/// at build time once the real Google console Desktop client exists (A3.7).
+/// Client ids are public identifiers, not secrets — a const is fine. The env
+/// override remains for pointing a build at a different Google project.
 const DESKTOP_CLIENT_ID: &str = match option_env!("REPLYMINT_GOOGLE_DESKTOP_CLIENT_ID") {
     Some(id) => id,
-    None => "REPLACE_ME.apps.googleusercontent.com",
+    None => "665655720291-jrojc2t6eq7vc5ul727gdq8cqinpl45a.apps.googleusercontent.com",
 };
 
 const AUTH_TIMEOUT: Duration = Duration::from_secs(300);
