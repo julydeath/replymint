@@ -29,7 +29,11 @@ alter table tokens add column if not exists device_name text;
 -- V3 cloud STT metering: seconds of audio proxied per day (content is never stored).
 alter table usage_daily add column if not exists stt_seconds int not null default 0;
 
--- Plan gates cloud STT (V3): 'pro' unlocks /v1/stt/stream. Orthogonal to mode
+-- Beta free tier: cloud dictation sessions started per day (desktop free users get a daily allowance).
+alter table usage_daily add column if not exists stt_sessions int not null default 0;
+
+-- Plan: 'pro' means unlimited drafts and unlimited cloud-STT sessions (beta gives free
+-- desktop users FREE_STT_DAILY_LIMIT sessions/day). Orthogonal to mode
 -- (personal/professional). Until billing (B4) lands this is flipped by hand;
 -- FREE_LIMIT_EXEMPT_EMAILS accounts are treated as pro at runtime.
 alter table users add column if not exists plan text not null default 'free'

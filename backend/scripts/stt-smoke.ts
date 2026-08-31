@@ -22,7 +22,7 @@ if (!url) throw new Error("DATABASE_URL is not set (run with --env-file=.env)");
 const sql = postgres(url, { prepare: false, max: 2 });
 const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
 
-// The main smoke user is pro — /v1/stt/stream is pro-gated.
+// The main smoke user is pro — unlimited cloud-STT sessions.
 const [user] = await sql<{ id: string }[]>`
   insert into users (google_sub, email, name, plan)
   values ('smoke-test-stt', 'stt-smoke@test.invalid', 'STT Smoke', 'pro')
@@ -33,7 +33,8 @@ if (!user) throw new Error("failed to create smoke user");
 const token = "rt_" + randomBytes(32).toString("base64url");
 await sql`insert into tokens (token_hash, user_id) values (${sha256(token)}, ${user.id})`;
 
-// A second, free-plan user to assert the pro gate.
+// A second, free-plan user to assert the beta free-tier gates (desktop allowance,
+// daily session limit, android denial).
 const [freeUser] = await sql<{ id: string }[]>`
   insert into users (google_sub, email, name, plan)
   values ('smoke-test-stt-free', 'stt-smoke-free@test.invalid', 'STT Smoke Free', 'free')
@@ -42,7 +43,15 @@ const [freeUser] = await sql<{ id: string }[]>`
 `;
 if (!freeUser) throw new Error("failed to create free smoke user");
 const freeToken = "rt_" + randomBytes(32).toString("base64url");
-await sql`insert into tokens (token_hash, user_id) values (${sha256(freeToken)}, ${freeUser.id})`;
+await sql`
+  insert into tokens (token_hash, user_id, platform)
+  values (${sha256(freeToken)}, ${freeUser.id}, 'windows')
+`;
+const freeAndroidToken = "rt_" + randomBytes(32).toString("base64url");
+await sql`
+  insert into tokens (token_hash, user_id, platform)
+  values (${sha256(freeAndroidToken)}, ${freeUser.id}, 'android')
+`;
 
 try {
   // 1 — no token must be rejected at the upgrade.
@@ -90,22 +99,72 @@ try {
   `;
   console.log("usage_daily:", usage);
 
-  // 4 — a free-plan user must be turned away with a typed pro_required error + close 4403.
+  // 4 — a free DESKTOP user gets the beta allowance: admitted, and the session is counted.
   await new Promise<void>((resolve, reject) => {
     const ws = new WebSocket(`${BASE}/v1/stt/stream`, {
       headers: { Authorization: `Bearer ${freeToken}` },
+    });
+    ws.on("open", () => {
+      ws.send(JSON.stringify({ type: "config", sampleRate: 16000 }));
+      ws.send(Buffer.alloc(8000)); // 250ms of silence — enough to open a session
+      ws.send(JSON.stringify({ type: "finish" }));
+    });
+    ws.on("message", (d) => console.log("<- (free desktop)", d.toString()));
+    ws.on("close", (code) => {
+      console.log(code < 4000 ? "free desktop admitted, close" : "FAIL: free desktop denied, close", code);
+      resolve();
+    });
+    ws.on("error", reject);
+  });
+  await new Promise((r) => setTimeout(r, 500));
+  const freeUsage = await sql`
+    select stt_sessions from usage_daily where user_id = ${freeUser.id}
+  `;
+  console.log(
+    (freeUsage[0]?.stt_sessions ?? 0) >= 1 ? "session counted:" : "FAIL: session not counted:",
+    freeUsage
+  );
+
+  // 5 — the same free desktop user over the daily session limit → stt_quota, close 4429.
+  await sql`update usage_daily set stt_sessions = 100000 where user_id = ${freeUser.id}`;
+  await new Promise<void>((resolve, reject) => {
+    const ws = new WebSocket(`${BASE}/v1/stt/stream`, {
+      headers: { Authorization: `Bearer ${freeToken}` },
+    });
+    let sawQuota = false;
+    ws.on("message", (d) => {
+      const msg = JSON.parse(d.toString());
+      sawQuota = msg.type === "error" && msg.code === "stt_quota";
+      console.log("<- (free over limit)", d.toString());
+    });
+    ws.on("close", (code) => {
+      if (code === 4429 && sawQuota) {
+        console.log("free user over limit rejected as expected: stt_quota, close", code);
+      } else {
+        console.error(`FAIL: over-limit free user close=${code}, stt_quota frame=${sawQuota}`);
+      }
+      resolve();
+    });
+    ws.on("error", reject);
+  });
+
+  // 6 — a free ANDROID token must be turned away with pro_required + close 4403
+  // (checked before the quota read — the android denial wins even over limit).
+  await new Promise<void>((resolve, reject) => {
+    const ws = new WebSocket(`${BASE}/v1/stt/stream`, {
+      headers: { Authorization: `Bearer ${freeAndroidToken}` },
     });
     let sawProRequired = false;
     ws.on("message", (d) => {
       const msg = JSON.parse(d.toString());
       sawProRequired = msg.type === "error" && msg.code === "pro_required";
-      console.log("<- (free)", d.toString());
+      console.log("<- (free android)", d.toString());
     });
     ws.on("close", (code) => {
       if (code === 4403 && sawProRequired) {
-        console.log("free user rejected as expected: pro_required, close", code);
+        console.log("free android user rejected as expected: pro_required, close", code);
       } else {
-        console.error(`FAIL: free user close=${code}, pro_required frame=${sawProRequired}`);
+        console.error(`FAIL: free android close=${code}, pro_required frame=${sawProRequired}`);
       }
       resolve();
     });

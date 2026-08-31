@@ -6,10 +6,11 @@ import { z } from "zod";
 import { exchangeGoogleCode, exchangeGoogleToken, requireAuth, signOut, type AuthEnv } from "./auth.js";
 import {
   bumpSttSeconds,
+  bumpSttSessions,
   bumpUsage,
   insertBetaRequest,
   pingDb,
-  todaySttSeconds,
+  todaySttUsage,
   todayUsage,
   type User,
 } from "./db.js";
@@ -33,13 +34,17 @@ const exemptEmails = new Set(
 );
 const isExempt = (email: string) => exemptEmails.has(email.toLowerCase());
 
-// Cloud STT (V3) is pro-only. Exempt dev emails count as pro so testing needs no DB edits;
-// the users.plan column stays the durable source of truth until billing (B4) writes it.
+// Exempt dev emails count as pro so testing needs no DB edits; the users.plan
+// column stays the durable source of truth until billing (B4) writes it.
 const isPro = (user: User) => user.plan === "pro" || isExempt(user.email);
 
-// Daily ceiling on proxied STT audio per pro user (seconds) — bounds vendor spend.
+// Daily ceiling on proxied STT audio per user (seconds) — bounds vendor spend.
 // Exempt emails bypass it; MAX_AUDIO_SECONDS already bounds any single session.
 const STT_DAILY_SECONDS = Number(process.env.STT_DAILY_SECONDS ?? 1800);
+
+// Beta free tier: cloud dictation sessions per day for free desktop users (Android free
+// stays on the on-device engine — cloud STT would be pure extra vendor spend there).
+const FREE_STT_DAILY_LIMIT = Number(process.env.FREE_STT_DAILY_LIMIT ?? 50);
 
 app.get("/health", (c) => c.json({ ok: true }));
 
@@ -80,12 +85,15 @@ app.post("/v1/beta/request", async (c) => {
 /** Feeds the home-screen usage card; also serves as a warm-up ping on app open. */
 app.get("/v1/me", requireAuth, async (c) => {
   const user = c.var.user;
+  const stt = await todaySttUsage(user.id);
   return c.json({
     email: user.email,
     name: user.name,
     plan: isPro(user) ? "pro" : "free", // effective plan — clients only care about entitlement
     todayCount: await todayUsage(user.id),
     dailyLimit: FREE_DAILY_LIMIT,
+    sttTodayCount: stt.sessions,
+    sttDailyLimit: FREE_STT_DAILY_LIMIT,
   });
 });
 
@@ -153,8 +161,12 @@ const MAX_AUDIO_SECONDS = 300;
  *   ← {"type":"ready"} | {"type":"partial","text"} | {"type":"final","text"}
  *   ← {"type":"done","text","seconds"}  full transcript, then we close
  *   ← {"type":"error","message","code"?}  code "pro_required" (close 4403) means the
- *     account isn't entitled — stop retrying and refresh /v1/me; "stt_quota" (close
- *     4429) means today's STT allowance is spent. Other errors close 1011.
+ *     account isn't entitled (free Android — use the on-device engine); "stt_quota"
+ *     (close 4429) means today's STT allowance is spent. Other errors close 1011.
+ *
+ * Entitlement (beta): desktop free accounts get FREE_STT_DAILY_LIMIT sessions/day;
+ * pro is unlimited sessions; both are bounded by STT_DAILY_SECONDS of audio/day.
+ * Exempt emails bypass everything. Android free accounts stay denied (native STT).
  */
 app.get(
   "/v1/stt/stream",
@@ -199,21 +211,34 @@ app.get(
     const admit = (ws: Ws) => {
       if (gate === "denied") return;
       gate = "ok";
+      // Counted on admit, not close, so an unclean disconnect can't dodge the counter.
+      // Everyone is counted (like /v1/reply); only free desktop accounts are blocked.
+      bumpSttSessions(userId).catch((e) =>
+        console.error("stt session count failed:", (e as Error).message)
+      );
       for (const chunk of earlyAudio.splice(0)) handleAudio(chunk, ws);
       if (finishWhileEarly) session?.finish();
     };
 
     return {
       onOpen(_evt, ws) {
-        if (!isPro(user)) {
+        // Exempt devs bypass all caps (their usage is still metered, like /v1/reply).
+        if (isExempt(user.email)) return admit(ws);
+        // Free Android uses the free on-device engine; the client falls back on this code.
+        if (!isPro(user) && user.platform === "android") {
           return deny(ws, "pro_required", "Cloud transcription requires ReplyMint Pro", 4403);
         }
-        // Exempt devs bypass the daily cap (their usage is still metered, like /v1/reply).
-        if (isExempt(user.email)) return admit(ws);
-        todaySttSeconds(userId).then(
-          (seconds) => {
+        todaySttUsage(userId).then(
+          ({ seconds, sessions }) => {
             if (seconds >= STT_DAILY_SECONDS) {
               deny(ws, "stt_quota", "Daily transcription limit reached", 4429);
+            } else if (!isPro(user) && sessions >= FREE_STT_DAILY_LIMIT) {
+              deny(
+                ws,
+                "stt_quota",
+                `You've used today's ${FREE_STT_DAILY_LIMIT} free dictations — resets at midnight UTC`,
+                4429
+              );
             } else {
               admit(ws);
             }

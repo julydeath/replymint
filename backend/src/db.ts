@@ -23,6 +23,9 @@ export interface User {
   email: string;
   name: string | null;
   plan: "free" | "pro";
+  /** Platform of the token behind this request ('android' | 'macos' | 'windows' | 'desktop');
+   *  only set by userForTokenHash — absent right after sign-up, null on pre-A3 tokens. */
+  platform?: string | null;
 }
 
 export async function upsertUserByGoogle(
@@ -59,7 +62,7 @@ export async function userForTokenHash(tokenHash: string): Promise<User | null> 
     update tokens set last_used_at = now()
     from users
     where tokens.token_hash = ${tokenHash} and users.id = tokens.user_id
-    returning users.id, users.email, users.name, users.plan
+    returning users.id, users.email, users.name, users.plan, tokens.platform
   `;
   return rows[0] ?? null;
 }
@@ -76,13 +79,15 @@ export async function todayUsage(userId: string): Promise<number> {
   return rows[0]?.count ?? 0;
 }
 
-/** Seconds of cloud-STT audio already proxied for this user today (0 if no row). */
-export async function todaySttSeconds(userId: string): Promise<number> {
-  const rows = await sql()<{ stt_seconds: number }[]>`
-    select stt_seconds from usage_daily
+/** Today's cloud-STT usage for this user: audio seconds proxied and sessions started (0/0 if no row). */
+export async function todaySttUsage(
+  userId: string
+): Promise<{ seconds: number; sessions: number }> {
+  const rows = await sql()<{ stt_seconds: number; stt_sessions: number }[]>`
+    select stt_seconds, stt_sessions from usage_daily
     where user_id = ${userId} and day = (now() at time zone 'utc')::date
   `;
-  return rows[0]?.stt_seconds ?? 0;
+  return { seconds: rows[0]?.stt_seconds ?? 0, sessions: rows[0]?.stt_sessions ?? 0 };
 }
 
 /** Connectivity probe for /health/db — returns the error message on failure, never throws. */
@@ -102,6 +107,15 @@ export async function bumpSttSeconds(userId: string, seconds: number): Promise<v
     insert into usage_daily (user_id, day, count, stt_seconds)
     values (${userId}, (now() at time zone 'utc')::date, 0, ${seconds})
     on conflict (user_id, day) do update set stt_seconds = usage_daily.stt_seconds + ${seconds}
+  `;
+}
+
+/** Counts a cloud-STT session against today's usage row (sessions only — content is never stored). */
+export async function bumpSttSessions(userId: string): Promise<void> {
+  await sql()`
+    insert into usage_daily (user_id, day, count, stt_sessions)
+    values (${userId}, (now() at time zone 'utc')::date, 0, 1)
+    on conflict (user_id, day) do update set stt_sessions = usage_daily.stt_sessions + 1
   `;
 }
 
