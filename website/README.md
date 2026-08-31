@@ -44,8 +44,8 @@ is published (or the Play listing ships), swap the modal for a direct link — u
 APK to the release as `ReplyMint-Android.apk` and use
 `releases/latest/download/ReplyMint-Android.apk`.
 
-The footer still shows `hello@replymint.app` as a contact — replace it if that inbox
-isn't live.
+The footer contact is `hello@replymint.in` — needs email forwarding set up at the
+registrar for replymint.in before that inbox is live.
 
 ## Hosting
 
