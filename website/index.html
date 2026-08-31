@@ -68,12 +68,16 @@
         line-height: 1.6;
         overflow-x: hidden;
         -webkit-font-smoothing: antialiased;
+        position: relative;
       }
       body::before {
-        /* ambient glow */
+        /* ambient glow — scrolls with the hero instead of pinning to the viewport */
         content: "";
-        position: fixed;
-        inset: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 140vh;
         pointer-events: none;
         z-index: 0;
         background:
@@ -114,6 +118,97 @@
       section.wrap {
         padding: 84px 28px;
         scroll-margin-top: 76px;
+      }
+      /* ============ SECTION BANDS ============ */
+      /* Full-bleed banded backgrounds (product .appdark gradient) — on wrappers,
+         outside the content-visibility-contained sections */
+      .band {
+        position: relative;
+        background: linear-gradient(
+          180deg,
+          var(--bg) 0%,
+          #0b1015 14%,
+          #0d1319 55%,
+          #0e1a18 86%,
+          var(--bg) 100%
+        );
+        border-top: 1px solid rgba(43, 230, 160, 0.07);
+        border-bottom: 1px solid rgba(43, 230, 160, 0.07);
+      }
+      .band::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(
+          900px 480px at 18% 0%,
+          rgba(43, 230, 160, 0.12),
+          transparent 60%
+        );
+      }
+      .band-b::before {
+        background: radial-gradient(
+          900px 480px at 82% 0%,
+          rgba(43, 230, 160, 0.12),
+          transparent 60%
+        );
+      }
+      .band-c::before {
+        background:
+          radial-gradient(
+            760px 420px at 50% 100%,
+            rgba(43, 230, 160, 0.12),
+            transparent 62%
+          ),
+          radial-gradient(
+            600px 300px at 12% 0%,
+            rgba(16, 185, 129, 0.07),
+            transparent 60%
+          );
+      }
+      /* Ambient glows on plain sections, alternating sides.
+         Kept inset:0 so #compare's paint containment clips nothing visible. */
+      #how::before,
+      #mac::before,
+      #apps::before,
+      #privacy::before,
+      #compare::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: -1;
+        background: radial-gradient(
+          640px 380px at 88% 8%,
+          rgba(43, 230, 160, 0.06),
+          transparent 62%
+        );
+      }
+      #mac::before,
+      #privacy::before {
+        background: radial-gradient(
+          640px 380px at 10% 10%,
+          rgba(16, 185, 129, 0.06),
+          transparent 62%
+        );
+      }
+      /* Faded mint rule at the top of plain sections that follow another block */
+      #mac::after,
+      #apps::after,
+      #privacy::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(560px, 72%);
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(43, 230, 160, 0.28),
+          transparent
+        );
       }
       .eyebrow {
         font-size: 12.5px;
@@ -239,6 +334,68 @@
         padding: 88px 28px 64px;
         text-align: center;
         position: relative;
+      }
+      header.hero.wrap::before {
+        /* slow-breathing aurora in the headline-gradient family */
+        content: "";
+        position: absolute;
+        top: -80px;
+        left: 50%;
+        width: min(1400px, 160vw);
+        height: 620px;
+        transform: translateX(-50%);
+        pointer-events: none;
+        z-index: -1;
+        background:
+          radial-gradient(
+            560px 340px at 38% 30%,
+            rgba(124, 245, 200, 0.1),
+            transparent 62%
+          ),
+          radial-gradient(
+            640px 380px at 64% 22%,
+            rgba(16, 185, 129, 0.09),
+            transparent 62%
+          ),
+          radial-gradient(
+            420px 300px at 50% 60%,
+            rgba(43, 230, 160, 0.05),
+            transparent 65%
+          );
+        animation: aurora 26s ease-in-out infinite alternate;
+      }
+      @keyframes aurora {
+        from {
+          transform: translateX(-50%) translateY(0) scale(1);
+          opacity: 0.85;
+        }
+        to {
+          transform: translateX(-50%) translateY(26px) scale(1.06);
+          opacity: 1;
+        }
+      }
+      header.hero.wrap::after {
+        /* dot-grid texture, faded to the hero core */
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background-image: radial-gradient(
+          rgba(255, 255, 255, 0.028) 1.4px,
+          transparent 1.4px
+        );
+        background-size: 26px 26px;
+        mask-image: radial-gradient(
+          720px 480px at 50% 30%,
+          #000 30%,
+          transparent 75%
+        );
+        -webkit-mask-image: radial-gradient(
+          720px 480px at 50% 30%,
+          #000 30%,
+          transparent 75%
+        );
       }
       h1 {
         font-family: var(--font-disp);
@@ -1340,6 +1497,11 @@
         padding: 34px 0;
         border-top: 1px solid var(--stroke-soft);
         border-bottom: 1px solid var(--stroke-soft);
+        background: linear-gradient(
+          180deg,
+          rgba(43, 230, 160, 0.025),
+          transparent 70%
+        );
         position: relative;
         z-index: 1;
         overflow: hidden;
@@ -1426,6 +1588,11 @@
         padding: 28px;
         position: relative;
         overflow: hidden;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+      }
+      .step:hover {
+        border-color: rgba(43, 230, 160, 0.28);
+        box-shadow: inset 0 24px 48px -32px rgba(43, 230, 160, 0.12);
       }
       .step::before {
         content: "";
@@ -1647,6 +1814,10 @@
         font-size: 13px;
         color: var(--ink-dim);
         font-weight: 500;
+        transition: border-color 0.25s ease;
+      }
+      .fchip:hover {
+        border-color: rgba(43, 230, 160, 0.28);
       }
       .fchip svg {
         color: var(--mint);
@@ -1907,6 +2078,11 @@
         gap: 14px;
         position: relative;
         overflow: hidden;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+      }
+      .dl-card:hover {
+        border-color: rgba(43, 230, 160, 0.28);
+        box-shadow: inset 0 24px 48px -32px rgba(43, 230, 160, 0.12);
       }
       .dl-card.live {
         border-color: rgba(43, 230, 160, 0.3);
@@ -1997,8 +2173,22 @@
         text-align: center;
         color: var(--ink-faint);
         font-size: 13px;
-        border-top: 1px solid var(--stroke-soft);
         position: relative;
+      }
+      footer::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(560px, 72%);
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(43, 230, 160, 0.28),
+          transparent
+        );
         z-index: 1;
       }
       footer .f-brand {
@@ -2028,6 +2218,20 @@
         }
       }
       @media (max-width: 760px) {
+        .band::before {
+          background: radial-gradient(
+            480px 300px at 50% 0%,
+            rgba(43, 230, 160, 0.1),
+            transparent 60%
+          );
+        }
+        header.hero.wrap::before {
+          height: 440px;
+          width: 140vw;
+        }
+        header.hero.wrap::after {
+          display: none;
+        }
         .wrap {
           padding: 0 18px;
         }
@@ -2390,6 +2594,7 @@
     </section>
 
     <!-- ================= MAGIC ================= -->
+    <div class="band band-a">
     <section class="wrap" id="magic">
       <div class="eyebrow">02 · See it work</div>
       <h2>Watch the magic. Literally.</h2>
@@ -2918,6 +3123,8 @@
     </section>
 
     <!-- ================= MAC ================= -->
+    </div>
+
     <section class="wrap" id="mac">
       <div class="eyebrow">03 · On Mac &amp; Windows</div>
       <h2>Dictate it — or let it draft it for you.</h2>
@@ -3046,6 +3253,7 @@
     </section>
 
     <!-- ================= ANDROID ================= -->
+    <div class="band band-b">
     <section class="wrap" id="android">
       <div class="eyebrow">04 · On Android</div>
       <h2>A mint bubble in your favorite apps.</h2>
@@ -3711,6 +3919,8 @@
     </section>
 
     <!-- ================= APPS ================= -->
+    </div>
+
     <section class="wrap" id="apps">
       <div class="eyebrow">05 · Where it works</div>
       <h2>18 apps on Android. Everywhere on desktop.</h2>
@@ -3962,6 +4172,7 @@
     </section>
 
     <!-- ================= PRICING ================= -->
+    <div class="band band-c">
     <section class="wrap" id="pricing" style="padding-top: 0">
       <div class="price-strip">
         <b>Free during beta</b>
@@ -4070,6 +4281,8 @@
         </div>
       </div>
     </section>
+
+    </div>
 
     <footer>
       <div class="f-brand">
