@@ -71,6 +71,8 @@
       }
       html {
         scroll-behavior: smooth;
+        overflow-x: hidden;
+        overflow-x: clip;
       }
       body {
         background: var(--bg);
@@ -2255,6 +2257,20 @@
         }
         .nav-links a.nl {
           display: none;
+        }
+        /* round icon-only download button */
+        #nav-dl-label {
+          display: none;
+        }
+        .nav-dl {
+          padding: 10px;
+        }
+        /* cancel the flex gap between "Reply" and "Mint" */
+        .brand .mint {
+          margin-left: -10px;
+        }
+        header.hero.wrap::before {
+          width: 100vw;
         }
         .phones {
           gap: 32px;
