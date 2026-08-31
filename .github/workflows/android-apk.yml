@@ -37,7 +37,12 @@ jobs:
       # (android/replymint-release.jks) — it is the app's install identity.
       - name: Materialize release keystore
         run: |
-          echo "$ANDROID_KEYSTORE_B64" | base64 -d > replymint-release.jks
+          if [ -z "$ANDROID_KEYSTORE_B64" ]; then
+            echo "::error::ANDROID_KEYSTORE_B64 secret is empty or unset"; exit 1
+          fi
+          printf '%s' "$ANDROID_KEYSTORE_B64" | base64 -d > replymint-release.jks
+          # Fail fast with a clear message if the keystore or password is wrong.
+          keytool -list -keystore replymint-release.jks -storepass "$ANDROID_STORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" > /dev/null
           cat > keystore.properties <<EOF
           storeFile=replymint-release.jks
           storePassword=$ANDROID_STORE_PASSWORD
