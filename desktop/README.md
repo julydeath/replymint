@@ -1,4 +1,4 @@
-# ReplyMint Desktop (Mac — VOICE_PLAN D1 + D2)
+# ReplyMint Desktop (Mac + Windows — VOICE_PLAN D1 + D2 + D3)
 
 A [Tauri](https://tauri.app) menu-bar app. The whole product is one loop:
 
@@ -15,12 +15,14 @@ static settings page ([ui/index.html](ui/index.html)) — no bundler.
 | Piece | File |
 |---|---|
 | Tray, hotkey, orchestration | `src/lib.rs` |
-| AX: focused-window read, direct insertion, trust prompt | `src/ax.rs` |
+| Shared context types + keyword extractor | `src/screen.rs` |
+| macOS AX: focused-window read, direct insertion, trust prompt | `src/ax.rs` |
+| Windows UIA: the same three jobs (D3) | `src/uia.rs` |
 | Mic capture → 16kHz mono PCM16 (cpal) | `src/audio.rs` |
 | WebSocket client for the STT proxy | `src/stt.rs` |
 | Instruction mode → POST /v1/reply | `src/reply.rs` |
-| Insertion dispatch: AX first, ⌘V-paste fallback | `src/insert.rs` |
-| Settings file (Application Support) | `src/settings.rs` |
+| Insertion dispatch: direct first, paste fallback | `src/insert.rs` |
+| Settings file (Application Support / %APPDATA%) | `src/settings.rs` |
 
 ## Run
 
@@ -45,6 +47,34 @@ treats your speech as an instruction — the focused window's text + your words 
 to `/v1/reply` and the generated draft is inserted instead (the Android bubble's
 voice flow, on Mac). Cloud STT is pro-gated server-side: the account behind the
 token needs `users.plan='pro'` (dev-token.ts mints one).
+
+## Windows (D3)
+
+Same codebase, same loop. The per-OS pieces sit behind one facade
+(`crate::platform` in lib.rs → `ax.rs` on macOS, `uia.rs` on Windows):
+
+- **Context read**: UI Automation walk of the focused top-level window
+  (name/value per element, same 60-line / 1500-node caps as macOS and Android).
+- **Insertion**: UIA `ValuePattern.SetValue` when the focused field is empty
+  (no clipboard); otherwise clipboard + synthesized **Ctrl+V** — UIA has no
+  insert-at-caret equivalent of `AXSelectedText`, and SetValue on a non-empty
+  field would clobber it.
+- **No permission dance**: UIA needs no grant, so the Accessibility card is
+  hidden in Settings and `ensure_trusted` is always true.
+- **Default hotkey**: **Ctrl+Alt+Space** (plain Alt+Space is the Windows
+  window-menu key).
+- Settings live at `%APPDATA%\com.replymint.desktop\settings.json`.
+
+Build on a Windows machine with `npm run build -- --bundles nsis`, or run
+the **Build Windows desktop installer** GitHub Actions workflow (manual trigger;
+a `desktop-v*` tag also attaches the `.exe` to that release). The installer is
+unsigned for now — SmartScreen shows a "More info → Run anyway" warning until we
+buy a code-signing cert.
+
+Still to verify on real Windows (code cross-type-checks against
+`x86_64-pc-windows-msvc` but hasn't run there): the `{ctrl}v` send-keys syntax,
+UIA context quality in Chrome/Electron apps, and the overlay's transparency /
+click-through behavior.
 
 ## Auth
 

@@ -83,11 +83,7 @@ pub async fn sign_in(backend_url: &str) -> Result<SignedIn, String> {
         redirect = urlencode(&redirect_uri),
     );
 
-    // Same shell-out precedent as the Accessibility deep link in lib.rs.
-    std::process::Command::new("open")
-        .arg(&auth_url)
-        .spawn()
-        .map_err(|e| format!("couldn't open browser: {e}"))?;
+    open_browser(&auth_url)?;
 
     let code = tokio::time::timeout(AUTH_TIMEOUT, wait_for_code(&listener, &state))
         .await
@@ -240,6 +236,29 @@ fn http_client() -> Result<reqwest::Client, String> {
         .map_err(|e| format!("http client: {e}"))
 }
 
+/// Launch the system browser at the consent page. Same shell-out precedent as
+/// the Accessibility deep link in lib.rs.
+#[cfg(target_os = "macos")]
+fn open_browser(url: &str) -> Result<(), String> {
+    std::process::Command::new("open")
+        .arg(url)
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| format!("couldn't open browser: {e}"))
+}
+
+/// rundll32 gets the URL as a plain argv entry — no cmd.exe quoting of the
+/// `&`-laden OAuth URL to get wrong.
+#[cfg(windows)]
+fn open_browser(url: &str) -> Result<(), String> {
+    std::process::Command::new("rundll32")
+        .args(["url.dll,FileProtocolHandler", url])
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| format!("couldn't open browser: {e}"))
+}
+
+#[cfg(target_os = "macos")]
 fn device_name() -> String {
     std::process::Command::new("scutil")
         .args(["--get", "ComputerName"])
@@ -249,6 +268,15 @@ fn device_name() -> String {
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
         .unwrap_or_else(|| "Mac".into())
+}
+
+#[cfg(windows)]
+fn device_name() -> String {
+    std::env::var("COMPUTERNAME")
+        .map(|s| s.trim().to_string())
+        .ok()
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "Windows PC".into())
 }
 
 fn urlencode(s: &str) -> String {

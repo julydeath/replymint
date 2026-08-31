@@ -1,35 +1,30 @@
-use std::process::Command;
 use std::thread::sleep;
 use std::time::Duration;
 
-/// How the text landed in the focused field. The enum is the D3 seam — Windows
-/// adds a SendInput variant behind the same `insert_text` call.
+/// How the text landed in the focused field.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Insertion {
-    /// Direct AX insertion at the cursor — no clipboard touched.
+    /// Direct accessibility insertion — macOS AXSelectedText at the cursor, or
+    /// Windows UIA ValuePattern on an empty field. No clipboard touched.
     Ax,
-    /// Clipboard + synthesized ⌘V fallback (apps with no settable AX text:
-    /// many Electron apps, terminals, Java UIs).
+    /// Clipboard + synthesized paste fallback (apps with no settable AX text /
+    /// no ValuePattern: many Electron apps, terminals, Java UIs).
     Paste,
 }
 
-/// Insert into whatever field has focus: AX first, paste fallback.
+/// Insert into whatever field has focus: direct first, paste fallback.
 pub fn insert_text(text: &str) -> Result<Insertion, String> {
-    match crate::ax::insert_via_ax(text) {
+    match crate::platform::insert_direct(text) {
         Ok(()) => Ok(Insertion::Ax),
-        Err(ax_err) => {
-            eprintln!("AX insertion unavailable ({ax_err}); falling back to paste");
+        Err(direct_err) => {
+            eprintln!("direct insertion unavailable ({direct_err}); falling back to paste");
             paste_text(text).map(|()| Insertion::Paste)
         }
     }
 }
 
-/// The D1 path, now the fallback: set the clipboard, synthesize ⌘V, restore the
-/// old clipboard (text-only, best-effort).
-///
-/// macOS-only — the ⌘V comes from `osascript`/System Events, which asks the
-/// user for Automation + Accessibility permission on first use. D3 swaps this
-/// for a cross-platform synthesizer (enigo / SendInput).
+/// The D1 path, now the fallback: set the clipboard, synthesize a paste
+/// keystroke, restore the old clipboard (text-only, best-effort).
 fn paste_text(text: &str) -> Result<(), String> {
     let mut clipboard = arboard::Clipboard::new().map_err(|e| format!("clipboard: {e}"))?;
     let previous = clipboard.get_text().ok();
@@ -37,9 +32,23 @@ fn paste_text(text: &str) -> Result<(), String> {
     clipboard
         .set_text(text.to_string())
         .map_err(|e| format!("clipboard: {e}"))?;
-    sleep(Duration::from_millis(150)); // let the clipboard settle before ⌘V
+    sleep(Duration::from_millis(150)); // let the clipboard settle before pasting
 
-    let status = Command::new("osascript")
+    synthesize_paste()?;
+
+    // Give the frontmost app time to consume the paste before restoring.
+    sleep(Duration::from_millis(400));
+    if let Some(previous) = previous {
+        let _ = clipboard.set_text(previous);
+    }
+    Ok(())
+}
+
+/// macOS: ⌘V via `osascript`/System Events, which asks the user for
+/// Automation + Accessibility permission on first use.
+#[cfg(target_os = "macos")]
+fn synthesize_paste() -> Result<(), String> {
+    let status = std::process::Command::new("osascript")
         .args([
             "-e",
             r#"tell application "System Events" to keystroke "v" using command down"#,
@@ -53,11 +62,12 @@ fn paste_text(text: &str) -> Result<(), String> {
                 .into(),
         );
     }
-
-    // Give the frontmost app time to consume the paste before restoring.
-    sleep(Duration::from_millis(400));
-    if let Some(previous) = previous {
-        let _ = clipboard.set_text(previous);
-    }
     Ok(())
+}
+
+/// Windows: Ctrl+V via UIA's key synthesizer (SendInput underneath) — no
+/// permission needed.
+#[cfg(windows)]
+fn synthesize_paste() -> Result<(), String> {
+    crate::platform::send_paste()
 }

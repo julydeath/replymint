@@ -8,7 +8,7 @@ use serde::Deserialize;
 use serde_json::json;
 use std::time::Duration;
 
-use crate::ax::AxContext;
+use crate::screen::ScreenContext;
 
 #[derive(Deserialize)]
 struct ReplyResponse {
@@ -21,7 +21,7 @@ struct ReplyResponse {
 pub async fn generate_draft(
     backend_url: &str,
     token: &str,
-    ctx: Option<&AxContext>,
+    ctx: Option<&ScreenContext>,
     instruction: &str,
 ) -> Result<String, String> {
     post_reply(backend_url, token, ctx, "voice", instruction).await
@@ -32,7 +32,7 @@ pub async fn generate_draft(
 pub async fn clean_dictation(
     backend_url: &str,
     token: &str,
-    ctx: Option<&AxContext>,
+    ctx: Option<&ScreenContext>,
     transcript: &str,
 ) -> Result<String, String> {
     post_reply(backend_url, token, ctx, "dictate", transcript).await
@@ -42,7 +42,7 @@ pub async fn clean_dictation(
 async fn post_reply(
     backend_url: &str,
     token: &str,
-    ctx: Option<&AxContext>,
+    ctx: Option<&ScreenContext>,
     action: &str,
     transcript: &str,
 ) -> Result<String, String> {

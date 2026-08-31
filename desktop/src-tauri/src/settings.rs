@@ -37,18 +37,25 @@ impl Default for Settings {
             .into(),
             token: String::new(),
             email: String::new(),
-            hotkey: "alt+space".into(),
+            // Alt+Space is the window-menu key on Windows — don't shadow it there.
+            hotkey: if cfg!(windows) { "ctrl+alt+space" } else { "alt+space" }.into(),
             mode: "dictation".into(),
             clean_dictation: true,
         }
     }
 }
 
+#[cfg(target_os = "macos")]
 fn path() -> Result<PathBuf, String> {
     let home = std::env::var("HOME").map_err(|_| "HOME is not set".to_string())?;
-    // macOS-only path is fine for D1; D3 moves this to a per-OS config dir.
     Ok(PathBuf::from(home)
         .join("Library/Application Support/com.replymint.desktop/settings.json"))
+}
+
+#[cfg(windows)]
+fn path() -> Result<PathBuf, String> {
+    let appdata = std::env::var("APPDATA").map_err(|_| "APPDATA is not set".to_string())?;
+    Ok(PathBuf::from(appdata).join("com.replymint.desktop/settings.json"))
 }
 
 pub fn load() -> Settings {

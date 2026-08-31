@@ -176,7 +176,7 @@
 
   <div class="card hidden" id="hero">
     <h2>Speak. It lands anywhere.</h2>
-    <p>Sign in to dictate into any Mac app — your free drafts are shared with your phone.</p>
+    <p>Sign in to dictate into any app — your free drafts are shared with your phone.</p>
     <button id="signin">Sign in with Google</button>
   </div>
 
@@ -230,7 +230,8 @@
     <input id="hotkey" spellcheck="false" placeholder="alt+space" />
   </div>
 
-  <div class="card">
+  <!-- macOS-only: Windows UIA needs no grant, so the whole card hides there. -->
+  <div class="card" id="ax-card">
     <div class="row">
       <button class="ghost" id="ax">Grant Accessibility</button>
     </div>
@@ -375,8 +376,13 @@
     };
 
     // ---- Hotkey (applies on change) + Advanced ---------------------------
+    // Alt+Space is the window-menu key on Windows — the default differs (settings.rs).
+    const IS_WIN = navigator.userAgent.includes("Windows");
+    const DEFAULT_HOTKEY = IS_WIN ? "ctrl+alt+space" : "alt+space";
+    $("hotkey").placeholder = DEFAULT_HOTKEY;
+    $("ax-card").hidden = IS_WIN;
     $("hotkey").onchange = () =>
-      applyNow({ hotkey: $("hotkey").value.trim() || "alt+space" }, "Hotkey saved.");
+      applyNow({ hotkey: $("hotkey").value.trim() || DEFAULT_HOTKEY }, "Hotkey saved.");
 
     $("save-adv").onclick = () =>
       applyNow(

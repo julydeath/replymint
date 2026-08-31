@@ -9,8 +9,16 @@ mod ax;
 mod audio;
 mod insert;
 mod reply;
+mod screen;
 mod settings;
 mod stt;
+mod uia;
+
+// The per-OS screen reader/inserter behind one name (ax.rs / uia.rs share an API).
+#[cfg(target_os = "macos")]
+pub(crate) use ax as platform;
+#[cfg(windows)]
+pub(crate) use uia as platform;
 
 use serde_json::json;
 use std::str::FromStr;
@@ -31,7 +39,7 @@ const TRAY_ID: &str = "main";
 struct AppState {
     session: Mutex<Option<audio::Recorder>>,
     /// Focused-window snapshot taken at recording start (D2 context).
-    context: Mutex<Option<ax::AxContext>>,
+    context: Mutex<Option<screen::ScreenContext>>,
 }
 
 pub fn run() {
@@ -175,7 +183,7 @@ fn toggle_dictation(app: &AppHandle) {
     // D2: snapshot the focused window BEFORE the mic starts — the target app is
     // frontmost right now (we're an Accessory app and never take focus). The
     // first hotkey press also triggers the one-time Accessibility grant prompt.
-    if !ax::ensure_trusted(true) {
+    if !platform::ensure_trusted(true) {
         emit_ui(
             app,
             "warn",
@@ -183,8 +191,8 @@ fn toggle_dictation(app: &AppHandle) {
              in System Settings → Privacy & Security → Accessibility (dictation still works)",
         );
     }
-    let context = ax::read_context();
-    let keywords = context.as_ref().map(ax::extract_keywords).unwrap_or_default();
+    let context = platform::read_context();
+    let keywords = context.as_ref().map(screen::extract_keywords).unwrap_or_default();
     *state.context.lock().unwrap() = context;
 
     let (tx, rx) = tokio::sync::mpsc::channel::<Vec<u8>>(64);
@@ -239,7 +247,7 @@ fn toggle_dictation(app: &AppHandle) {
                     // their AX tree lazily, so the snapshot at recording start
                     // often comes back empty — by now the tree is warm.
                     if context.is_none() {
-                        context = tauri::async_runtime::spawn_blocking(ax::read_context)
+                        context = tauri::async_runtime::spawn_blocking(platform::read_context)
                             .await
                             .ok()
                             .flatten();
@@ -416,7 +424,8 @@ async fn fetch_me() -> Result<auth::MeResponse, String> {
 /// most once, so the deep link is the reliable path afterwards).
 #[tauri::command]
 fn request_ax() -> bool {
-    let trusted = ax::ensure_trusted(true);
+    let trusted = platform::ensure_trusted(true);
+    #[cfg(target_os = "macos")]
     if !trusted {
         let _ = std::process::Command::new("open")
             .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
