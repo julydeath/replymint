@@ -1,0 +1,5083 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ReplyMint — Speak. It writes the right message.</title>
+    <meta
+      name="description"
+      content="ReplyMint turns your voice into the message you meant to send — polished replies in WhatsApp, Gmail, Slack and 15 more apps on Android, and everywhere you can type on Mac."
+    />
+    <meta
+      property="og:title"
+      content="ReplyMint — Speak. It writes the right message."
+    />
+    <meta
+      property="og:description"
+      content="Voice in, the perfect reply out. It reads the conversation on your screen and writes the message for you — on Mac and Android."
+    />
+    <meta property="og:type" content="website" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%232BE6A0'/%3E%3Cpath d='M18.5 11.2a6.7 6.7 0 0 1-7.2 6.7 6.9 6.9 0 0 1-2.6-.5L5 18.5l1.4-3.7a6.7 6.7 0 1 1 12.1-3.6z' fill='none' stroke='%2307130E' stroke-width='1.8'/%3E%3Cpath d='M12 8.1l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z' fill='%2307130E'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ============ TOKENS ============ */
+      :root {
+        --bg: #07090c;
+        --bg2: #0b0f13;
+        --panel: #10151b;
+        --panel2: #141b22;
+        --stroke: rgba(255, 255, 255, 0.08);
+        --stroke-soft: rgba(255, 255, 255, 0.05);
+        --mint: #2be6a0;
+        --mint-deep: #10b981;
+        --mint-dark: #0e9f6e;
+        --on-mint: #07130e;
+        --ink: #f2f5f7;
+        --ink-dim: #9aa6b2;
+        --ink-faint: #5d6873;
+        --glass: rgba(18, 24, 30, 0.86);
+        --glass-stroke: rgba(255, 255, 255, 0.14);
+        --err: #ff6b6b;
+        --r-lg: 24px;
+        --r-md: 18px;
+        --r-sm: 12px;
+        --font-body: "Inter", -apple-system, system-ui, sans-serif;
+        --font-disp: "Space Grotesk", "Inter", sans-serif;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+      body::before {
+        /* ambient glow */
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background:
+          radial-gradient(
+            900px 500px at 15% -5%,
+            rgba(43, 230, 160, 0.07),
+            transparent 60%
+          ),
+          radial-gradient(
+            700px 500px at 90% 20%,
+            rgba(16, 185, 129, 0.05),
+            transparent 60%
+          );
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 28px;
+        position: relative;
+        z-index: 1;
+      }
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: inherit;
+      }
+      svg {
+        display: block;
+      }
+      /* section.wrap outranks .wrap, so sections keep their vertical rhythm */
+      section,
+      section.wrap {
+        padding: 84px 28px;
+        scroll-margin-top: 76px;
+      }
+      .eyebrow {
+        font-size: 12.5px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--mint);
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+      h2 {
+        font-family: var(--font-disp);
+        font-size: clamp(28px, 4vw, 42px);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+        margin-bottom: 12px;
+      }
+      .lede {
+        color: var(--ink-dim);
+        max-width: 660px;
+        margin-bottom: 48px;
+        font-size: 16.5px;
+      }
+      .kbd {
+        display: inline-block;
+        background: var(--panel2);
+        border: 1px solid var(--stroke);
+        border-bottom-width: 2px;
+        border-radius: 7px;
+        padding: 2px 9px;
+        font-size: 12.5px;
+        color: var(--ink-dim);
+        font-weight: 600;
+        line-height: 1.5;
+        transition:
+          transform 0.12s,
+          border-color 0.2s,
+          color 0.2s;
+      }
+      .kbd.pressed {
+        transform: translateY(1.5px);
+        border-color: rgba(43, 230, 160, 0.5);
+        color: var(--mint);
+        border-bottom-width: 1px;
+      }
+
+      /* ============ NAV ============ */
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(7, 9, 12, 0.72);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--stroke-soft);
+      }
+      .nav-in {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 13px 28px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--font-disp);
+        font-weight: 700;
+        font-size: 19px;
+        letter-spacing: -0.01em;
+      }
+      .brand .mint {
+        color: var(--mint);
+      }
+      .logo-orb {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        flex: none;
+        background: radial-gradient(
+          circle at 32% 28%,
+          #7cf5c8,
+          var(--mint) 38%,
+          var(--mint-dark) 90%
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--on-mint);
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        font-size: 14px;
+        color: var(--ink-dim);
+      }
+      .nav-links a.nl:hover {
+        color: var(--ink);
+      }
+      .nav-dl {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(120deg, #3ef0ae, var(--mint-deep));
+        color: var(--on-mint);
+        font-weight: 600;
+        font-size: 13.5px;
+        border-radius: 999px;
+        padding: 9px 18px;
+        box-shadow: 0 6px 18px rgba(16, 185, 129, 0.3);
+        transition: transform 0.15s;
+      }
+      .nav-dl:hover {
+        transform: translateY(-1px);
+      }
+
+      /* ============ HERO ============ */
+      header.hero.wrap {
+        padding: 88px 28px 64px;
+        text-align: center;
+        position: relative;
+      }
+      h1 {
+        font-family: var(--font-disp);
+        font-size: clamp(40px, 6.4vw, 72px);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1.06;
+      }
+      h1 .grad {
+        background: linear-gradient(
+          120deg,
+          #7cf5c8,
+          var(--mint) 40%,
+          var(--mint-deep)
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .hero .tag {
+        color: var(--ink-dim);
+        font-size: 19px;
+        max-width: 640px;
+        margin: 20px auto 0;
+        line-height: 1.55;
+      }
+      .cta-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        margin-top: 36px;
+        flex-wrap: wrap;
+      }
+      .dl-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 11px;
+        background: linear-gradient(120deg, #3ef0ae, var(--mint-deep));
+        color: var(--on-mint);
+        font-weight: 700;
+        font-size: 16px;
+        border-radius: 18px;
+        padding: 15px 28px;
+        box-shadow: 0 12px 32px rgba(16, 185, 129, 0.35);
+        transition:
+          transform 0.15s,
+          box-shadow 0.2s;
+      }
+      .dl-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 40px rgba(16, 185, 129, 0.45);
+      }
+      .dl-btn:active {
+        transform: scale(0.98);
+      }
+      .dl-btn.ghost {
+        background: var(--panel);
+        color: var(--ink);
+        border: 1px solid var(--stroke);
+        box-shadow: none;
+        font-weight: 600;
+      }
+      .dl-btn.ghost:hover {
+        border-color: rgba(43, 230, 160, 0.4);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      }
+      .soon-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--ink-faint);
+        font-weight: 500;
+        font-size: 14px;
+        padding: 15px 6px;
+      }
+      .dl-meta {
+        margin-top: 16px;
+        font-size: 12.5px;
+        color: var(--ink-faint);
+        letter-spacing: 0.05em;
+      }
+
+      /* ============ MAC WINDOW ============ */
+      .mac-demo {
+        margin: 60px auto 0;
+        max-width: 720px;
+        text-align: left;
+      }
+      .mac-keys {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        margin-bottom: 16px;
+        color: var(--ink-faint);
+        font-size: 13px;
+      }
+      .mac-keys .mklabel {
+        margin-left: 6px;
+        transition: color 0.3s;
+      }
+      .mac-keys.live .mklabel {
+        color: var(--mint);
+      }
+      .mac-window {
+        background: #f4f4f6;
+        color: #1d1d1f;
+        border-radius: 14px;
+        overflow: hidden;
+        position: relative;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        box-shadow:
+          0 40px 90px -24px rgba(0, 0, 0, 0.8),
+          0 0 0 1px rgba(0, 0, 0, 0.5);
+        font-size: 14.5px;
+        line-height: 1.55;
+      }
+      .mac-titlebar {
+        display: flex;
+        align-items: center;
+        padding: 11px 14px;
+        background: #e7e7ea;
+        border-bottom: 1px solid #d5d5da;
+        position: relative;
+      }
+      .traffic {
+        display: flex;
+        gap: 8px;
+      }
+      .traffic i {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: block;
+      }
+      .traffic i:nth-child(1) {
+        background: #ff5f57;
+      }
+      .traffic i:nth-child(2) {
+        background: #febc2e;
+      }
+      .traffic i:nth-child(3) {
+        background: #28c840;
+      }
+      .mac-title {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 13px;
+        font-weight: 600;
+        color: #6e6e73;
+        white-space: nowrap;
+      }
+      .mac-fields {
+        background: #fbfbfd;
+      }
+      .mac-field {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-bottom: 1px solid #e8e8ec;
+        font-size: 13.5px;
+        color: #6e6e73;
+      }
+      .mac-field b {
+        color: #1d1d1f;
+        font-weight: 500;
+      }
+      .mac-field .chipmail {
+        background: #ebebf0;
+        border-radius: 999px;
+        padding: 2px 11px;
+        font-size: 12.5px;
+        color: #3a3a3e;
+      }
+      .mac-quote {
+        margin: 14px 18px 0;
+        padding: 10px 14px;
+        border-left: 3px solid #d5d5da;
+        color: #6e6e73;
+        font-size: 13px;
+        line-height: 1.5;
+        background: #fafafc;
+        border-radius: 0 8px 8px 0;
+      }
+      .mac-quote b {
+        color: #3a3a3e;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 2px;
+      }
+      .mac-body {
+        padding: 16px 18px 56px;
+        min-height: 150px;
+        position: relative;
+      }
+      .mac-body .composer-text {
+        font-size: 14.5px;
+        line-height: 1.6;
+        color: #1d1d1f;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .mac-body .composer-text.empty::before {
+        content: attr(data-ph);
+        color: #a0a0a8;
+      }
+      .caret {
+        display: inline-block;
+        width: 2px;
+        height: 1.1em;
+        background: var(--mint-deep);
+        vertical-align: text-bottom;
+        margin-left: 1px;
+        animation: blink 1s steps(1) infinite;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+      /* desktop overlay variants — reuse .rm-voice/.rm-pill visuals with mac positioning */
+      .mac-window .rm-voice {
+        left: 16%;
+        right: 16%;
+        bottom: 14px;
+      }
+      .mac-window .rm-pill {
+        bottom: 14px;
+      }
+      .mac-window .rm-transcript {
+        min-height: 24px;
+      }
+      .mac-window .rm-wave {
+        height: 20px;
+      }
+      /* small mac windows in mode cards */
+      .mode-card .mac-window {
+        font-size: 13px;
+      }
+      .mode-card .mac-body {
+        padding: 14px 16px 52px;
+        min-height: 120px;
+      }
+      .mode-card .mac-window .rm-voice {
+        left: 8%;
+        right: 8%;
+        bottom: 12px;
+        padding: 14px 14px 12px;
+      }
+      .mode-card .mac-window .rm-pill {
+        bottom: 12px;
+      }
+
+      /* ============ PHONES (lifted from approved mockup) ============ */
+      .phones {
+        display: flex;
+        gap: 44px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .phone-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+      }
+      .phone {
+        width: 330px;
+        height: 696px;
+        border-radius: 48px;
+        padding: 11px;
+        position: relative;
+        flex: none;
+        background: linear-gradient(160deg, #2a3138, #0e1114 40%);
+        box-shadow:
+          0 40px 90px -30px rgba(0, 0, 0, 0.85),
+          0 0 0 1px rgba(255, 255, 255, 0.07),
+          inset 0 0 0 1px rgba(0, 0, 0, 0.7);
+      }
+      .screen {
+        width: 100%;
+        height: 100%;
+        border-radius: 38px;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        background: #000;
+      }
+      .punch {
+        position: absolute;
+        top: 9px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: #000;
+        z-index: 60;
+        box-shadow: inset 0 0 2px 1px #111;
+      }
+      .statusbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 9px 22px 4px;
+        font-size: 12px;
+        font-weight: 600;
+        position: relative;
+        z-index: 5;
+        flex: none;
+      }
+      .statusbar .sicons {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+        opacity: 0.9;
+      }
+      .caption {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .caption .applogo {
+        width: 34px;
+        height: 34px;
+        flex: none;
+        border-radius: 10px;
+        background: rgba(43, 230, 160, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--mint);
+      }
+      .caption .cttl {
+        font-weight: 600;
+        font-size: 15px;
+      }
+      .caption .csub {
+        color: var(--ink-faint);
+        font-size: 12.5px;
+      }
+      .replay {
+        display: none;
+        align-items: center;
+        gap: 7px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--mint);
+        border: 1px solid rgba(43, 230, 160, 0.35);
+        border-radius: 999px;
+        padding: 6px 14px;
+        margin-left: 8px;
+        transition: background 0.2s;
+      }
+      .replay:hover {
+        background: rgba(43, 230, 160, 0.1);
+      }
+      .replay.show {
+        display: inline-flex;
+      }
+      .hint {
+        color: var(--ink-faint);
+        font-size: 13px;
+        text-align: center;
+        margin-top: 36px;
+      }
+      .hint b {
+        color: var(--ink-dim);
+        font-weight: 600;
+      }
+      /* magic phone holds multiple swappable screens */
+      .mscreen {
+        position: absolute;
+        inset: 11px;
+        border-radius: 38px;
+        overflow: hidden;
+      }
+      .mscreen[hidden] {
+        display: none;
+      }
+      .mscreen .screen {
+        border-radius: 38px;
+      }
+
+      /* ============ WHATSAPP ============ */
+      .wa .statusbar {
+        background: #1f2c34;
+        color: #e9edef;
+      }
+      .wa-head {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px 10px;
+        background: #1f2c34;
+        color: #e9edef;
+        position: relative;
+        z-index: 5;
+      }
+      .wa-head .av {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f0a860, #d96c6c);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 15px;
+        color: #fff;
+      }
+      .wa-head .who b {
+        display: block;
+        font-size: 15.5px;
+        font-weight: 600;
+        line-height: 1.2;
+      }
+      .wa-head .who span {
+        font-size: 12px;
+        color: #8696a0;
+      }
+      .wa-head .hics {
+        margin-left: auto;
+        display: flex;
+        gap: 20px;
+        color: #aebac1;
+      }
+      .wa-chat {
+        flex: 1;
+        overflow: hidden;
+        padding: 12px 12px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        position: relative;
+        background: #0b141a;
+        background-image: radial-gradient(
+          rgba(255, 255, 255, 0.028) 1.4px,
+          transparent 1.4px
+        );
+        background-size: 26px 26px;
+      }
+      .datechip {
+        align-self: center;
+        background: #1f2c34;
+        color: #8696a0;
+        font-size: 11px;
+        padding: 4px 12px;
+        border-radius: 8px;
+        margin-bottom: 6px;
+      }
+      .msg {
+        max-width: 78%;
+        padding: 7px 10px 6px;
+        border-radius: 10px;
+        font-size: 13.8px;
+        line-height: 1.4;
+        position: relative;
+        color: #e9edef;
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+      }
+      .msg .mt {
+        display: inline-flex;
+        gap: 3px;
+        align-items: center;
+        float: right;
+        margin: 8px -2px -2px 8px;
+        font-size: 10.5px;
+        color: #8696a0;
+      }
+      .msg.in {
+        background: #1f2c34;
+        align-self: flex-start;
+        border-top-left-radius: 2px;
+      }
+      .msg.out {
+        background: #005c4b;
+        align-self: flex-end;
+        border-top-right-radius: 2px;
+      }
+      .msg.out .mt {
+        color: #7fc4ad;
+      }
+      .ticks {
+        color: #53bdeb;
+      }
+      .wa-composer {
+        flex: none;
+        display: flex;
+        align-items: flex-end;
+        gap: 7px;
+        padding: 7px 9px 12px;
+        background: transparent;
+        position: relative;
+        z-index: 5;
+      }
+      .wa-input {
+        flex: 1;
+        background: #1f2c34;
+        border-radius: 22px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 9px 12px;
+        color: #e9edef;
+      }
+      .wa-input .cics {
+        color: #8696a0;
+        flex: none;
+      }
+      .composer-text {
+        flex: 1;
+        font-size: 14.2px;
+        line-height: 1.35;
+        max-height: 88px;
+        overflow: hidden;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .composer-text.empty::before {
+        content: attr(data-ph);
+        color: #8696a0;
+      }
+      .composer-text.fade {
+        opacity: 0.15;
+        transition: opacity 0.3s;
+      }
+      .fab {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #00a884;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        flex: none;
+        position: relative;
+      }
+      .fab .ic-send {
+        display: none;
+      }
+      .fab.active .ic-send {
+        display: block;
+      }
+      .fab.active .ic-mic {
+        display: none;
+      }
+
+      /* ============ INSTAGRAM ============ */
+      .ig .statusbar {
+        background: #000;
+        color: #fff;
+      }
+      .ig-head {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 8px 14px 10px;
+        background: #000;
+        color: #fff;
+        position: relative;
+        z-index: 5;
+      }
+      .ring {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        padding: 2.5px;
+        background: conic-gradient(
+          from 210deg,
+          #f9ce34,
+          #ee2a7b,
+          #6228d7,
+          #f9ce34
+        );
+        flex: none;
+      }
+      .ring .av {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #5d6df0, #31b3c4);
+        border: 2px solid #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        color: #fff;
+      }
+      .ig-head .who b {
+        display: block;
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 1.2;
+      }
+      .ig-head .who span {
+        font-size: 12px;
+        color: #a8a8a8;
+      }
+      .ig-head .hics {
+        margin-left: auto;
+        display: flex;
+        gap: 20px;
+        color: #fff;
+      }
+      .ig-chat {
+        flex: 1;
+        overflow: hidden;
+        padding: 14px 12px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        background: #000;
+        position: relative;
+      }
+      .ig-msg {
+        max-width: 76%;
+        padding: 10px 14px;
+        border-radius: 20px;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      .ig-msg.in {
+        background: #262626;
+        color: #fff;
+        align-self: flex-start;
+        border-bottom-left-radius: 6px;
+      }
+      .ig-msg.out {
+        background: linear-gradient(135deg, #405de6, #833ab4 70%, #c13584);
+        color: #fff;
+        align-self: flex-end;
+        border-bottom-right-radius: 6px;
+      }
+      .ig-time {
+        align-self: center;
+        color: #737373;
+        font-size: 11px;
+        margin-bottom: 4px;
+      }
+      .ig-composer {
+        flex: none;
+        display: flex;
+        align-items: flex-end;
+        padding: 8px 10px 14px;
+        background: #000;
+        position: relative;
+        z-index: 5;
+      }
+      .ig-input {
+        flex: 1;
+        background: #262626;
+        border-radius: 24px;
+        min-height: 46px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 5px 14px 5px 5px;
+        color: #fff;
+      }
+      .ig-cam {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #405de6, #b33bb3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        flex: none;
+      }
+      .ig-input .composer-text {
+        font-size: 14.2px;
+      }
+      .ig-input .composer-text.empty::before {
+        color: #8e8e8e;
+      }
+      .ig-input .cics {
+        color: #fff;
+        display: flex;
+        gap: 14px;
+        flex: none;
+        padding-right: 4px;
+      }
+
+      /* ============ GMAIL ============ */
+      .gm .statusbar {
+        background: #ffffff;
+        color: #1f1f1f;
+      }
+      .gm-head {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        padding: 10px 16px;
+        background: #fff;
+        color: #444746;
+        position: relative;
+        z-index: 5;
+      }
+      .gm-head .hics {
+        margin-left: auto;
+        display: flex;
+        gap: 22px;
+        align-items: center;
+      }
+      .gm-body {
+        flex: 1;
+        background: #fff;
+        color: #1f1f1f;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      }
+      .gm-field {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 13px 16px;
+        border-bottom: 1px solid #e3e3e3;
+        font-size: 14px;
+        color: #444746;
+      }
+      .gm-field b {
+        color: #1f1f1f;
+        font-weight: 500;
+      }
+      .gm-field .chipmail {
+        background: #f1f3f4;
+        border-radius: 999px;
+        padding: 3px 12px;
+        font-size: 13px;
+        color: #3c4043;
+      }
+      .gm-subject {
+        font-size: 15px;
+        font-weight: 500;
+        color: #1f1f1f;
+      }
+      .gm-compose {
+        flex: 1;
+        padding: 16px;
+        font-size: 14.5px;
+        line-height: 1.55;
+        color: #1f1f1f;
+      }
+      .gm-compose .composer-text.empty::before {
+        color: #9aa0a6;
+      }
+
+      /* ============ OVERLAY (shared, lifted) ============ */
+      .rm-layer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 40;
+      }
+      .rm-layer > * {
+        pointer-events: auto;
+      }
+      .rm-bubble {
+        position: absolute;
+        right: 12px;
+        top: 44%;
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 32% 28%,
+          #7cf5c8,
+          var(--mint) 38%,
+          var(--mint-dark) 90%
+        );
+        border: 1px solid rgba(255, 255, 255, 0.55);
+        box-shadow:
+          0 6px 22px rgba(16, 185, 129, 0.45),
+          0 2px 8px rgba(0, 0, 0, 0.4),
+          inset 0 1px 3px rgba(255, 255, 255, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--on-mint);
+        opacity: 0;
+        transform: scale(0.4);
+        transition:
+          transform 0.45s cubic-bezier(0.2, 1.4, 0.4, 1),
+          opacity 0.35s;
+      }
+      .rm-bubble.in {
+        opacity: 1;
+        transform: scale(1);
+        animation: bubblePulse 2.6s ease-in-out 0.6s infinite;
+      }
+      .rm-bubble.pressed {
+        transform: scale(0.88);
+        animation: none;
+      }
+      @keyframes bubblePulse {
+        0%,
+        100% {
+          box-shadow:
+            0 6px 22px rgba(16, 185, 129, 0.45),
+            0 2px 8px rgba(0, 0, 0, 0.4),
+            inset 0 1px 3px rgba(255, 255, 255, 0.55);
+        }
+        50% {
+          box-shadow:
+            0 6px 30px rgba(43, 230, 160, 0.75),
+            0 2px 8px rgba(0, 0, 0, 0.4),
+            inset 0 1px 3px rgba(255, 255, 255, 0.55);
+        }
+      }
+      .rm-menu {
+        position: absolute;
+        right: 14px;
+        top: calc(44% + 62px);
+        min-width: 196px;
+        background: var(--glass);
+        border: 1px solid var(--glass-stroke);
+        border-radius: 20px;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow:
+          0 20px 50px rgba(0, 0, 0, 0.55),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        padding: 7px;
+        opacity: 0;
+        transform: scale(0.6) translateY(-14px);
+        transform-origin: top right;
+        transition:
+          transform 0.32s cubic-bezier(0.2, 1.3, 0.4, 1),
+          opacity 0.22s;
+        pointer-events: none !important;
+      }
+      .rm-menu.open {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        pointer-events: auto !important;
+      }
+      .rm-menu .mi {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 11px 12px;
+        border-radius: 14px;
+        color: var(--ink);
+        font-size: 14.5px;
+        font-weight: 500;
+        text-align: left;
+        transition: background 0.18s;
+      }
+      .rm-menu .mi svg {
+        color: var(--mint);
+        flex: none;
+      }
+      .rm-menu .mi:hover,
+      .rm-menu .mi.hl {
+        background: rgba(43, 230, 160, 0.13);
+      }
+      .rm-menu .mi.hl {
+        outline: 1px solid rgba(43, 230, 160, 0.35);
+      }
+      .rm-undo-wrap {
+        display: none;
+      }
+      .rm-undo-wrap.on {
+        display: block;
+      }
+      .rm-menu-div {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.09);
+        margin: 5px 10px;
+      }
+      .rm-voice {
+        position: absolute;
+        left: 14px;
+        right: 14px;
+        bottom: 78px;
+        background: var(--glass);
+        border: 1px solid var(--glass-stroke);
+        border-radius: 22px;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow:
+          0 24px 60px rgba(0, 0, 0, 0.6),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        padding: 18px 18px 16px;
+        opacity: 0;
+        transform: translateY(24px) scale(0.94);
+        transition:
+          transform 0.34s cubic-bezier(0.2, 1.2, 0.4, 1),
+          opacity 0.24s;
+        pointer-events: none !important;
+      }
+      .rm-voice.open {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto !important;
+      }
+      .rm-voice-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--mint);
+        font-weight: 600;
+        font-size: 15px;
+        margin-bottom: 13px;
+      }
+      .rm-voice-head .micdot {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(43, 230, 160, 0.14);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .rm-wave {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        height: 26px;
+        margin-bottom: 12px;
+      }
+      .rm-wave i {
+        flex: 1;
+        background: linear-gradient(180deg, var(--mint), var(--mint-dark));
+        border-radius: 3px;
+        height: 15%;
+        opacity: 0.9;
+      }
+      .rm-voice.open .rm-wave i {
+        animation: wave 1s ease-in-out infinite alternate;
+      }
+      @keyframes wave {
+        from {
+          height: 12%;
+        }
+        to {
+          height: 92%;
+        }
+      }
+      .rm-transcript {
+        color: var(--ink);
+        font-size: 14px;
+        line-height: 1.5;
+        min-height: 42px;
+        margin-bottom: 13px;
+      }
+      .rm-transcript.empty {
+        color: var(--ink-faint);
+      }
+      .rm-stop {
+        width: 100%;
+        background: linear-gradient(120deg, #3ef0ae, var(--mint-deep));
+        color: var(--on-mint);
+        font-weight: 700;
+        font-size: 14.5px;
+        border-radius: 14px;
+        padding: 12px;
+        box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+        transition: transform 0.15s;
+        font-family: inherit;
+      }
+      .rm-stop.pressed,
+      .rm-stop:active {
+        transform: scale(0.96);
+      }
+      .rm-pill {
+        position: absolute;
+        left: 50%;
+        bottom: 82px;
+        transform: translateX(-50%) translateY(16px);
+        background: var(--glass);
+        border: 1px solid var(--glass-stroke);
+        border-radius: 999px;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 9px 18px 9px 12px;
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--ink);
+        white-space: nowrap;
+        opacity: 0;
+        transition:
+          opacity 0.25s,
+          transform 0.3s cubic-bezier(0.2, 1.2, 0.4, 1);
+        pointer-events: none !important;
+      }
+      .rm-pill.on {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+      .rm-pill .spin {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid rgba(43, 230, 160, 0.25);
+        border-top-color: var(--mint);
+        animation: spin 0.8s linear infinite;
+        display: none;
+      }
+      .rm-pill .okic,
+      .rm-pill .eric {
+        display: none;
+      }
+      .rm-pill.writing .spin {
+        display: block;
+      }
+      .rm-pill.writing {
+        background: linear-gradient(
+            100deg,
+            rgba(18, 24, 30, 0.86) 30%,
+            rgba(43, 230, 160, 0.14) 50%,
+            rgba(18, 24, 30, 0.86) 70%
+          )
+          var(--glass);
+        background-size: 220% 100%;
+        animation: shimmer 1.6s linear infinite;
+      }
+      .rm-pill.ok .okic {
+        display: block;
+        color: var(--mint);
+      }
+      .rm-pill.ok {
+        border-color: rgba(43, 230, 160, 0.4);
+      }
+      .rm-pill.err .eric {
+        display: block;
+        color: var(--err);
+      }
+      .rm-pill.err {
+        border-color: rgba(255, 107, 107, 0.4);
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes shimmer {
+        from {
+          background-position: 200% 0;
+        }
+        to {
+          background-position: -20% 0;
+        }
+      }
+      .rm-undochip {
+        position: absolute;
+        left: 50%;
+        bottom: 82px;
+        transform: translateX(-50%) translateY(14px);
+        background: var(--glass);
+        border: 1px solid var(--glass-stroke);
+        border-radius: 999px;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 16px 8px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ink);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        transition:
+          opacity 0.25s,
+          transform 0.3s;
+        pointer-events: none !important;
+      }
+      .rm-undochip.in {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+        pointer-events: auto !important;
+      }
+      .rm-undochip svg {
+        color: var(--mint);
+      }
+
+      /* ============ APP MARQUEE ============ */
+      .marquee-sec {
+        padding: 34px 0;
+        border-top: 1px solid var(--stroke-soft);
+        border-bottom: 1px solid var(--stroke-soft);
+        position: relative;
+        z-index: 1;
+        overflow: hidden;
+      }
+      .marquee-label {
+        text-align: center;
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        font-weight: 600;
+        margin-bottom: 20px;
+      }
+      .marquee {
+        display: flex;
+        overflow: hidden;
+        -webkit-mask-image: linear-gradient(
+          90deg,
+          transparent,
+          #000 12%,
+          #000 88%,
+          transparent
+        );
+        mask-image: linear-gradient(
+          90deg,
+          transparent,
+          #000 12%,
+          #000 88%,
+          transparent
+        );
+      }
+      .marquee-track {
+        display: flex;
+        gap: 12px;
+        flex: none;
+        padding-right: 12px;
+        animation: marquee 46s linear infinite;
+      }
+      .marquee:hover .marquee-track {
+        animation-play-state: paused;
+      }
+      @keyframes marquee {
+        to {
+          transform: translateX(-100%);
+        }
+      }
+      .mq-item {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        flex: none;
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        border-radius: 999px;
+        padding: 9px 18px 9px 11px;
+        font-size: 13.5px;
+        color: var(--ink-dim);
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      .mq-item svg {
+        color: var(--ink-dim);
+        width: 19px;
+        height: 19px;
+      }
+      .mq-item.mac {
+        color: var(--mint);
+        border-color: rgba(43, 230, 160, 0.35);
+      }
+      .mq-item.mac svg {
+        color: var(--mint);
+      }
+
+      /* ============ STEPS ============ */
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 22px;
+      }
+      .step {
+        background: linear-gradient(170deg, var(--panel2), var(--panel));
+        border: 1px solid var(--stroke);
+        border-radius: var(--r-lg);
+        padding: 28px;
+        position: relative;
+        overflow: hidden;
+      }
+      .step::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          400px 200px at 80% -20%,
+          rgba(43, 230, 160, 0.06),
+          transparent
+        );
+        pointer-events: none;
+      }
+      .step-num {
+        width: 38px;
+        height: 38px;
+        border-radius: 13px;
+        background: rgba(43, 230, 160, 0.12);
+        color: var(--mint);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-disp);
+        font-weight: 700;
+        font-size: 17px;
+        margin-bottom: 18px;
+      }
+      .step b {
+        display: block;
+        font-family: var(--font-disp);
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        letter-spacing: -0.01em;
+      }
+      .step p {
+        color: var(--ink-dim);
+        font-size: 14.5px;
+        line-height: 1.6;
+      }
+
+      /* ============ MAGIC (persona switcher) ============ */
+      #magic {
+        content-visibility: auto;
+        contain-intrinsic-size: auto 1100px;
+      }
+      .persona-tabs {
+        display: flex;
+        gap: 4px;
+        background: var(--bg2);
+        border: 1px solid var(--stroke);
+        border-radius: 16px;
+        padding: 4px;
+        margin-bottom: 40px;
+        max-width: 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .persona-tabs::-webkit-scrollbar {
+        display: none;
+      }
+      .persona-tabs button {
+        flex: 1;
+        padding: 11px 18px;
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--ink-dim);
+        border-radius: 12px;
+        transition:
+          color 0.2s,
+          background 0.2s;
+        white-space: nowrap;
+      }
+      .persona-tabs button.on {
+        color: var(--mint);
+        background: linear-gradient(
+          120deg,
+          rgba(43, 230, 160, 0.18),
+          rgba(16, 185, 129, 0.12)
+        );
+        outline: 1px solid rgba(43, 230, 160, 0.35);
+      }
+      .magic-stage {
+        display: flex;
+        gap: 48px;
+        justify-content: center;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .magic-mac {
+        flex: 1 1 460px;
+        max-width: 620px;
+        min-width: 0;
+      }
+      .magic-mac .scene-label,
+      .magic-phone-col .scene-label {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-bottom: 14px;
+        font-size: 13.5px;
+        color: var(--ink-dim);
+      }
+      .scene-label .sl-ic {
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        background: rgba(43, 230, 160, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--mint);
+        flex: none;
+      }
+      .scene-label b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .magic-phone-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .magic-said {
+        margin-top: 18px;
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        border-radius: var(--r-md);
+        padding: 14px 18px;
+        font-size: 13.5px;
+        color: var(--ink-dim);
+        line-height: 1.6;
+        max-width: 620px;
+      }
+      .magic-said .you {
+        color: var(--mint);
+        font-weight: 600;
+      }
+
+      /* ============ MODE CARDS (#mac) ============ */
+      .modes {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 24px;
+      }
+      .mode-card {
+        background: linear-gradient(170deg, var(--panel2), var(--panel));
+        border: 1px solid var(--stroke);
+        border-radius: var(--r-lg);
+        padding: 30px;
+        position: relative;
+        overflow: hidden;
+      }
+      .mode-card.hl {
+        border-color: rgba(43, 230, 160, 0.3);
+      }
+      .mode-card.hl::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          360px 180px at 15% 0%,
+          rgba(43, 230, 160, 0.1),
+          transparent
+        );
+        pointer-events: none;
+      }
+      .mode-ic {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: rgba(43, 230, 160, 0.12);
+        color: var(--mint);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 18px;
+        position: relative;
+      }
+      .mode-card > b {
+        display: block;
+        font-family: var(--font-disp);
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        letter-spacing: -0.01em;
+        position: relative;
+      }
+      .mode-card > p {
+        color: var(--ink-dim);
+        font-size: 14.5px;
+        line-height: 1.6;
+        margin-bottom: 22px;
+        position: relative;
+      }
+      .mode-card .mac-demo {
+        margin: 0;
+        max-width: none;
+      }
+
+      /* ============ ANDROID SECTION ============ */
+      #android {
+        content-visibility: auto;
+        contain-intrinsic-size: auto 1100px;
+      }
+      .feature-chips {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 46px;
+      }
+      .fchip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        border-radius: 999px;
+        padding: 8px 16px 8px 11px;
+        font-size: 13px;
+        color: var(--ink-dim);
+        font-weight: 500;
+      }
+      .fchip svg {
+        color: var(--mint);
+      }
+
+      /* ============ APPS GRID ============ */
+      .apps-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px;
+        margin-bottom: 22px;
+      }
+      .app-tile {
+        background: var(--panel2);
+        border: 1px solid var(--stroke);
+        border-radius: 18px;
+        padding: 18px 8px 14px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+        color: var(--ink-dim);
+        text-align: center;
+        transition:
+          border-color 0.2s,
+          transform 0.2s;
+      }
+      .app-tile:hover {
+        border-color: rgba(43, 230, 160, 0.35);
+        transform: translateY(-2px);
+      }
+      .app-tile .ic {
+        width: 40px;
+        height: 40px;
+        border-radius: 13px;
+        background: rgba(43, 230, 160, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--ink-dim);
+      }
+      .app-tile:hover .ic {
+        color: var(--mint);
+      }
+      .app-tile .ic svg {
+        width: 22px;
+        height: 22px;
+      }
+      .mac-everywhere {
+        background: linear-gradient(170deg, var(--panel2), var(--panel));
+        border: 1px solid rgba(43, 230, 160, 0.3);
+        border-radius: var(--r-lg);
+        padding: 28px 30px;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        flex-wrap: wrap;
+        position: relative;
+        overflow: hidden;
+      }
+      .mac-everywhere::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          420px 200px at 10% 0%,
+          rgba(43, 230, 160, 0.1),
+          transparent
+        );
+        pointer-events: none;
+      }
+      .mac-everywhere .ic {
+        width: 50px;
+        height: 50px;
+        border-radius: 16px;
+        background: rgba(43, 230, 160, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--mint);
+        flex: none;
+        position: relative;
+      }
+      .mac-everywhere b {
+        display: block;
+        font-family: var(--font-disp);
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        position: relative;
+      }
+      .mac-everywhere p {
+        color: var(--ink-dim);
+        font-size: 14px;
+        position: relative;
+        flex: 1;
+        min-width: 240px;
+      }
+      .tm-note {
+        font-size: 11.5px;
+        color: var(--ink-faint);
+        margin-top: 18px;
+        line-height: 1.5;
+      }
+
+      /* ============ COMPARE ============ */
+      #compare {
+        content-visibility: auto;
+        contain-intrinsic-size: auto 800px;
+      }
+      .table-scroll {
+        overflow-x: auto;
+        border: 1px solid var(--stroke);
+        border-radius: var(--r-lg);
+        background: linear-gradient(170deg, var(--panel2), var(--panel));
+      }
+      .cmp {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 760px;
+        font-size: 14px;
+      }
+      .cmp th,
+      .cmp td {
+        padding: 15px 18px;
+        text-align: center;
+        border-bottom: 1px solid var(--stroke-soft);
+      }
+      .cmp tr:last-child td {
+        border-bottom: none;
+      }
+      .cmp th {
+        font-family: var(--font-disp);
+        font-size: 14.5px;
+        font-weight: 600;
+        color: var(--ink-dim);
+        border-bottom: 1px solid var(--stroke);
+      }
+      .cmp th:first-child,
+      .cmp td:first-child {
+        text-align: left;
+        color: var(--ink);
+        font-weight: 500;
+        font-size: 13.8px;
+        min-width: 220px;
+      }
+      .cmp td {
+        color: var(--ink-faint);
+      }
+      .cmp .rmcol {
+        background: rgba(43, 230, 160, 0.05);
+        color: var(--ink);
+      }
+      .cmp th.rmcol {
+        color: var(--mint);
+      }
+      .cmp .yes {
+        color: var(--mint);
+        font-weight: 600;
+      }
+      .cmp .no {
+        color: var(--ink-faint);
+      }
+      .cmp small {
+        display: block;
+        font-weight: 400;
+        color: var(--ink-dim);
+        font-size: 12px;
+        margin-top: 2px;
+      }
+      .cmp .rmcol small {
+        color: var(--ink-dim);
+      }
+      .cmp-note {
+        font-size: 12px;
+        color: var(--ink-faint);
+        margin-top: 14px;
+      }
+
+      /* ============ PRIVACY ============ */
+      .priv {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 22px;
+      }
+      .priv-card {
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        border-radius: var(--r-md);
+        padding: 24px;
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+      }
+      .priv-ic {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: rgba(43, 230, 160, 0.1);
+        color: var(--mint);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+      }
+      .priv-card b {
+        display: block;
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+      .priv-card span {
+        color: var(--ink-dim);
+        font-size: 13.5px;
+        line-height: 1.55;
+      }
+
+      /* ============ PRICING STRIP ============ */
+      .price-strip {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        background: var(--panel);
+        border: 1px solid var(--stroke);
+        border-radius: 999px;
+        padding: 16px 30px;
+        font-size: 14.5px;
+        color: var(--ink-dim);
+        text-align: center;
+      }
+      .price-strip b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .price-strip .dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--ink-faint);
+      }
+
+      /* ============ DOWNLOAD ============ */
+      .dl-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 22px;
+      }
+      .dl-card {
+        background: linear-gradient(170deg, var(--panel2), var(--panel));
+        border: 1px solid var(--stroke);
+        border-radius: var(--r-lg);
+        padding: 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        position: relative;
+        overflow: hidden;
+      }
+      .dl-card.live {
+        border-color: rgba(43, 230, 160, 0.3);
+      }
+      .dl-card.live::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          360px 180px at 50% -20%,
+          rgba(43, 230, 160, 0.1),
+          transparent
+        );
+        pointer-events: none;
+      }
+      .dl-card.muted {
+        border-style: dashed;
+        opacity: 0.8;
+      }
+      .dl-card .plat-ic {
+        width: 48px;
+        height: 48px;
+        border-radius: 15px;
+        background: rgba(43, 230, 160, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--mint);
+        position: relative;
+      }
+      .dl-card.muted .plat-ic {
+        color: var(--ink-faint);
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .dl-card h3 {
+        font-family: var(--font-disp);
+        font-size: 21px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        position: relative;
+      }
+      .dl-card .badge {
+        display: inline-flex;
+        align-self: flex-start;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        border-radius: 999px;
+        padding: 4px 12px;
+        position: relative;
+      }
+      .badge.b-live {
+        background: rgba(43, 230, 160, 0.14);
+        color: var(--mint);
+      }
+      .badge.b-beta {
+        background: rgba(94, 141, 240, 0.16);
+        color: #8fb1ff;
+      }
+      .badge.b-soon {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--ink-faint);
+      }
+      .dl-card p {
+        color: var(--ink-dim);
+        font-size: 13.8px;
+        line-height: 1.6;
+        position: relative;
+        flex: 1;
+      }
+      .dl-card .dl-btn {
+        justify-content: center;
+        font-size: 14.5px;
+        padding: 13px 20px;
+        position: relative;
+      }
+      .dl-card .fineprint {
+        font-size: 12px;
+        color: var(--ink-faint);
+        line-height: 1.5;
+        position: relative;
+      }
+
+      /* ============ FOOTER ============ */
+      footer {
+        padding: 56px 0 72px;
+        text-align: center;
+        color: var(--ink-faint);
+        font-size: 13px;
+        border-top: 1px solid var(--stroke-soft);
+        position: relative;
+        z-index: 1;
+      }
+      footer .f-brand {
+        font-family: var(--font-disp);
+        font-weight: 700;
+        color: var(--ink-dim);
+        font-size: 15px;
+        margin-bottom: 8px;
+      }
+      footer a {
+        color: var(--ink-dim);
+      }
+      footer a:hover {
+        color: var(--ink);
+      }
+      footer .legal {
+        max-width: 620px;
+        margin: 16px auto 0;
+        font-size: 11.5px;
+        line-height: 1.6;
+      }
+
+      /* ============ RESPONSIVE ============ */
+      @media (max-width: 900px) {
+        .magic-stage {
+          gap: 36px;
+        }
+      }
+      @media (max-width: 760px) {
+        .wrap {
+          padding: 0 18px;
+        }
+        header.hero.wrap {
+          padding: 56px 18px 44px;
+        }
+        section,
+        section.wrap {
+          padding: 56px 18px;
+        }
+        .nav-links a.nl {
+          display: none;
+        }
+        .phones {
+          gap: 32px;
+        }
+        .phone {
+          transform: scale(0.86);
+          transform-origin: top center;
+          margin-bottom: -97px;
+        }
+        .magic-phone-col .phone {
+          margin-bottom: -80px;
+        }
+        .mac-title {
+          display: none;
+        }
+        .mac-window .rm-voice {
+          left: 8%;
+          right: 8%;
+        }
+        .persona-tabs button {
+          flex: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.001s !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.001s !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-in">
+        <a class="brand" href="#top">
+          <span class="logo-orb">
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.2-.6L3 21l1.7-4.6A8.4 8.4 0 1 1 21 11.5z"
+              />
+              <path
+                d="M12 7.6l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z"
+                fill="currentColor"
+                stroke="none"
+              />
+            </svg>
+          </span>
+          Reply<span class="mint">Mint</span>
+        </a>
+        <div class="nav-links">
+          <a class="nl" href="#how">How it works</a>
+          <a class="nl" href="#magic">See it work</a>
+          <a class="nl" href="#compare">Compare</a>
+          <a class="nl" href="#privacy">Privacy</a>
+          <a
+            class="nav-dl"
+            id="nav-dl"
+            href="https://github.com/julydeath/replymint/releases/latest/download/ReplyMint-macOS.dmg"
+          >
+            <svg
+              width="13"
+              height="15"
+              viewBox="0 0 814 1000"
+              fill="currentColor"
+            >
+              <path
+                d="M788 341c-6 4-104 60-104 184 0 143 126 194 130 195-1 3-20 70-67 138-42 60-86 120-152 120s-84-39-160-39c-75 0-101 40-162 40s-104-56-152-124C66 775 20 651 20 533c0-189 123-289 244-289 64 0 118 42 158 42 39 0 99-45 172-45 28 0 128 3 194 100zM554 159c30-36 52-86 52-136 0-7-1-14-2-20-49 2-108 33-143 74-28 32-54 82-54 133 0 8 1 15 2 18 3 1 8 2 13 2 44 0 100-30 132-71z"
+              />
+            </svg>
+            <span id="nav-dl-label">Download</span>
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ================= HERO ================= -->
+    <header class="hero wrap" id="top">
+      <h1>
+        Speak. It writes<br /><span class="grad">the right message.</span>
+      </h1>
+      <p class="tag">
+        ReplyMint listens to what you mean and writes what you'd want to send —
+        polished replies in your messages, emails and DMs. On your Mac, and
+        inside 18 apps on Android.
+      </p>
+      <div class="cta-row">
+        <a
+          class="dl-btn"
+          id="cta-mac"
+          href="https://github.com/julydeath/replymint/releases/latest/download/ReplyMint-macOS.dmg"
+        >
+          <svg
+            width="18"
+            height="21"
+            viewBox="0 0 814 1000"
+            fill="currentColor"
+          >
+            <path
+              d="M788 341c-6 4-104 60-104 184 0 143 126 194 130 195-1 3-20 70-67 138-42 60-86 120-152 120s-84-39-160-39c-75 0-101 40-162 40s-104-56-152-124C66 775 20 651 20 533c0-189 123-289 244-289 64 0 118 42 158 42 39 0 99-45 172-45 28 0 128 3 194 100zM554 159c30-36 52-86 52-136 0-7-1-14-2-20-49 2-108 33-143 74-28 32-54 82-54 133 0 8 1 15 2 18 3 1 8 2 13 2 44 0 100-30 132-71z"
+            />
+          </svg>
+          Download for Mac
+        </a>
+        <a class="dl-btn ghost" href="#download">
+          <svg width="17" height="19" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M17.5 8.3l1.9-3.3a.4.4 0 0 0-.7-.4l-1.9 3.3a11.4 11.4 0 0 0-9.6 0L5.3 4.6a.4.4 0 0 0-.7.4l1.9 3.3A11 11 0 0 0 1 17h22a11 11 0 0 0-5.5-8.7zM7 14a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm10 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"
+            />
+          </svg>
+          Get the Android beta
+        </a>
+        <span class="soon-chip">
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 3" />
+          </svg>
+          Windows — coming soon
+        </span>
+      </div>
+      <p class="dl-meta">
+        Mac · Apple Silicon · v0.1.0 &nbsp;·&nbsp; Android · open beta
+        &nbsp;·&nbsp; Free during beta
+      </p>
+
+      <div class="mac-demo" id="hero-mac">
+        <div class="mac-keys" aria-hidden="true">
+          <span class="kbd k-opt">⌥</span><span class="kbd k-space">Space</span>
+          <span class="mklabel">tap to talk · tap again to insert</span>
+        </div>
+        <div class="mac-window">
+          <div class="mac-titlebar">
+            <span class="traffic"><i></i><i></i><i></i></span
+            ><span class="mac-title">Re: Q3 report — Mail</span>
+          </div>
+          <div class="mac-fields">
+            <div class="mac-field">
+              To&nbsp;<span class="chipmail mw-to">Sarah Chen</span>
+            </div>
+            <div class="mac-field"><b class="mw-subj">Re: Q3 report</b></div>
+          </div>
+          <div class="mac-body">
+            <div class="composer-text empty" data-ph="Write your reply…"></div>
+          </div>
+        </div>
+        <div class="magic-said" style="margin: 18px auto 0; text-align: left">
+          <span class="you">Dictation with polish:</span> speak with the umms,
+          the half-sentences, the "no wait —" corrections. Watch the live
+          transcript hear the mess, and the clean sentence land in the email.
+        </div>
+      </div>
+    </header>
+
+    <!-- ================= APP MARQUEE ================= -->
+    <div class="marquee-sec">
+      <div class="marquee-label">Works where you already type</div>
+      <div class="marquee" aria-label="Supported apps">
+        <div class="marquee-track" id="mq-a"></div>
+        <div class="marquee-track" id="mq-b" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <!-- ================= HOW ================= -->
+    <section class="wrap" id="how">
+      <div class="eyebrow">01 · How it works</div>
+      <h2>Three seconds from thought to sent.</h2>
+      <p class="lede">
+        No windows to open, nothing to copy and paste. ReplyMint lives on a
+        hotkey on Mac and in a floating bubble on Android — it writes straight
+        into whichever app you're already in.
+      </p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <b>Summon it</b>
+          <p>
+            On Mac, tap <span class="kbd">⌥</span
+            ><span class="kbd">Space</span> in any app. On Android, tap the mint
+            bubble that appears whenever there's somewhere to type.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <b>Say it, naturally</b>
+          <p>
+            Speak the way you think — half-sentences, corrections, "umm" and
+            all. Or don't say anything: Auto Reply reads the conversation and
+            drafts the answer itself.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <b>It's written</b>
+          <p>
+            A polished, ready-to-send message appears right in the text box —
+            correct names, right tone, proper punctuation. You review it and
+            press send. Always you.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MAGIC ================= -->
+    <section class="wrap" id="magic">
+      <div class="eyebrow">02 · See it work</div>
+      <h2>Watch the magic. Literally.</h2>
+      <p class="lede">
+        Pick a life — the demos below are live. The same voice-in,
+        right-message-out loop, whether you're closing a deal or confirming
+        dinner.
+      </p>
+
+      <div class="persona-tabs" id="ptabs" role="tablist">
+        <button class="on" data-p="recruiter" role="tab">🧑‍💼 Recruiter</button>
+        <button data-p="sales" role="tab">📈 Sales</button>
+        <button data-p="support" role="tab">🎧 Support</button>
+        <button data-p="founder" role="tab">🚀 Founder</button>
+        <button data-p="family" role="tab">🏠 Family</button>
+        <button data-p="friends" role="tab">🎟️ Friends</button>
+      </div>
+
+      <div class="magic-stage">
+        <div class="magic-mac">
+          <div class="scene-label">
+            <span class="sl-ic"
+              ><svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="2" y="4" width="20" height="13" rx="2" />
+                <path d="M8 21h8M12 17v4" /></svg
+            ></span>
+            <span
+              >On your Mac —
+              <b id="mac-scene-title">Assistant mode in Mail</b></span
+            >
+          </div>
+          <div class="mac-demo" id="magic-mac">
+            <div class="mac-keys" aria-hidden="true">
+              <span class="kbd k-opt">⌥</span
+              ><span class="kbd k-space">Space</span>
+              <span class="mklabel">Assistant mode</span>
+            </div>
+            <div class="mac-window">
+              <div class="mac-titlebar">
+                <span class="traffic"><i></i><i></i><i></i></span
+                ><span class="mac-title">Mail</span>
+              </div>
+              <div class="mac-fields">
+                <div class="mac-field">
+                  To&nbsp;<span class="chipmail mw-to">Jordan Lee</span>
+                </div>
+                <div class="mac-field">
+                  <b class="mw-subj">Re: Application — Senior Designer</b>
+                </div>
+              </div>
+              <div class="mac-quote">
+                <b class="mq-from">Jordan wrote:</b
+                ><span class="mq-text"
+                  >Hi! Just checking in on my application for the Senior
+                  Designer role — is the position still open?</span
+                >
+              </div>
+              <div class="mac-body">
+                <div
+                  class="composer-text empty"
+                  data-ph="Write your reply…"
+                ></div>
+              </div>
+            </div>
+          </div>
+          <div class="magic-said" id="magic-said-mac"></div>
+        </div>
+
+        <div class="magic-phone-col">
+          <div class="scene-label">
+            <span class="sl-ic"
+              ><svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="6" y="2" width="12" height="20" rx="3" />
+                <path d="M11 18.5h2" /></svg
+            ></span>
+            <span
+              >On Android —
+              <b id="phone-scene-title"
+                >Auto Reply in LinkedIn-style DM</b
+              ></span
+            >
+          </div>
+          <div class="phone magic-phone">
+            <div class="mscreen" id="mp-wa">
+              <div class="screen wa">
+                <div class="punch"></div>
+                <div class="statusbar">
+                  <span>9:41</span
+                  ><span class="sicons">
+                    <svg
+                      width="15"
+                      height="12"
+                      viewBox="0 0 16 12"
+                      fill="currentColor"
+                    >
+                      <path
+                        d="M1 8h2v4H1zM5 6h2v6H5zM9 4h2v8H9zM13 1h2v11h-2z"
+                      />
+                    </svg>
+                    <svg width="22" height="11" viewBox="0 0 24 12">
+                      <rect
+                        x="1"
+                        y="1"
+                        width="19"
+                        height="10"
+                        rx="2.5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-opacity=".5"
+                      />
+                      <rect
+                        x="2.5"
+                        y="2.5"
+                        width="13"
+                        height="7"
+                        rx="1.4"
+                        fill="currentColor"
+                      />
+                      <rect
+                        x="21"
+                        y="4"
+                        width="2"
+                        height="4"
+                        rx="1"
+                        fill="currentColor"
+                        fill-opacity=".5"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div class="wa-head">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#AEBAC1"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                  >
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                  <div class="av">M</div>
+                  <div class="who"><b>Maya</b><span>online</span></div>
+                  <div class="hics">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path
+                        d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 3v-9l-4 3z"
+                      />
+                    </svg>
+                    <svg
+                      width="19"
+                      height="19"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path
+                        d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.24 11 11 0 0 0 3.6.6 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11 11 0 0 0 .6 3.6 1 1 0 0 1-.25 1z"
+                      />
+                    </svg>
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <circle cx="12" cy="5" r="2" />
+                      <circle cx="12" cy="12" r="2" />
+                      <circle cx="12" cy="19" r="2" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="wa-chat">
+                  <div class="datechip">Today</div>
+                  <div class="msg in">
+                    Hey! Are we still on for dinner tonight? 🍜<span class="mt"
+                      >6:42 PM</span
+                    >
+                  </div>
+                </div>
+                <div class="wa-composer">
+                  <div class="wa-input">
+                    <span class="cics"
+                      ><svg
+                        width="21"
+                        height="21"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                      >
+                        <circle cx="12" cy="12" r="9" />
+                        <path
+                          d="M8.5 14.5a4.5 4.5 0 0 0 7 0"
+                          stroke-linecap="round"
+                        />
+                        <circle
+                          cx="9"
+                          cy="9.6"
+                          r=".8"
+                          fill="currentColor"
+                          stroke="none"
+                        />
+                        <circle
+                          cx="15"
+                          cy="9.6"
+                          r=".8"
+                          fill="currentColor"
+                          stroke="none"
+                        /></svg
+                    ></span>
+                    <div class="composer-text empty" data-ph="Message"></div>
+                    <span class="cics"
+                      ><svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                      >
+                        <path
+                          d="M21 12.5l-8.5 8.5a5.66 5.66 0 0 1-8-8L13 4.5a3.77 3.77 0 0 1 5.3 5.3L10 18a1.89 1.89 0 0 1-2.7-2.7l7.8-7.8"
+                        /></svg
+                    ></span>
+                  </div>
+                  <button class="fab">
+                    <svg
+                      class="ic-mic"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    >
+                      <path
+                        d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"
+                      />
+                      <path d="M19 11a7 7 0 0 1-14 0M12 18v4" />
+                    </svg>
+                    <svg
+                      class="ic-send"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M3 20.6L21.6 12 3 3.4v6.7L15.5 12 3 13.9z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="mscreen" id="mp-ig" hidden>
+              <div class="screen ig">
+                <div class="punch"></div>
+                <div class="statusbar">
+                  <span>9:41</span
+                  ><span class="sicons">
+                    <svg
+                      width="15"
+                      height="12"
+                      viewBox="0 0 16 12"
+                      fill="currentColor"
+                    >
+                      <path
+                        d="M1 8h2v4H1zM5 6h2v6H5zM9 4h2v8H9zM13 1h2v11h-2z"
+                      />
+                    </svg>
+                    <svg width="22" height="11" viewBox="0 0 24 12">
+                      <rect
+                        x="1"
+                        y="1"
+                        width="19"
+                        height="10"
+                        rx="2.5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-opacity=".5"
+                      />
+                      <rect
+                        x="2.5"
+                        y="2.5"
+                        width="13"
+                        height="7"
+                        rx="1.4"
+                        fill="currentColor"
+                      />
+                      <rect
+                        x="21"
+                        y="4"
+                        width="2"
+                        height="4"
+                        rx="1"
+                        fill="currentColor"
+                        fill-opacity=".5"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div class="ig-head">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#fff"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                  >
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                  <div class="ring"><div class="av">A</div></div>
+                  <div class="who"><b>alex.j</b><span>Active now</span></div>
+                  <div class="hics">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    >
+                      <path
+                        d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.24 11 11 0 0 0 3.6.6 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11 11 0 0 0 .6 3.6 1 1 0 0 1-.25 1z"
+                      />
+                    </svg>
+                    <svg
+                      width="21"
+                      height="21"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    >
+                      <rect x="2" y="6" width="13" height="12" rx="2.5" />
+                      <path
+                        d="M15 10.5l6-3.5v10l-6-3.5"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div class="ig-chat">
+                  <div class="ig-time">TODAY 8:14 PM</div>
+                  <div class="ig-msg in">
+                    yo the concert got moved to saturday 😭
+                  </div>
+                  <div class="ig-msg in">can you still make it?</div>
+                </div>
+                <div class="ig-composer">
+                  <div class="ig-input">
+                    <div class="ig-cam">
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path
+                          d="M20 5h-3.2L15 3H9L7.2 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm-8 13a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2.8a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"
+                        />
+                      </svg>
+                    </div>
+                    <div class="composer-text empty" data-ph="Message…"></div>
+                    <span class="cics">
+                      <svg
+                        width="19"
+                        height="19"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                      >
+                        <path
+                          d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"
+                        />
+                        <path d="M19 11a7 7 0 0 1-14 0" />
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="mscreen" id="mp-gm" hidden>
+              <div class="screen gm">
+                <div class="punch"></div>
+                <div class="statusbar">
+                  <span>9:41</span
+                  ><span class="sicons">
+                    <svg
+                      width="15"
+                      height="12"
+                      viewBox="0 0 16 12"
+                      fill="currentColor"
+                    >
+                      <path
+                        d="M1 8h2v4H1zM5 6h2v6H5zM9 4h2v8H9zM13 1h2v11h-2z"
+                      />
+                    </svg>
+                    <svg width="22" height="11" viewBox="0 0 24 12">
+                      <rect
+                        x="1"
+                        y="1"
+                        width="19"
+                        height="10"
+                        rx="2.5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-opacity=".5"
+                      />
+                      <rect
+                        x="2.5"
+                        y="2.5"
+                        width="13"
+                        height="7"
+                        rx="1.4"
+                        fill="currentColor"
+                      />
+                      <rect
+                        x="21"
+                        y="4"
+                        width="2"
+                        height="4"
+                        rx="1"
+                        fill="currentColor"
+                        fill-opacity=".5"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div class="gm-head">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  >
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                  <div class="hics">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                    >
+                      <path
+                        d="M21 12.5l-8.5 8.5a5.66 5.66 0 0 1-8-8L13 4.5a3.77 3.77 0 0 1 5.3 5.3L10 18a1.89 1.89 0 0 1-2.7-2.7l7.8-7.8"
+                      />
+                    </svg>
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="#0B57D0"
+                    >
+                      <path d="M3 20.6L21.6 12 3 3.4v6.7L15.5 12 3 13.9z" />
+                    </svg>
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <circle cx="12" cy="5" r="2" />
+                      <circle cx="12" cy="12" r="2" />
+                      <circle cx="12" cy="19" r="2" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="gm-body">
+                  <div class="gm-field">
+                    From&nbsp;<b class="gm-from">you@company.com</b>
+                  </div>
+                  <div class="gm-field">
+                    To&nbsp;<span class="chipmail gm-to">sarah@acme.co</span>
+                  </div>
+                  <div class="gm-field gm-subject">Re: Q3 budget report</div>
+                  <div class="gm-compose">
+                    <div class="composer-text" data-ph="Compose email">
+                      hey got ur mail. report not done yet maybe friday. sry
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="magic-said" id="magic-said-phone"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= MAC ================= -->
+    <section class="wrap" id="mac">
+      <div class="eyebrow">03 · On your Mac</div>
+      <h2>Dictate it — or let it draft it for you.</h2>
+      <p class="lede">
+        One hotkey, two modes, instant switch. ReplyMint lives in your menu bar
+        and types wherever your cursor is — Mail, Slack, Notes, your browser,
+        your editor.
+      </p>
+      <div class="modes">
+        <div class="mode-card">
+          <div class="mode-ic">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+              <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
+              <path d="M12 18v4" />
+            </svg>
+          </div>
+          <b>Dictation — your words, cleaned up</b>
+          <p>
+            Speak naturally. Polish removes the stumbles and false starts, fixes
+            punctuation and casing, and inserts exactly what you meant to say.
+            If anything fails, your raw words are inserted anyway — nothing is
+            ever lost.
+          </p>
+          <div class="mac-demo" id="mode-dict">
+            <div class="mac-keys" aria-hidden="true">
+              <span class="kbd k-opt">⌥</span
+              ><span class="kbd k-space">Space</span
+              ><span class="mklabel">Dictation · polish on</span>
+            </div>
+            <div class="mac-window">
+              <div class="mac-titlebar">
+                <span class="traffic"><i></i><i></i><i></i></span
+                ><span class="mac-title">New message — Mail</span>
+              </div>
+              <div class="mac-fields">
+                <div class="mac-field">
+                  To&nbsp;<span class="chipmail mw-to">Dan Park</span>
+                </div>
+                <div class="mac-field">
+                  <b class="mw-subj">Deck for tomorrow</b>
+                </div>
+              </div>
+              <div class="mac-body">
+                <div
+                  class="composer-text empty"
+                  data-ph="Write your message…"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mode-card hl">
+          <div class="mode-ic">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.2-.6L3 21l1.7-4.6A8.4 8.4 0 1 1 21 11.5z"
+              />
+              <path
+                d="M12 7.6l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z"
+                fill="currentColor"
+                stroke="none"
+              />
+            </svg>
+          </div>
+          <b>Assistant — it reads, you decide</b>
+          <p>
+            ReplyMint reads the conversation visible in your focused window and
+            writes the reply from a single spoken instruction. You say the
+            intent; it handles the wording, the tone, and the details on screen.
+          </p>
+          <div class="mac-demo" id="mode-asst">
+            <div class="mac-keys" aria-hidden="true">
+              <span class="kbd k-opt">⌥</span
+              ><span class="kbd k-space">Space</span
+              ><span class="mklabel">Assistant mode</span>
+            </div>
+            <div class="mac-window">
+              <div class="mac-titlebar">
+                <span class="traffic"><i></i><i></i><i></i></span
+                ><span class="mac-title">Re: Partnership call — Mail</span>
+              </div>
+              <div class="mac-fields">
+                <div class="mac-field">
+                  To&nbsp;<span class="chipmail mw-to">Priya Nair</span>
+                </div>
+                <div class="mac-field">
+                  <b class="mw-subj">Re: Partnership call</b>
+                </div>
+              </div>
+              <div class="mac-quote">
+                <b class="mq-from">Priya wrote:</b
+                ><span class="mq-text"
+                  >Could we grab 30 minutes this Thursday to talk through the
+                  partnership?</span
+                >
+              </div>
+              <div class="mac-body">
+                <div
+                  class="composer-text empty"
+                  data-ph="Write your reply…"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ANDROID ================= -->
+    <section class="wrap" id="android">
+      <div class="eyebrow">04 · On Android</div>
+      <h2>A mint bubble in your favorite apps.</h2>
+      <p class="lede">
+        The bubble appears only when there's somewhere to type, only in the apps
+        you message from. Tap it and pick a move — watch each flow play out, or
+        tap a bubble yourself to drive it.
+      </p>
+      <div class="feature-chips">
+        <span class="fchip"
+          ><svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M12 3l1.9 4.8L18.7 9.7l-4.8 1.9L12 16.4l-1.9-4.8L5.3 9.7l4.8-1.9z"
+            /></svg
+          >Auto Reply — reads the chat, drafts the answer</span
+        >
+        <span class="fchip"
+          ><svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+            <path d="M19 11a7 7 0 0 1-14 0M12 18v4" /></svg
+          >Voice — speak an instruction</span
+        >
+        <span class="fchip"
+          ><svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M4 20l10.5-10.5M13 4.5l1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1z"
+            /></svg
+          >Fix — polish what you typed</span
+        >
+        <span class="fchip"
+          ><svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M1 4v6h6" />
+            <path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10" /></svg
+          >Undo — your old text back, for 5 minutes</span
+        >
+        <span class="fchip"
+          ><svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg
+          >Drafts only — it can't press send</span
+        >
+      </div>
+
+      <div class="phones">
+        <!-- WHATSAPP -->
+        <div class="phone-col">
+          <div class="phone" id="demo-wa">
+            <div class="screen wa">
+              <div class="punch"></div>
+              <div class="statusbar">
+                <span>9:41</span
+                ><span class="sicons">
+                  <svg
+                    width="15"
+                    height="12"
+                    viewBox="0 0 16 12"
+                    fill="currentColor"
+                  >
+                    <path d="M1 8h2v4H1zM5 6h2v6H5zM9 4h2v8H9zM13 1h2v11h-2z" />
+                  </svg>
+                  <svg width="22" height="11" viewBox="0 0 24 12">
+                    <rect
+                      x="1"
+                      y="1"
+                      width="19"
+                      height="10"
+                      rx="2.5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-opacity=".5"
+                    />
+                    <rect
+                      x="2.5"
+                      y="2.5"
+                      width="13"
+                      height="7"
+                      rx="1.4"
+                      fill="currentColor"
+                    />
+                    <rect
+                      x="21"
+                      y="4"
+                      width="2"
+                      height="4"
+                      rx="1"
+                      fill="currentColor"
+                      fill-opacity=".5"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="wa-head">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#AEBAC1"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                >
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+                <div class="av">P</div>
+                <div class="who"><b>Priya</b><span>online</span></div>
+                <div class="hics">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 3v-9l-4 3z"
+                    />
+                  </svg>
+                  <svg
+                    width="19"
+                    height="19"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.24 11 11 0 0 0 3.6.6 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11 11 0 0 0 .6 3.6 1 1 0 0 1-.25 1z"
+                    />
+                  </svg>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <circle cx="12" cy="5" r="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <circle cx="12" cy="19" r="2" />
+                  </svg>
+                </div>
+              </div>
+              <div class="wa-chat">
+                <div class="datechip">Today</div>
+                <div class="msg in">
+                  Hey! Are we still on for dinner tonight? 🍜<span class="mt"
+                    >6:42 PM</span
+                  >
+                </div>
+                <div class="msg in">
+                  I found this new ramen place near the station, looks
+                  amazing<span class="mt">6:42 PM</span>
+                </div>
+              </div>
+              <div class="wa-composer">
+                <div class="wa-input">
+                  <span class="cics"
+                    ><svg
+                      width="21"
+                      height="21"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                    >
+                      <circle cx="12" cy="12" r="9" />
+                      <path
+                        d="M8.5 14.5a4.5 4.5 0 0 0 7 0"
+                        stroke-linecap="round"
+                      />
+                      <circle
+                        cx="9"
+                        cy="9.6"
+                        r=".8"
+                        fill="currentColor"
+                        stroke="none"
+                      />
+                      <circle
+                        cx="15"
+                        cy="9.6"
+                        r=".8"
+                        fill="currentColor"
+                        stroke="none"
+                      /></svg
+                  ></span>
+                  <div class="composer-text empty" data-ph="Message"></div>
+                  <span class="cics"
+                    ><svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                    >
+                      <path
+                        d="M21 12.5l-8.5 8.5a5.66 5.66 0 0 1-8-8L13 4.5a3.77 3.77 0 0 1 5.3 5.3L10 18a1.89 1.89 0 0 1-2.7-2.7l7.8-7.8"
+                      /></svg
+                  ></span>
+                </div>
+                <button class="fab">
+                  <svg
+                    class="ic-mic"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  >
+                    <path
+                      d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"
+                    />
+                    <path d="M19 11a7 7 0 0 1-14 0M12 18v4" />
+                  </svg>
+                  <svg
+                    class="ic-send"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M3 20.6L21.6 12 3 3.4v6.7L15.5 12 3 13.9z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="caption">
+            <span class="applogo"
+              ><svg
+                width="19"
+                height="19"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M20.5 11.2a8.5 8.5 0 0 1-12.4 7.5L4 19.6l1-4A8.5 8.5 0 1 1 20.5 11.2z"
+                />
+                <path
+                  d="M16 14.2c-.3.8-1.5 1.5-2.2 1.4-2-.3-4.6-2.7-5.2-4.6-.2-.7.4-2 1.2-2.2l.9 1.9-.8 1a6 6 0 0 0 2.7 2.6l1.1-.8z"
+                  fill="currentColor"
+                  stroke="none"
+                /></svg
+            ></span>
+            <div>
+              <div class="cttl">Messaging · Auto Reply</div>
+              <div class="csub">
+                Reads the chat, drafts once, writes into the field
+              </div>
+            </div>
+            <button class="replay" data-for="demo-wa">
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M1 4v6h6" />
+                <path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10" /></svg
+              >Replay
+            </button>
+          </div>
+        </div>
+
+        <!-- INSTAGRAM -->
+        <div class="phone-col">
+          <div class="phone" id="demo-ig">
+            <div class="screen ig">
+              <div class="punch"></div>
+              <div class="statusbar">
+                <span>9:41</span
+                ><span class="sicons">
+                  <svg
+                    width="15"
+                    height="12"
+                    viewBox="0 0 16 12"
+                    fill="currentColor"
+                  >
+                    <path d="M1 8h2v4H1zM5 6h2v6H5zM9 4h2v8H9zM13 1h2v11h-2z" />
+                  </svg>
+                  <svg width="22" height="11" viewBox="0 0 24 12">
+                    <rect
+                      x="1"
+                      y="1"
+                      width="19"
+                      height="10"
+                      rx="2.5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-opacity=".5"
+                    />
+                    <rect
+                      x="2.5"
+                      y="2.5"
+                      width="13"
+                      height="7"
+                      rx="1.4"
+                      fill="currentColor"
+                    />
+                    <rect
+                      x="21"
+                      y="4"
+                      width="2"
+                      height="4"
+                      rx="1"
+                      fill="currentColor"
+                      fill-opacity=".5"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="ig-head">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#fff"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                >
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+                <div class="ring"><div class="av">A</div></div>
+                <div class="who"><b>alex.j</b><span>Active now</span></div>
+                <div class="hics">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                  >
+                    <path
+                      d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.24 11 11 0 0 0 3.6.6 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11 11 0 0 0 .6 3.6 1 1 0 0 1-.25 1z"
+                    />
+                  </svg>
+                  <svg
+                    width="21"
+                    height="21"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                  >
+                    <rect x="2" y="6" width="13" height="12" rx="2.5" />
+                    <path
+                      d="M15 10.5l6-3.5v10l-6-3.5"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div class="ig-chat">
+                <div class="ig-time">TODAY 8:14 PM</div>
+                <div class="ig-msg in">
+                  yo the concert got moved to saturday 😭
+                </div>
+                <div class="ig-msg in">can you still make it?</div>
+              </div>
+              <div class="ig-composer">
+                <div class="ig-input">
+                  <div class="ig-cam">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path
+                        d="M20 5h-3.2L15 3H9L7.2 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm-8 13a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2.8a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"
+                      />
+                    </svg>
+                  </div>
+                  <div class="composer-text empty" data-ph="Message…"></div>
+                  <span class="cics">
+                    <svg
+                      width="19"
+                      height="19"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                    >
+                      <path
+                        d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"
+                      />
+                      <path d="M19 11a7 7 0 0 1-14 0" />
+                    </svg>
+                    <svg
+                      width="19"
+                      height="19"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                    >
+                      <rect x="3" y="3" width="18" height="18" rx="4" />
+                      <circle
+                        cx="9"
+                        cy="9.5"
+                        r="1.6"
+                        fill="currentColor"
+                        stroke="none"
+                      />
+                      <path
+                        d="M21 15.5l-4.5-4.5L7 20.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="caption">
+            <span class="applogo"
+              ><svg
+                width="19"
+                height="19"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="5.5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle
+                  cx="17.2"
+                  cy="6.8"
+                  r="1.1"
+                  fill="currentColor"
+                  stroke="none"
+                /></svg
+            ></span>
+            <div>
+              <div class="cttl">DMs · Voice</div>
+              <div class="csub">Speak an instruction, get a written draft</div>
+            </div>
+            <button class="replay" data-for="demo-ig">
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M1 4v6h6" />
+                <path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10" /></svg
+              >Replay
+            </button>
+          </div>
+        </div>
+
+        <!-- GMAIL -->
+        <div class="phone-col">
+          <div class="phone" id="demo-gm">
+            <div class="screen gm">
+              <div class="punch"></div>
+              <div class="statusbar">
+                <span>9:41</span
+                ><span class="sicons">
+                  <svg
+                    width="15"
+                    height="12"
+                    viewBox="0 0 16 12"
+                    fill="currentColor"
+                  >
+                    <path d="M1 8h2v4H1zM5 6h2v6H5zM9 4h2v8H9zM13 1h2v11h-2z" />
+                  </svg>
+                  <svg width="22" height="11" viewBox="0 0 24 12">
+                    <rect
+                      x="1"
+                      y="1"
+                      width="19"
+                      height="10"
+                      rx="2.5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-opacity=".5"
+                    />
+                    <rect
+                      x="2.5"
+                      y="2.5"
+                      width="13"
+                      height="7"
+                      rx="1.4"
+                      fill="currentColor"
+                    />
+                    <rect
+                      x="21"
+                      y="4"
+                      width="2"
+                      height="4"
+                      rx="1"
+                      fill="currentColor"
+                      fill-opacity=".5"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="gm-head">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                >
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+                <div class="hics">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                  >
+                    <path
+                      d="M21 12.5l-8.5 8.5a5.66 5.66 0 0 1-8-8L13 4.5a3.77 3.77 0 0 1 5.3 5.3L10 18a1.89 1.89 0 0 1-2.7-2.7l7.8-7.8"
+                    />
+                  </svg>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="#0B57D0"
+                  >
+                    <path d="M3 20.6L21.6 12 3 3.4v6.7L15.5 12 3 13.9z" />
+                  </svg>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <circle cx="12" cy="5" r="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <circle cx="12" cy="19" r="2" />
+                  </svg>
+                </div>
+              </div>
+              <div class="gm-body">
+                <div class="gm-field">From&nbsp;<b>you@company.com</b></div>
+                <div class="gm-field">
+                  To&nbsp;<span class="chipmail">sarah@acme.co</span>
+                </div>
+                <div class="gm-field gm-subject">Re: Q3 budget report</div>
+                <div class="gm-compose">
+                  <div class="composer-text" data-ph="Compose email">
+                    hey got ur mail. report not done yet maybe friday. sry
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="caption">
+            <span class="applogo"
+              ><svg
+                width="19"
+                height="19"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
+                <path d="M3.5 6.5L12 13l8.5-6.5" /></svg
+            ></span>
+            <div>
+              <div class="cttl">Email · Fix</div>
+              <div class="csub">
+                Rough draft in, polished professional email out
+              </div>
+            </div>
+            <button class="replay" data-for="demo-gm">
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M1 4v6h6" />
+                <path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10" /></svg
+              >Replay
+            </button>
+          </div>
+        </div>
+      </div>
+      <p class="hint">
+        Demos loop on their own. <b>Tap a bubble</b> to take over — then pick
+        Auto Reply, Voice or Fix yourself. Undo appears after a draft is
+        written.
+      </p>
+    </section>
+
+    <!-- ================= APPS ================= -->
+    <section class="wrap" id="apps">
+      <div class="eyebrow">05 · Where it works</div>
+      <h2>18 apps on Android. Everywhere on Mac.</h2>
+      <p class="lede">
+        On Android, the bubble shows up only in the apps you actually message
+        from — never in your bank, your browser, or your settings. On Mac,
+        there's no list at all.
+      </p>
+      <div class="apps-grid" id="appsGrid"></div>
+      <div class="mac-everywhere">
+        <span class="ic"
+          ><svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="2" y="4" width="20" height="13" rx="2" />
+            <path d="M8 21h8M12 17v4" /></svg
+        ></span>
+        <div style="position: relative; flex: 1; min-width: 240px">
+          <b>On Mac, there's no list.</b>
+          <p>
+            ReplyMint types wherever your cursor is — Mail, Slack, Notes,
+            Safari, WhatsApp Desktop, your code editor, everything.
+          </p>
+        </div>
+      </div>
+      <p class="tm-note">
+        App names and marks belong to their respective owners and are used only
+        to indicate compatibility. ReplyMint is not affiliated with or endorsed
+        by any of them.
+      </p>
+    </section>
+
+    <!-- ================= COMPARE ================= -->
+    <section class="wrap" id="compare">
+      <div class="eyebrow">06 · Why ReplyMint</div>
+      <h2>The right message, not a transcript.</h2>
+      <p class="lede">
+        Dictation tools type what you said. Writing checkers fix what you typed.
+        ReplyMint is the only one that reads the conversation and writes the
+        message you actually need to send.
+      </p>
+      <div class="table-scroll">
+        <table class="cmp">
+          <thead>
+            <tr>
+              <th></th>
+              <th class="rmcol">ReplyMint</th>
+              <th>Wispr Flow</th>
+              <th>Built-in dictation<small>macOS / Gboard</small></th>
+              <th>Grammarly</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Reads the conversation on your screen</td>
+              <td class="rmcol">
+                <span class="yes">✓</span
+                ><small>replies that fit the thread</small>
+              </td>
+              <td class="no">—</td>
+              <td class="no">—</td>
+              <td class="no">—</td>
+            </tr>
+            <tr>
+              <td>Drafts a full reply from one spoken instruction</td>
+              <td class="rmcol">
+                <span class="yes">✓</span
+                ><small>"politely decline, suggest next week"</small>
+              </td>
+              <td class="no">—</td>
+              <td class="no">—</td>
+              <td class="no">—</td>
+            </tr>
+            <tr>
+              <td>Cleans up stumbles &amp; self-corrections</td>
+              <td class="rmcol"><span class="yes">✓</span></td>
+              <td><span class="yes">✓</span></td>
+              <td class="no">— raw transcript</td>
+              <td class="no">no voice</td>
+            </tr>
+            <tr>
+              <td>Fixes text you already typed</td>
+              <td class="rmcol">
+                <span class="yes">✓</span><small>Fix, on Android</small>
+              </td>
+              <td class="no">—</td>
+              <td class="no">—</td>
+              <td><span class="yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>Voice into any app on Mac</td>
+              <td class="rmcol"><span class="yes">✓</span></td>
+              <td><span class="yes">✓</span></td>
+              <td><span class="yes">✓</span></td>
+              <td class="no">—</td>
+            </tr>
+            <tr>
+              <td>Floating helper inside WhatsApp, Instagram &amp; 16 more</td>
+              <td class="rmcol">
+                <span class="yes">✓</span><small>no keyboard switching</small>
+              </td>
+              <td class="no">—</td>
+              <td class="no">keyboard only</td>
+              <td class="no">—</td>
+            </tr>
+            <tr>
+              <td>Drafts wait for your review — never auto-sends</td>
+              <td class="rmcol">
+                <span class="yes">✓</span><small>you always press send</small>
+              </td>
+              <td class="no">n/a</td>
+              <td class="no">n/a</td>
+              <td class="no">n/a</td>
+            </tr>
+            <tr>
+              <td>Free to start</td>
+              <td class="rmcol">
+                <span class="yes">✓</span
+                ><small>50 drafts a day during beta</small>
+              </td>
+              <td class="no">— paid only</td>
+              <td><span class="yes">✓</span></td>
+              <td><span class="yes">✓</span><small>limited</small></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="cmp-note">
+        Comparisons based on publicly documented features, August 2026.
+      </p>
+    </section>
+
+    <!-- ================= PRIVACY ================= -->
+    <section class="wrap" id="privacy">
+      <div class="eyebrow">07 · Private by design</div>
+      <h2>Your conversations are not our data.</h2>
+      <p class="lede">
+        Every request stands alone. Your words go in, your draft comes out, and
+        the content is gone — we keep an anonymous daily counter, never what you
+        said or wrote.
+      </p>
+      <div class="priv">
+        <div class="priv-card">
+          <div class="priv-ic">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="11" width="18" height="10" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
+          <div>
+            <b>No content stored</b
+            ><span
+              >Messages, emails, screen text, audio — none of it is saved on our
+              servers. Not logged, not "temporarily retained". Gone when your
+              draft arrives.</span
+            >
+          </div>
+        </div>
+        <div class="priv-card">
+          <div class="priv-ic">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </div>
+          <div>
+            <b>Reads only when you ask</b
+            ><span
+              >On Mac it reads the focused window only when you tap the hotkey.
+              On Android it reads the screen only when you tap the bubble. No
+              background monitoring, no keylogging.</span
+            >
+          </div>
+        </div>
+        <div class="priv-card">
+          <div class="priv-ic">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <div>
+            <b>Drafts, never sends</b
+            ><span
+              >On Android, the app literally contains no code that can press
+              send — an architectural guarantee, not a setting. Every message
+              goes out by your hand.</span
+            >
+          </div>
+        </div>
+        <div class="priv-card">
+          <div class="priv-ic">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+              <path d="M19 11a7 7 0 0 1-14 0M12 18v4" />
+            </svg>
+          </div>
+          <div>
+            <b>Mic on your terms</b
+            ><span
+              >The microphone is live only while you're dictating — tap the
+              hotkey or Stop and it's off. The tray icon always shows when
+              ReplyMint is listening.</span
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PRICING ================= -->
+    <section class="wrap" id="pricing" style="padding-top: 0">
+      <div class="price-strip">
+        <b>Free during beta</b>
+        <span>50 drafts a day · on-device voice recognition</span>
+        <span class="dot"></span>
+        <span
+          ><b>Pro</b> coming soon — cloud transcription accuracy &amp; unlimited
+          drafts</span
+        >
+      </div>
+    </section>
+
+    <!-- ================= DOWNLOAD ================= -->
+    <section class="wrap" id="download">
+      <div class="eyebrow">08 · Get ReplyMint</div>
+      <h2>Stop typing. Start talking.</h2>
+      <p class="lede">
+        Download, sign in with Google, and you're dictating in under a minute.
+        Your account and usage work across all your devices.
+      </p>
+      <div class="dl-cards">
+        <div class="dl-card live">
+          <span class="plat-ic"
+            ><svg
+              width="24"
+              height="28"
+              viewBox="0 0 814 1000"
+              fill="currentColor"
+            >
+              <path
+                d="M788 341c-6 4-104 60-104 184 0 143 126 194 130 195-1 3-20 70-67 138-42 60-86 120-152 120s-84-39-160-39c-75 0-101 40-162 40s-104-56-152-124C66 775 20 651 20 533c0-189 123-289 244-289 64 0 118 42 158 42 39 0 99-45 172-45 28 0 128 3 194 100zM554 159c30-36 52-86 52-136 0-7-1-14-2-20-49 2-108 33-143 74-28 32-54 82-54 133 0 8 1 15 2 18 3 1 8 2 13 2 44 0 100-30 132-71z"
+              /></svg
+          ></span>
+          <span class="badge b-live">Available now</span>
+          <h3>Mac</h3>
+          <p>
+            Menu-bar app with the ⌥Space hotkey, Dictation with polish, and
+            Assistant mode that reads your screen. Works in every app you can
+            type in.
+          </p>
+          <a
+            class="dl-btn"
+            href="https://github.com/julydeath/replymint/releases/latest/download/ReplyMint-macOS.dmg"
+            >Download for Mac</a
+          >
+          <span class="fineprint"
+            >Apple Silicon · v0.1.0 · Sign in with Google. Beta builds aren't
+            notarized yet — on first launch, right-click the app and choose
+            Open.</span
+          >
+        </div>
+        <div class="dl-card live">
+          <span class="plat-ic"
+            ><svg
+              width="26"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M17.5 8.3l1.9-3.3a.4.4 0 0 0-.7-.4l-1.9 3.3a11.4 11.4 0 0 0-9.6 0L5.3 4.6a.4.4 0 0 0-.7.4l1.9 3.3A11 11 0 0 0 1 17h22a11 11 0 0 0-5.5-8.7zM7 14a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm10 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"
+              /></svg
+          ></span>
+          <span class="badge b-beta">Open beta</span>
+          <h3>Android</h3>
+          <p>
+            The floating bubble in WhatsApp, Instagram, Gmail and 15 more — Auto
+            Reply, Voice, Fix and Undo, with free on-device voice recognition.
+          </p>
+          <a
+            class="dl-btn ghost"
+            href="mailto:hello@replymint.app?subject=ReplyMint%20Android%20beta%20access&body=Hi!%20I%27d%20like%20to%20join%20the%20ReplyMint%20Android%20beta.%0A%0AMy%20Google%20account%20email%3A%20"
+            >Request beta access</a
+          >
+          <span class="fineprint"
+            >We enable your Google account and send you the install link the
+            same day. Direct install for now — Play Store listing in
+            progress.</span
+          >
+        </div>
+        <div class="dl-card muted">
+          <span class="plat-ic"
+            ><svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M3 5.5L10.5 4.4V11.4H3zM12 4.2L21 3V11.4H12zM3 12.6H10.5V19.6L3 18.5zM12 12.6H21V21L12 19.8z"
+              /></svg
+          ></span>
+          <span class="badge b-soon">In development</span>
+          <h3>Windows</h3>
+          <p>
+            The same dictation and assistant experience — one hotkey, every app
+            — is coming to Windows next.
+          </p>
+          <a
+            class="dl-btn ghost"
+            href="mailto:hello@replymint.app?subject=ReplyMint%20Windows%20waitlist&body=Notify%20me%20when%20ReplyMint%20for%20Windows%20is%20ready."
+            >Get notified</a
+          >
+          <span class="fineprint"
+            >Join the waitlist and you'll be first in when it ships.</span
+          >
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="f-brand">
+        Reply<span style="color: var(--mint)">Mint</span>
+      </div>
+      <p>The right message, in one tap.</p>
+      <p style="margin-top: 14px">
+        © 2026 ReplyMint · <a href="mailto:hello@replymint.app">Contact</a>
+      </p>
+      <p class="legal">
+        All third-party app and product names, logos and brands are the property
+        of their respective owners, are used for identification and
+        compatibility purposes only, and do not imply endorsement or
+        affiliation.
+      </p>
+    </footer>
+
+    <script>
+      /* ================= SHARED ================= */
+      const ICONS = {
+        auto: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.8L18.7 9.7l-4.8 1.9L12 16.4l-1.9-4.8L5.3 9.7l4.8-1.9z" fill="currentColor" fill-opacity=".15"/><path d="M19 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>',
+        voice:
+          '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v4"/></svg>',
+        fix: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l10.5-10.5M13 4.5l1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1zM19 12l.6 1.5L21 14l-1.4.5L19 16l-.6-1.5L17 14l1.4-.5z"/></svg>',
+        undo: '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"/></svg>',
+        ok: '<svg class="okic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+        err: '<svg class="eric" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v5.5M12 16.5v.1"/></svg>',
+        bubble:
+          '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.2-.6L3 21l1.7-4.6A8.4 8.4 0 1 1 21 11.5z"/><path d="M12 7.6l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z" fill="currentColor" stroke="none"/></svg>',
+        mic: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0"/></svg>',
+      };
+      let waveBars = "";
+      for (let i = 0; i < 18; i++)
+        waveBars += `<i style="animation-delay:${(Math.random() * 0.5).toFixed(2)}s;animation-duration:${(0.7 + Math.random() * 0.6).toFixed(2)}s"></i>`;
+      const OVERLAY_TPL = `
+<div class="rm-layer">
+  <button class="rm-bubble" aria-label="ReplyMint bubble">${ICONS.bubble}</button>
+  <div class="rm-menu">
+    <button class="mi" data-act="auto">${ICONS.auto}Auto Reply</button>
+    <button class="mi" data-act="voice">${ICONS.voice}Voice</button>
+    <button class="mi" data-act="fix">${ICONS.fix}Fix</button>
+    <div class="rm-undo-wrap"><div class="rm-menu-div"></div>
+      <button class="mi" data-act="undo">${ICONS.undo}Undo</button></div>
+  </div>
+  <div class="rm-voice">
+    <div class="rm-voice-head"><span class="micdot">${ICONS.mic}</span>Listening…</div>
+    <div class="rm-wave">${waveBars}</div>
+    <div class="rm-transcript empty">Speak your instruction, then tap Stop</div>
+    <button class="rm-stop">Stop &amp; use</button>
+  </div>
+  <div class="rm-pill">${ICONS.ok}${ICONS.err}<span class="spin"></span><span class="rm-pill-tx"></span></div>
+  <button class="rm-undochip">${ICONS.undo.replace('width="19" height="19"', 'width="14" height="14"')}Undo</button>
+</div>`;
+
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+
+      /* ================= CHAT RE-RENDER (persona switcher) ================= */
+      function renderChat(screen, chat) {
+        if (chat.skin === "wa") {
+          screen.querySelector(".wa-head .av").textContent = chat.av;
+          screen.querySelector(".wa-head .who b").textContent = chat.name;
+          screen.querySelector(".wa-head .who span").textContent =
+            chat.sub || "online";
+          screen.querySelector(".wa-chat").innerHTML =
+            '<div class="datechip">Today</div>' +
+            chat.messages
+              .map(
+                (m) =>
+                  `<div class="msg ${m.dir}">${esc(m.text)}<span class="mt">${m.time || ""}</span></div>`,
+              )
+              .join("");
+        } else if (chat.skin === "ig") {
+          screen.querySelector(".ring .av").textContent = chat.av;
+          screen.querySelector(".ig-head .who b").textContent = chat.name;
+          screen.querySelector(".ig-head .who span").textContent =
+            chat.sub || "Active now";
+          screen.querySelector(".ig-chat").innerHTML =
+            `<div class="ig-time">${chat.time || "TODAY"}</div>` +
+            chat.messages
+              .map((m) => `<div class="ig-msg ${m.dir}">${esc(m.text)}</div>`)
+              .join("");
+        } else if (chat.skin === "gm") {
+          if (chat.from)
+            screen.querySelector(".gm-from").textContent = chat.from;
+          if (chat.to) screen.querySelector(".gm-to").textContent = chat.to;
+          if (chat.subject)
+            screen.querySelector(".gm-subject").textContent = chat.subject;
+        }
+      }
+
+      /* ================= PHONE DEMO ENGINE (lifted from approved mockup) ================= */
+      function setupDemo(cfg) {
+        const phone = document.getElementById(cfg.id);
+        const screen = phone.querySelector(".screen");
+        screen.insertAdjacentHTML("beforeend", OVERLAY_TPL);
+        const q = (s) => screen.querySelector(s);
+        const bubble = q(".rm-bubble"),
+          menu = q(".rm-menu"),
+          voicePanel = q(".rm-voice"),
+          pill = q(".rm-pill"),
+          pillTx = q(".rm-pill-tx"),
+          chip = q(".rm-undochip"),
+          transcript = q(".rm-transcript"),
+          stopBtn = q(".rm-stop"),
+          undoWrap = q(".rm-undo-wrap"),
+          composer = q(cfg.composerSel),
+          fab = cfg.fabSel ? q(cfg.fabSel) : null,
+          replayBtn = document.querySelector(`.replay[data-for="${cfg.id}"]`);
+
+        let runId = 0,
+          auto = true,
+          loopRunning = false,
+          hasDraft = false,
+          savedText = cfg.initialText || "",
+          visible = false,
+          voiceStreaming = false;
+        const live = (id) => id === runId;
+        /* interruptible sleep — checks liveness in slices so scenario switches feel instant */
+        async function slp(ms, id) {
+          for (let t = 0; t < ms; t += 120) {
+            if (!live(id)) return false;
+            await wait(Math.min(120, ms - t));
+          }
+          return live(id);
+        }
+
+        function setComposer(t) {
+          composer.textContent = t;
+          composer.classList.toggle("empty", !t);
+          if (fab) fab.classList.toggle("active", !!t);
+        }
+        function refreshUndo() {
+          undoWrap.classList.toggle("on", hasDraft);
+        }
+        function pillShow(mode, label) {
+          pill.className = "rm-pill on " + mode;
+          pillTx.textContent = label;
+        }
+        function pillHide() {
+          pill.className = "rm-pill";
+        }
+        function resetOverlay() {
+          bubble.classList.remove("pressed");
+          menu.classList.remove("open");
+          voicePanel.classList.remove("open");
+          pillHide();
+          chip.classList.remove("in");
+          menu.querySelectorAll(".mi").forEach((b) => b.classList.remove("hl"));
+          voiceStreaming = false;
+        }
+        function fullReset() {
+          resetOverlay();
+          bubble.classList.remove("in");
+          setComposer(cfg.initialText || "");
+          hasDraft = false;
+          savedText = cfg.initialText || "";
+          refreshUndo();
+          transcript.textContent = "Speak your instruction, then tap Stop";
+          transcript.classList.add("empty");
+        }
+        async function typeInto(text, id) {
+          const speed = REDUCED ? 0 : 22;
+          for (let i = 1; i <= text.length; i++) {
+            if (!live(id)) return false;
+            setComposer(text.slice(0, i));
+            if (speed) await wait(speed + Math.random() * 26);
+          }
+          return live(id);
+        }
+        async function finishWrite(id, okLabel) {
+          hasDraft = true;
+          refreshUndo();
+          pillShow("ok", okLabel);
+          if (!(await slp(1500, id))) return false;
+          pillHide();
+          if (!(await slp(300, id))) return false;
+          chip.classList.add("in");
+          if (!(await slp(2400, id))) return false;
+          chip.classList.remove("in");
+          return true;
+        }
+        async function actAuto(id) {
+          menu.classList.remove("open");
+          pillShow("writing", "Writing…");
+          if (!(await slp(1500, id))) return false;
+          savedText = composer.textContent;
+          pillHide();
+          if (!(await slp(150, id))) return false;
+          if (!(await typeInto(cfg.reply, id))) return false;
+          return finishWrite(id, "Draft ready — review & send");
+        }
+        async function actVoice(id) {
+          menu.classList.remove("open");
+          transcript.textContent = "Speak your instruction, then tap Stop";
+          transcript.classList.add("empty");
+          voicePanel.classList.add("open");
+          voiceStreaming = true;
+          if (!(await slp(750, id))) return false;
+          const words = cfg.voiceLine.split(" ");
+          transcript.classList.remove("empty");
+          for (let i = 1; i <= words.length; i++) {
+            if (!live(id)) return false;
+            transcript.textContent = words.slice(0, i).join(" ");
+            await wait(REDUCED ? 0 : 170 + Math.random() * 140);
+          }
+          voiceStreaming = false;
+          if (!(await slp(800, id))) return false;
+          stopBtn.classList.add("pressed");
+          await wait(220);
+          stopBtn.classList.remove("pressed");
+          if (!live(id)) return false;
+          voicePanel.classList.remove("open");
+          pillShow("writing", "Writing…");
+          if (!(await slp(1400, id))) return false;
+          savedText = composer.textContent;
+          pillHide();
+          if (!(await slp(150, id))) return false;
+          if (!(await typeInto(cfg.voiceReply || cfg.reply, id))) return false;
+          return finishWrite(id, "Draft ready — review & send");
+        }
+        async function actFix(id) {
+          menu.classList.remove("open");
+          const cur = composer.textContent.trim();
+          if (!cur) {
+            pillShow("err", "Type something first, then tap Fix");
+            if (!(await slp(2200, id))) return false;
+            pillHide();
+            return true;
+          }
+          pillShow("writing", "Polishing…");
+          if (!(await slp(1400, id))) return false;
+          savedText = composer.textContent;
+          composer.classList.add("fade");
+          if (!(await slp(340, id))) return false;
+          setComposer("");
+          composer.classList.remove("fade");
+          pillHide();
+          if (!(await slp(150, id))) return false;
+          if (!(await typeInto(cfg.fixedText || cfg.reply, id))) return false;
+          return finishWrite(id, "Polished — review & send");
+        }
+        async function actUndo(id) {
+          menu.classList.remove("open");
+          chip.classList.remove("in");
+          if (!(await slp(200, id))) return false;
+          setComposer(savedText);
+          hasDraft = false;
+          refreshUndo();
+          pillShow("ok", "Undone");
+          if (!(await slp(1400, id))) return false;
+          pillHide();
+          return true;
+        }
+        const ACTIONS = {
+          auto: actAuto,
+          voice: actVoice,
+          fix: actFix,
+          undo: actUndo,
+        };
+
+        async function loop() {
+          if (loopRunning) return;
+          loopRunning = true;
+          try {
+            while (auto) {
+              const id = ++runId;
+              fullReset();
+              while (!visible) {
+                await wait(400);
+                if (!live(id)) return;
+              }
+              if (!(await slp(900, id))) return;
+              bubble.classList.add("in");
+              if (!(await slp(1600, id))) return;
+              bubble.classList.add("pressed");
+              await wait(190);
+              bubble.classList.remove("pressed");
+              if (!live(id)) return;
+              menu.classList.add("open");
+              if (!(await slp(1150, id))) return;
+              const btn = menu.querySelector(`[data-act="${cfg.autoFlow}"]`);
+              btn.classList.add("hl");
+              await wait(640);
+              btn.classList.remove("hl");
+              if (!live(id)) return;
+              if (!(await ACTIONS[cfg.autoFlow](id))) return;
+              if (!(await slp(2800, id))) return;
+            }
+          } finally {
+            loopRunning = false;
+          }
+        }
+
+        function takeOver() {
+          if (auto) {
+            auto = false;
+            if (replayBtn) replayBtn.classList.add("show");
+          }
+          runId++;
+        }
+        bubble.addEventListener("click", () => {
+          takeOver();
+          voicePanel.classList.remove("open");
+          pillHide();
+          chip.classList.remove("in");
+          bubble.classList.add("in");
+          menu.classList.toggle("open");
+        });
+        menu.querySelectorAll(".mi").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            takeOver();
+            const id = runId;
+            ACTIONS[btn.dataset.act](id);
+          });
+        });
+        stopBtn.addEventListener("click", () => {
+          if (!voiceStreaming) return;
+          takeOver();
+          const id = runId;
+          (async () => {
+            voicePanel.classList.remove("open");
+            pillShow("writing", "Writing…");
+            if (!(await slp(1200, id))) return;
+            savedText = composer.textContent;
+            pillHide();
+            if (!(await slp(150, id))) return;
+            if (!(await typeInto(cfg.voiceReply || cfg.reply, id))) return;
+            finishWrite(id, "Draft ready — review & send");
+          })();
+        });
+        chip.addEventListener("click", () => {
+          takeOver();
+          ACTIONS.undo(runId);
+        });
+        if (replayBtn)
+          replayBtn.addEventListener("click", () => {
+            replayBtn.classList.remove("show");
+            auto = true;
+            runId++;
+            restart();
+          });
+
+        new IntersectionObserver(
+          (es) => {
+            visible = es[0].isIntersecting;
+          },
+          { threshold: 0.12 },
+        ).observe(phone);
+
+        async function restart() {
+          runId++;
+          auto = true;
+          while (loopRunning) await wait(60);
+          fullReset();
+          loop();
+        }
+        function stop() {
+          auto = false;
+          runId++;
+          resetOverlay();
+        }
+        function setScenario(s) {
+          runId++;
+          if (s.cfg) Object.assign(cfg, s.cfg);
+          if (s.chat) renderChat(screen, s.chat);
+          if (replayBtn) replayBtn.classList.remove("show");
+          restart();
+        }
+
+        fullReset();
+        loop();
+        return { setScenario, stop, restart };
+      }
+
+      /* ================= MAC DEMO ENGINE ================= */
+      const MAC_TPL = `
+  <div class="rm-voice">
+    <div class="rm-voice-head"><span class="micdot">${ICONS.mic}</span><span class="mv-label">Listening…</span></div>
+    <div class="rm-wave">${waveBars}</div>
+    <div class="rm-transcript empty">…</div>
+  </div>
+  <div class="rm-pill">${ICONS.ok}${ICONS.err}<span class="spin"></span><span class="rm-pill-tx"></span></div>`;
+
+      function setupMacDemo(cfg) {
+        const root = document.getElementById(cfg.id);
+        const win = root.querySelector(".mac-window");
+        win.insertAdjacentHTML("beforeend", MAC_TPL);
+        const q = (s) => root.querySelector(s);
+        const keys = q(".mac-keys"),
+          kOpt = q(".k-opt"),
+          kSpace = q(".k-space"),
+          mklabel = q(".mklabel"),
+          panel = win.querySelector(".rm-voice"),
+          mvLabel = win.querySelector(".mv-label"),
+          transcript = win.querySelector(".rm-transcript"),
+          pill = win.querySelector(".rm-pill"),
+          pillTx = win.querySelector(".rm-pill-tx"),
+          composer = q(".mac-body .composer-text");
+
+        let runId = 0,
+          visible = false,
+          loopRunning = false,
+          running = true;
+        const live = (id) => id === runId;
+        async function slp(ms, id) {
+          for (let t = 0; t < ms; t += 120) {
+            if (!live(id)) return false;
+            await wait(Math.min(120, ms - t));
+          }
+          return live(id);
+        }
+        const listenLabel = () =>
+          cfg.mode === "assistant"
+            ? "Listening (Assistant)…"
+            : cfg.polish === false
+              ? "Listening (Dictation)…"
+              : "Listening (Dictation, polish on)…";
+        function pillShow(mode, label) {
+          pill.className = "rm-pill on " + mode;
+          pillTx.textContent = label;
+        }
+        function pillHide() {
+          pill.className = "rm-pill";
+        }
+        function setBody(html) {
+          composer.innerHTML = html;
+          composer.classList.toggle("empty", !html);
+        }
+        function applyMeta() {
+          const t = q(".mac-title"),
+            to = q(".mw-to"),
+            sub = q(".mw-subj"),
+            quote = q(".mac-quote"),
+            qf = q(".mq-from"),
+            qt = q(".mq-text");
+          if (t && cfg.title) t.textContent = cfg.title;
+          if (to && cfg.to) to.textContent = cfg.to;
+          if (sub && cfg.subject) sub.textContent = cfg.subject;
+          if (quote) {
+            if (cfg.quoteText) {
+              quote.style.display = "";
+              if (qf) qf.textContent = cfg.quoteFrom || "";
+              if (qt) qt.textContent = cfg.quoteText;
+            } else quote.style.display = "none";
+          }
+          mklabel.textContent =
+            cfg.mode === "assistant"
+              ? "Assistant mode"
+              : cfg.polish === false
+                ? "Dictation"
+                : "Dictation · polish on";
+        }
+        function fullReset() {
+          panel.classList.remove("open");
+          pillHide();
+          keys.classList.remove("live");
+          kOpt.classList.remove("pressed");
+          kSpace.classList.remove("pressed");
+          transcript.textContent = "…";
+          transcript.classList.add("empty");
+          setBody("");
+          applyMeta();
+        }
+        async function pressKeys(id) {
+          kOpt.classList.add("pressed");
+          kSpace.classList.add("pressed");
+          await wait(320);
+          kOpt.classList.remove("pressed");
+          kSpace.classList.remove("pressed");
+          return live(id);
+        }
+        async function typeBody(text, id) {
+          const speed = REDUCED ? 0 : 20;
+          for (let i = 1; i <= text.length; i++) {
+            if (!live(id)) return false;
+            composer.classList.remove("empty");
+            composer.innerHTML =
+              esc(text.slice(0, i)) + '<span class="caret"></span>';
+            if (speed) await wait(speed + Math.random() * 22);
+          }
+          if (!live(id)) return false;
+          composer.innerHTML = esc(text);
+          return true;
+        }
+        async function loop() {
+          if (loopRunning) return;
+          loopRunning = true;
+          try {
+            while (running) {
+              const id = ++runId;
+              fullReset();
+              while (!visible) {
+                await wait(400);
+                if (!live(id)) return;
+              }
+              if (REDUCED) {
+                setBody(esc(cfg.typed));
+                pillShow(
+                  "ok",
+                  cfg.mode === "assistant" ? "Draft inserted" : "Inserted",
+                );
+                return;
+              }
+              if (!(await slp(900, id))) return;
+              if (!(await pressKeys(id))) return;
+              keys.classList.add("live");
+              mklabel.textContent = listenLabel();
+              mvLabel.textContent = listenLabel();
+              transcript.textContent = "…";
+              transcript.classList.add("empty");
+              panel.classList.add("open");
+              if (!(await slp(650, id))) return;
+              const words = cfg.spoken.split(" ");
+              transcript.classList.remove("empty");
+              for (let i = 1; i <= words.length; i++) {
+                if (!live(id)) return;
+                transcript.textContent = words.slice(0, i).join(" ");
+                await wait(160 + Math.random() * 130);
+              }
+              if (!(await slp(700, id))) return;
+              if (!(await pressKeys(id))) return;
+              panel.classList.remove("open");
+              keys.classList.remove("live");
+              applyMeta();
+              pillShow("writing", "Transcribing…");
+              if (!(await slp(800, id))) return;
+              if (cfg.polish !== false && cfg.mode !== "assistant") {
+                pillShow("writing", "Polishing…");
+                if (!(await slp(900, id))) return;
+              }
+              pillShow(
+                "writing",
+                cfg.mode === "assistant" ? "Writing your draft…" : "Writing…",
+              );
+              if (!(await typeBody(cfg.typed, id))) return;
+              pillShow(
+                "ok",
+                cfg.mode === "assistant" ? "Draft inserted" : "Inserted",
+              );
+              if (!(await slp(1700, id))) return;
+              pillHide();
+              if (!(await slp(3200, id))) return;
+            }
+          } finally {
+            loopRunning = false;
+          }
+        }
+        new IntersectionObserver(
+          (es) => {
+            visible = es[0].isIntersecting;
+          },
+          { threshold: 0.15 },
+        ).observe(win);
+
+        async function restart() {
+          runId++;
+          running = true;
+          while (loopRunning) await wait(60);
+          fullReset();
+          loop();
+        }
+        function setScenario(s) {
+          runId++;
+          Object.assign(cfg, s);
+          restart();
+        }
+        fullReset();
+        loop();
+        return { setScenario };
+      }
+
+      /* ================= PERSONA SCENARIOS ================= */
+      const SCENARIOS = {
+        recruiter: {
+          macTitle: "Assistant mode in Mail",
+          phoneTitle: "Auto Reply in a candidate chat",
+          mac: {
+            mode: "assistant",
+            title: "Mail",
+            to: "Jordan Lee",
+            subject: "Re: Application — Senior Designer",
+            quoteFrom: "Jordan wrote:",
+            quoteText:
+              "Hi! Just checking in on my application for the Senior Designer role — is the position still open?",
+            spoken:
+              "politely pass for this role but keep the door open for the next opening",
+            typed:
+              "Hi Jordan,\n\nThank you for following up — and for your patience. We've decided to move forward with another candidate for this role, but your portfolio genuinely stood out. I'd love to keep you in mind for the next opening on the team.\n\nBest,\nSam",
+          },
+          macSaid:
+            'You said: <span class="you">"politely pass, keep the door open"</span> — ReplyMint read the thread on screen and wrote the rest: the name, the tone, the whole email.',
+          phoneScreen: "wa",
+          phone: {
+            cfg: {
+              autoFlow: "auto",
+              composerSel: ".composer-text",
+              initialText: "",
+              reply:
+                "Hi Maya! Yes — the role's still open and your portfolio looks great. Would a 30-minute intro call on Thursday or Friday work?",
+              voiceLine:
+                "Say the role is open and offer an intro call this week",
+              voiceReply:
+                "Hi Maya! The role's still open — would a 30-minute intro call this week work?",
+              fixedText:
+                "Hi Maya — yes, the role is still open. Would a 30-minute intro call this week work?",
+            },
+            chat: {
+              skin: "wa",
+              name: "Maya",
+              av: "M",
+              sub: "online",
+              messages: [
+                {
+                  dir: "in",
+                  text: "Hi! I applied for the Senior Designer role last week 😊",
+                  time: "2:14 PM",
+                },
+                {
+                  dir: "in",
+                  text: "Is the position still open? Would love to chat",
+                  time: "2:14 PM",
+                },
+              ],
+            },
+          },
+          phoneSaid:
+            'You tapped <span class="you">Auto Reply</span>. It read the chat and drafted the answer — role, timing, next step. You just press send.',
+        },
+        sales: {
+          macTitle: "Assistant mode in Mail",
+          phoneTitle: "Voice in a prospect chat",
+          mac: {
+            mode: "assistant",
+            title: "Mail",
+            to: "Elena Ruiz",
+            subject: "Re: Proposal — Acme rollout",
+            quoteFrom: "Elena wrote:",
+            quoteText:
+              "Thanks for the proposal. We're reviewing internally — will get back to you.",
+            spoken:
+              "chase the proposal friendly not pushy and offer to answer questions on a quick call",
+            typed:
+              "Hi Elena,\n\nJust floating this back to the top of your inbox — no rush at all. If any questions came up during the review, I'm happy to jump on a quick call and walk through them.\n\nBest,\nSam",
+          },
+          macSaid:
+            'You said: <span class="you">"chase the proposal, friendly not pushy"</span> — it turned six words into a follow-up that doesn\'t sound like a follow-up.',
+          phoneScreen: "wa",
+          phone: {
+            cfg: {
+              autoFlow: "voice",
+              composerSel: ".composer-text",
+              initialText: "",
+              reply:
+                "Hi Rohit! Full pricing is here: acme.co/pricing — happy to walk you through it. Would Thursday afternoon suit for a quick call?",
+              voiceLine:
+                "Send the pricing link and offer a call Thursday afternoon",
+              voiceReply:
+                "Hi Rohit! Here's the full pricing: acme.co/pricing — and I'd be glad to walk you through it. Would Thursday afternoon work for a quick call?",
+              fixedText:
+                "Hi Rohit — full pricing is at acme.co/pricing. Would Thursday afternoon work for a quick call?",
+            },
+            chat: {
+              skin: "wa",
+              name: "Rohit · Acme",
+              av: "R",
+              sub: "business chat",
+              messages: [
+                {
+                  dir: "in",
+                  text: "Hey! We're comparing options this week",
+                  time: "11:02 AM",
+                },
+                {
+                  dir: "in",
+                  text: "Can you send over your pricing?",
+                  time: "11:02 AM",
+                },
+              ],
+            },
+          },
+          phoneSaid:
+            'You said: <span class="you">"send the pricing link, offer a call Thursday"</span> — spoken in five seconds, written like you took five minutes.',
+        },
+        support: {
+          macTitle: "Dictation with polish in Mail",
+          phoneTitle: "Auto Reply to an upset customer",
+          mac: {
+            mode: "dictate",
+            polish: true,
+            title: "Re: Refund — order #4821 — Mail",
+            to: "Chris Doyle",
+            subject: "Re: Refund — order #4821",
+            quoteFrom: "Chris wrote:",
+            quoteText:
+              "This is the second time my order arrived damaged. I want a refund.",
+            spoken:
+              "umm so sorry about this Chris the refund is processed you'll see it in um three to five days and no wait also add a ten percent discount code",
+            typed:
+              "Hi Chris — I'm so sorry about this. Your refund is processed and you'll see it within 3–5 business days. I've also added a 10% discount code to your account for the trouble.",
+          },
+          macSaid:
+            'You rambled — <span class="you">"umm… no wait, also add…"</span> — and polish turned it into the calm, complete answer. Your words, cleaned up.',
+          phoneScreen: "wa",
+          phone: {
+            cfg: {
+              autoFlow: "auto",
+              composerSel: ".composer-text",
+              initialText: "",
+              reply:
+                "Hi Jenna, I'm really sorry — that's not the experience we want you to have. I've just issued a replacement with express shipping; it'll arrive by Friday. I'll follow up personally to make sure it lands.",
+              voiceLine:
+                "Apologise and send a replacement with express shipping by Friday",
+              voiceReply:
+                "Hi Jenna, I'm so sorry about this — a replacement is on its way with express shipping and will arrive by Friday.",
+              fixedText:
+                "Hi Jenna — I'm really sorry about this. A replacement with express shipping is on its way and will arrive by Friday.",
+            },
+            chat: {
+              skin: "wa",
+              name: "Jenna",
+              av: "J",
+              sub: "online",
+              messages: [
+                {
+                  dir: "in",
+                  text: "My order arrived broken AGAIN 😡",
+                  time: "4:47 PM",
+                },
+                {
+                  dir: "in",
+                  text: "This is really frustrating",
+                  time: "4:47 PM",
+                },
+              ],
+            },
+          },
+          phoneSaid:
+            'One tap on <span class="you">Auto Reply</span> — it read the frustration and answered with an apology, a fix, and a deadline. Calm, even when you aren\'t.',
+        },
+        founder: {
+          macTitle: "Dictation with polish in Mail",
+          phoneTitle: "Fix on a rough investor email",
+          mac: {
+            mode: "dictate",
+            polish: true,
+            title: "Investor update — October — Mail",
+            to: "Investors",
+            subject: "Investor update — October",
+            quoteFrom: "",
+            quoteText: "",
+            spoken:
+              "um quick update revenue is up twenty two percent um month over month we shipped the mac app and no wait and we signed two enterprise pilots",
+            typed:
+              "Quick update: revenue is up 22% month-over-month, we shipped the Mac app, and we signed two enterprise pilots.",
+          },
+          macSaid:
+            'You thought out loud; it wrote the update. <span class="you">"um… no wait, and…"</span> became one crisp investor-ready sentence.',
+          phoneScreen: "gm",
+          phone: {
+            cfg: {
+              autoFlow: "fix",
+              composerSel: ".gm-compose .composer-text",
+              initialText:
+                "hey saw ur mail. yes we r on track for the q4 targets. numbers r looking gud will share deck soon",
+              reply:
+                "Hi Marcus,\n\nThanks for checking in — we're on track for the Q4 targets and the numbers are looking strong. I'll share the updated deck by the end of the week.\n\nBest,\nSam",
+              voiceLine:
+                "Tell him we're on track and the deck is coming this week",
+              voiceReply:
+                "Hi Marcus,\n\nWe're on track for the Q4 targets — I'll send the updated deck this week.\n\nBest,\nSam",
+              fixedText:
+                "Hi Marcus,\n\nThanks for checking in — we're on track for our Q4 targets and the numbers are looking strong. I'll share the updated deck later this week.\n\nBest,\nSam",
+            },
+            chat: {
+              skin: "gm",
+              from: "sam@yourstartup.com",
+              to: "marcus@sequoiacap.example",
+              subject: "Re: Q4 progress",
+            },
+          },
+          phoneSaid:
+            'You typed it fast and rough. <span class="you">Fix</span> rewrote it investor-ready — same meaning, none of the "ur".',
+        },
+        family: {
+          macTitle: "Dictation with polish in Messages",
+          phoneTitle: "Auto Reply to a dinner plan",
+          mac: {
+            mode: "dictate",
+            polish: true,
+            title: "Messages",
+            to: "Mum",
+            subject: "iMessage",
+            quoteFrom: "",
+            quoteText: "",
+            spoken:
+              "um yes we'll be there sunday around one and no wait say we'll bring dessert",
+            typed:
+              "Yes, we'll be there Sunday around 1 — and we'll bring dessert!",
+          },
+          macSaid:
+            'Even the small stuff: <span class="you">"um yes… no wait…"</span> lands as one warm, clean message.',
+          phoneScreen: "wa",
+          phone: {
+            cfg: {
+              autoFlow: "auto",
+              composerSel: ".composer-text",
+              initialText: "",
+              reply:
+                "Yes, absolutely! Ramen sounds perfect — I can be there by 7:30. Want me to book us a table? 🙌",
+              voiceLine: "Say yes and offer to book a table for seven thirty",
+              voiceReply:
+                "Yes! I'll book us a table for 7:30 — see you there 🍜",
+              fixedText:
+                "Yes, absolutely — ramen sounds perfect. I can be there by 7:30; want me to book a table?",
+            },
+            chat: {
+              skin: "wa",
+              name: "Priya",
+              av: "P",
+              sub: "online",
+              messages: [
+                {
+                  dir: "in",
+                  text: "Hey! Are we still on for dinner tonight? 🍜",
+                  time: "6:42 PM",
+                },
+                {
+                  dir: "in",
+                  text: "I found this new ramen place near the station, looks amazing",
+                  time: "6:42 PM",
+                },
+              ],
+            },
+          },
+          phoneSaid:
+            "Auto Reply keeps it human — enthusiasm, emoji and a helpful offer. It read the chat, not a script.",
+        },
+        friends: {
+          macTitle: "Dictation with polish in Messages",
+          phoneTitle: "Voice in a group plan",
+          mac: {
+            mode: "dictate",
+            polish: true,
+            title: "Messages",
+            to: "Weekend crew",
+            subject: "Group chat",
+            quoteFrom: "",
+            quoteText: "",
+            spoken:
+              "tell them I'm in for saturday and I can drive um four people fit in my car",
+            typed:
+              "I'm in for Saturday! I can drive too — four seats in my car.",
+          },
+          macSaid:
+            "Group chats deserve good messages too. Speak the plan; it types it, tidy.",
+          phoneScreen: "ig",
+          phone: {
+            cfg: {
+              autoFlow: "voice",
+              composerSel: ".composer-text",
+              initialText: "",
+              reply: "Saturday actually works better for me 🙌 still so in!",
+              voiceLine: "Tell him Saturday works, and ask about parking",
+              voiceReply:
+                "Saturday actually works better for me 🙌 Is parking easy near the venue or should we take the metro?",
+              fixedText:
+                "Saturday works great for me — is parking easy near the venue?",
+            },
+            chat: {
+              skin: "ig",
+              name: "alex.j",
+              av: "A",
+              sub: "Active now",
+              time: "TODAY 8:14 PM",
+              messages: [
+                { dir: "in", text: "yo the concert got moved to saturday 😭" },
+                { dir: "in", text: "can you still make it?" },
+              ],
+            },
+          },
+          phoneSaid:
+            'You said: <span class="you">"Saturday works, ask about parking"</span> — it wrote the reply your friend actually wants to read.',
+        },
+      };
+
+      /* ================= APPS DATA (Android target list) ================= */
+      const glyph = {
+        chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.2-.6L3 21l1.7-4.6A8.4 8.4 0 1 1 21 11.5z"/></svg>',
+        txt: (t, fs) =>
+          `<svg viewBox="0 0 24 24"><text x="12" y="16.2" text-anchor="middle" font-size="${fs || 11}" font-weight="700" fill="currentColor" font-family="Inter,sans-serif">${t}</text></svg>`,
+      };
+      const APPS = [
+        {
+          n: "WhatsApp",
+          s: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.2a8.5 8.5 0 0 1-12.4 7.5L4 19.6l1-4A8.5 8.5 0 1 1 20.5 11.2z"/><path d="M16 14.2c-.3.8-1.5 1.5-2.2 1.4-2-.3-4.6-2.7-5.2-4.6-.2-.7.4-2 1.2-2.2l.9 1.9-.8 1a6 6 0 0 0 2.7 2.6l1.1-.8z" fill="currentColor" stroke="none"/></svg>',
+        },
+        {
+          n: "WhatsApp Business",
+          s: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.2a8.5 8.5 0 0 1-12.4 7.5L4 19.6l1-4A8.5 8.5 0 1 1 20.5 11.2z"/><path d="M9.5 13.5v-4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v4z" fill="currentColor" stroke="none"/></svg>',
+        },
+        {
+          n: "Instagram",
+          s: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="3.8"/><circle cx="17" cy="7" r="1.1" fill="currentColor" stroke="none"/></svg>',
+        },
+        {
+          n: "Gmail",
+          s: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M3.5 6.5L12 13l8.5-6.5"/></svg>',
+        },
+        { n: "LinkedIn", s: null, t: "in" },
+        {
+          n: "Slack",
+          s: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M9 4v7M15 4v7M9 13v7M15 13v7" transform="rotate(90 12 12)"/><path d="M9 4v7M15 4v7M9 13v7M15 13v7"/></svg>',
+        },
+        { n: "Microsoft Teams", s: null, t: "T" },
+        { n: "Facebook", s: null, t: "f", fs: 14 },
+        {
+          n: "Messenger",
+          s: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a8.6 8.6 0 0 0-8.7 8.5c0 2.6 1.2 4.9 3.1 6.4V21l2.9-1.6a9.3 9.3 0 0 0 2.7.4 8.6 8.6 0 0 0 8.7-8.4A8.6 8.6 0 0 0 12 3z"/><path d="M7.5 14l3.2-3.4 2.2 1.8 3.6-3.6-3.2 3.5-2.2-1.8z" fill="currentColor" stroke="none"/></svg>',
+        },
+        {
+          n: "Google Chat",
+          s: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H8l-4 4z"/><path d="M8 8.5h8M8 11.5h5" stroke-width="1.6"/></svg>',
+        },
+        {
+          n: "Discord",
+          s: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 5.5C10 5 14 5 15.5 5.5c2 .7 4 2.8 4.2 9.3 0 0-1.4 2.4-4.2 2.7l-.8-1.6c-1.6.5-3.8.5-5.4 0l-.8 1.6C5.7 17.2 4.3 14.8 4.3 14.8 4.5 8.3 6.5 6.2 8.5 5.5z"/><circle cx="9.3" cy="11.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="14.7" cy="11.5" r="1.1" fill="currentColor" stroke="none"/></svg>',
+        },
+        {
+          n: "Telegram",
+          s: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4L3 11.5l5 1.8M21 4l-2.8 15L11 13.5M21 4L8 13.3v5.2l3-4"/></svg>',
+        },
+        {
+          n: "Signal",
+          s: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.6 2.2"><circle cx="12" cy="12" r="8.5"/><path d="M12 8a4 4 0 0 1 4 4c0 2.2-1.8 4-4 4a4.4 4.4 0 0 1-1.6-.3L8 16.5l.8-2.1A4 4 0 0 1 12 8z" stroke-dasharray="0" fill="currentColor" stroke="none"/></svg>',
+        },
+        {
+          n: "Google Messages",
+          s: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4H6a2 2 0 0 0-2 2v14l4-4h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/></svg>',
+        },
+        { n: "Samsung Messages", s: null, t: "S" },
+        {
+          n: "Snapchat",
+          s: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5c2.5 0 4.3 1.9 4.3 4.4v2c.8.3 1.6-.4 2.2.2.4.5-.6 1.2-1.5 1.7 1 2 2.6 2.9 3.5 3.1-.6 1.2-2.4 1.3-3.1 1.5-.2.6-.3 1.2-.8 1.2-.7 0-1.3-.4-2.6-.4-1.2 0-1.7 1.3-3 1.3s-1.8-1.3-3-1.3c-1.3 0-1.9.4-2.6.4-.5 0-.6-.6-.8-1.2-.7-.2-2.5-.3-3.1-1.5.9-.2 2.5-1.1 3.5-3.1-.9-.5-1.9-1.2-1.5-1.7.6-.6 1.4.1 2.2-.2v-2c0-2.5 1.8-4.4 4.3-4.4z"/></svg>',
+        },
+        {
+          n: "X",
+          s: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l16 16M20 4L4 20"/></svg>',
+        },
+        { n: "Outlook", s: null, t: "O", fs: 13 },
+      ];
+
+      /* ================= INIT ================= */
+      /* marquee + apps grid */
+      (function () {
+        const item = (a) =>
+          `<span class="mq-item">${a.s || glyph.txt(a.t, a.fs)}${a.n}</span>`;
+        const row =
+          APPS.map(item).join("") +
+          `<span class="mq-item mac">${glyph.chat}…and every app on your Mac</span>`;
+        document.getElementById("mq-a").innerHTML = row;
+        document.getElementById("mq-b").innerHTML = row;
+        document.getElementById("appsGrid").innerHTML = APPS.map(
+          (a) =>
+            `<div class="app-tile"><span class="ic">${a.s || glyph.txt(a.t, a.fs)}</span>${a.n}</div>`,
+        ).join("");
+      })();
+
+      /* hero + mode-card mac demos */
+      setupMacDemo({
+        id: "hero-mac",
+        mode: "dictate",
+        polish: true,
+        title: "Re: Q3 report — Mail",
+        to: "Sarah Chen",
+        subject: "Re: Q3 report",
+        spoken:
+          "umm tell her the report's nearly done I'll send it friday no wait thursday",
+        typed:
+          "Hi Sarah — the report is nearly done; I'll send it over on Thursday.",
+      });
+      setupMacDemo({
+        id: "mode-dict",
+        mode: "dictate",
+        polish: true,
+        title: "New message — Mail",
+        to: "Dan Park",
+        subject: "Deck for tomorrow",
+        spoken:
+          "um the deck is basically done I just need to um redo the pricing slide send it by six",
+        typed:
+          "The deck is basically done — I just need to redo the pricing slide. I'll send it by 6.",
+      });
+      setupMacDemo({
+        id: "mode-asst",
+        mode: "assistant",
+        title: "Re: Partnership call — Mail",
+        to: "Priya Nair",
+        subject: "Re: Partnership call",
+        quoteFrom: "Priya wrote:",
+        quoteText:
+          "Could we grab 30 minutes this Thursday to talk through the partnership?",
+        spoken: "politely decline thursday and suggest next week instead",
+        typed:
+          "Hi Priya,\n\nThursday is tricky on my side — could we do the same time next week instead? Happy to work around your calendar.\n\nBest,\nSam",
+      });
+
+      /* android section demos (lifted configs) */
+      setupDemo({
+        id: "demo-wa",
+        composerSel: ".composer-text",
+        fabSel: ".fab",
+        autoFlow: "auto",
+        initialText: "",
+        reply:
+          "Yes, absolutely! Ramen sounds perfect — I can be there by 7:30. Want me to book us a table? 🙌",
+        voiceLine: "Say yes and offer to book a table for seven thirty",
+        voiceReply: "Yes! I'll book us a table for 7:30 — see you there 🍜",
+        fixedText:
+          "Yes, absolutely — ramen sounds perfect. I can be there by 7:30; want me to book a table?",
+      });
+      setupDemo({
+        id: "demo-ig",
+        composerSel: ".composer-text",
+        autoFlow: "voice",
+        initialText: "",
+        reply: "Saturday actually works better for me 🙌 still so in!",
+        voiceLine: "Tell him Saturday works, and ask about parking",
+        voiceReply:
+          "Saturday actually works better for me 🙌 Is parking easy near the venue or should we take the metro?",
+        fixedText:
+          "Saturday works great for me — is parking easy near the venue?",
+      });
+      setupDemo({
+        id: "demo-gm",
+        composerSel: ".gm-compose .composer-text",
+        autoFlow: "fix",
+        initialText: "hey got ur mail. report not done yet maybe friday. sry",
+        reply:
+          "Hi Sarah,\n\nThanks for checking in — happy to help with anything you need on the Q3 numbers.\n\nBest,\nSam",
+        voiceLine: "Tell her the report will be ready Friday",
+        voiceReply:
+          "Hi Sarah,\n\nThe Q3 report will be ready by Friday — I'll send it over as soon as it's final.\n\nBest,\nSam",
+        fixedText:
+          "Hi Sarah,\n\nThanks for following up. The Q3 report is nearly complete — I expect to have it with you by Friday. Apologies for the short delay.\n\nBest,\nSam",
+      });
+
+      /* magic section: 3 swappable phone screens + 1 mac window */
+      const magicPhones = {
+        wa: setupDemo({
+          id: "mp-wa",
+          composerSel: ".composer-text",
+          fabSel: ".fab",
+          autoFlow: "auto",
+          initialText: "",
+          reply: "…",
+          voiceLine: "…",
+          voiceReply: "…",
+          fixedText: "…",
+        }),
+        ig: setupDemo({
+          id: "mp-ig",
+          composerSel: ".composer-text",
+          autoFlow: "voice",
+          initialText: "",
+          reply: "…",
+          voiceLine: "…",
+          voiceReply: "…",
+          fixedText: "…",
+        }),
+        gm: setupDemo({
+          id: "mp-gm",
+          composerSel: ".gm-compose .composer-text",
+          autoFlow: "fix",
+          initialText: "",
+          reply: "…",
+          voiceLine: "…",
+          voiceReply: "…",
+          fixedText: "…",
+        }),
+      };
+      const magicMac = setupMacDemo({
+        id: "magic-mac",
+        mode: "assistant",
+        title: "Mail",
+        to: "",
+        subject: "",
+        spoken: "…",
+        typed: "…",
+      });
+
+      (function () {
+        const tabs = document.getElementById("ptabs");
+        const macTitle = document.getElementById("mac-scene-title");
+        const phoneTitle = document.getElementById("phone-scene-title");
+        const saidMac = document.getElementById("magic-said-mac");
+        const saidPhone = document.getElementById("magic-said-phone");
+        function show(key) {
+          const s = SCENARIOS[key];
+          tabs
+            .querySelectorAll("button")
+            .forEach((b) => b.classList.toggle("on", b.dataset.p === key));
+          ["wa", "ig", "gm"].forEach((sk) => {
+            const holder = document.getElementById("mp-" + sk);
+            const active = sk === s.phoneScreen;
+            holder.hidden = !active;
+            if (!active) magicPhones[sk].stop();
+          });
+          magicPhones[s.phoneScreen].setScenario(s.phone);
+          magicMac.setScenario(s.mac);
+          macTitle.textContent = s.macTitle;
+          phoneTitle.textContent = s.phoneTitle;
+          saidMac.innerHTML = s.macSaid;
+          saidPhone.innerHTML = s.phoneSaid;
+        }
+        tabs.addEventListener("click", (e) => {
+          const b = e.target.closest("button[data-p]");
+          if (b) show(b.dataset.p);
+        });
+        show("recruiter");
+      })();
+
+      /* OS-aware primary CTA */
+      (function () {
+        const ua = navigator.userAgent;
+        const nav = document.getElementById("nav-dl"),
+          lbl = document.getElementById("nav-dl-label");
+        if (/Android/i.test(ua)) {
+          nav.href = "#download";
+          lbl.textContent = "Get the beta";
+        } else if (!/Mac/i.test(ua)) {
+          nav.href = "#download";
+        }
+      })();
+    </script>
+  </body>
+</html>
