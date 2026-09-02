@@ -31,6 +31,7 @@ export async function ollamaReply(opts: {
 
   const res = await fetch(`${BASE_URL}/api/chat`, {
     method: "POST",
+    signal: AbortSignal.timeout(40_000), // inside the desktop client's 45s window
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,

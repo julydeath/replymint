@@ -25,14 +25,19 @@ pub fn ensure_trusted(_prompt: bool) -> bool {
     true
 }
 
-/// Snapshot the focused app/window at dictation start. None when nothing is
-/// focused. Same shape the macOS ax.rs and Android ScreenReader produce.
-pub fn read_context() -> Option<ScreenContext> {
-    let automation = UIAutomation::new().ok()?;
-    let focused = automation.get_focused_element().ok()?;
+/// Snapshot the focused app/window at dictation start. Err says why it
+/// couldn't (shown to the user). Same shape the macOS ax.rs and Android
+/// ScreenReader produce.
+pub fn read_context() -> Result<ScreenContext, String> {
+    let automation = UIAutomation::new().map_err(|e| format!("UIA unavailable: {e}"))?;
+    let focused = automation
+        .get_focused_element()
+        .map_err(|e| format!("no focused element: {e}"))?;
     let focused_text = element_value(&focused);
-    let walker = automation.get_control_view_walker().ok()?;
-    let root = automation.get_root_element().ok()?;
+    let walker = automation
+        .get_control_view_walker()
+        .map_err(|e| format!("UIA walker: {e}"))?;
+    let root = automation.get_root_element().map_err(|e| format!("UIA root: {e}"))?;
 
     // Walk up from the focused element to the top-level window (the child of
     // the desktop root) — the UIA equivalent of AXFocusedWindow.
@@ -64,7 +69,7 @@ pub fn read_context() -> Option<ScreenContext> {
         lines.drain(..lines.len() - MAX_LINES);
     }
 
-    Some(ScreenContext { app_name, window_title, lines, focused_text })
+    Ok(ScreenContext { app_name, window_title, lines, focused_text })
 }
 
 /// Bounded DFS in document order collecting each element's name and value.

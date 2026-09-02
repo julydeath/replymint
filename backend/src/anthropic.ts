@@ -8,7 +8,10 @@ import { cleanDraft } from "./clean.js";
  */
 let client: Anthropic | null = null;
 function getClient(): Anthropic {
-  return (client ??= new Anthropic());
+  // Fail inside the desktop client's 45s window (reply.rs): 20s per attempt,
+  // one retry. The SDK default (10 min, 2 retries) would leave the client
+  // timing out with no idea why.
+  return (client ??= new Anthropic({ timeout: 20_000, maxRetries: 1 }));
 }
 
 /**
@@ -36,7 +39,8 @@ export async function anthropicReply(opts: {
 
   const message = await getClient().messages.create({
     model: isPro ? MODEL.professional : MODEL.personal,
-    max_tokens: 1024,
+    // A polished 5-minute dictation (~750 words) is ~1k tokens: 1024 truncated it.
+    max_tokens: 4096,
     system: opts.system,
     messages: [{ role: "user", content: opts.user }],
     // Opus 5 thinks by default; turn it off for this short reply task.

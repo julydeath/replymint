@@ -79,8 +79,10 @@ async fn post_reply(
         },
     });
 
+    // Longer than the backend's own LLM budget (anthropic.ts: 20s × 2 tries)
+    // so a slow model surfaces as the server's error, not as our timeout.
     let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(30))
+        .timeout(Duration::from_secs(45))
         .build()
         .map_err(|e| format!("http client: {e}"))?;
     let resp = client

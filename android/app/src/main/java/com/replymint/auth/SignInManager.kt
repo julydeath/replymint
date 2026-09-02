@@ -1,6 +1,7 @@
 package com.replymint.auth
 
 import android.app.Activity
+import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -35,13 +36,12 @@ class SignInManager(private val activity: Activity) {
         }
 
         val idToken = try {
-            // First pass only offers accounts that already authorized us (quiet for returning
-            // users); NoCredentialException means a first-timer, so re-ask with the full picker.
-            try {
-                requestGoogleIdToken(filterByAuthorized = true)
-            } catch (e: NoCredentialException) {
-                requestGoogleIdToken(filterByAuthorized = false)
-            }
+            // Always show the full account picker. Filtering by authorized accounts would hide
+            // every device account except the one that already granted us access, so a user
+            // who signs out can never pick a different email.
+            requestGoogleIdToken(filterByAuthorized = false)
+        } catch (e: NoCredentialException) {
+            return Outcome.Failed("No Google account found on this device")
         } catch (e: GetCredentialCancellationException) {
             return Outcome.Cancelled
         } catch (e: Exception) {
@@ -63,6 +63,11 @@ class SignInManager(private val activity: Activity) {
     suspend fun signOut() {
         store.token?.let { authClient.signOut(it) }
         store.clearAuth()
+        // Tell Credential Manager the user signed out so it stops treating the last-used
+        // account as the preferred one on the next sign-in.
+        runCatching {
+            CredentialManager.create(activity).clearCredentialState(ClearCredentialStateRequest())
+        }
     }
 
     private suspend fun requestGoogleIdToken(filterByAuthorized: Boolean): String? {

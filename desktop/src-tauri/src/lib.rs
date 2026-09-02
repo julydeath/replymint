@@ -191,7 +191,9 @@ fn toggle_dictation(app: &AppHandle) {
              in System Settings → Privacy & Security → Accessibility (dictation still works)",
         );
     }
-    let context = platform::read_context();
+    let context = platform::read_context()
+        .map_err(|e| eprintln!("screen context unavailable at start: {e}"))
+        .ok();
     let keywords = context.as_ref().map(screen::extract_keywords).unwrap_or_default();
     *state.context.lock().unwrap() = context;
 
@@ -225,6 +227,23 @@ fn toggle_dictation(app: &AppHandle) {
             SttEvent::Partial(t) => emit_ui(&app, "partial", &t),
             SttEvent::Final(t) => emit_ui(&app, "final", &t),
             SttEvent::Done(text) => done_text = Some(text),
+            SttEvent::Limit => {
+                // Per-session cap: stop the mic right away so the tray and
+                // pill read "finishing", not "still listening".
+                if let Some(rec) = app.state::<AppState>().session.lock().unwrap().take() {
+                    rec.stop();
+                }
+                set_tray_title(&app, Some("…"));
+                emit_ui(
+                    &app,
+                    "warn",
+                    &format!(
+                        "{}-minute limit per dictation reached — finishing up",
+                        stt::MAX_AUDIO_SECONDS / 60
+                    ),
+                );
+                emit_ui(&app, "state", "transcribing");
+            }
             SttEvent::Error | SttEvent::Ready => {}
         })
         .await;
@@ -245,12 +264,15 @@ fn toggle_dictation(app: &AppHandle) {
 
                     // Second chance at the screen: Electron/Chromium apps build
                     // their AX tree lazily, so the snapshot at recording start
-                    // often comes back empty — by now the tree is warm.
-                    if context.is_none() {
-                        context = tauri::async_runtime::spawn_blocking(platform::read_context)
-                            .await
-                            .ok()
-                            .flatten();
+                    // often fails or carries toolbar labels only — by now the
+                    // tree is warm. Keep the reason: it goes in the warning.
+                    let mut read_error = String::new();
+                    if context.as_ref().map_or(true, |c| c.lines.is_empty()) {
+                        match tauri::async_runtime::spawn_blocking(platform::read_context).await {
+                            Ok(Ok(ctx)) => context = Some(ctx),
+                            Ok(Err(e)) => read_error = e,
+                            Err(e) => read_error = e.to_string(),
+                        }
                     }
 
                     // Assistant mode: the transcript is an instruction — insert
@@ -260,8 +282,21 @@ fn toggle_dictation(app: &AppHandle) {
                     // user's words are never lost.
                     let mut label_ok = "";
                     let text = if cfg.mode == "assistant" {
-                        if context.is_none() {
-                            emit_ui(&app, "warn", "couldn't read the screen — drafting from your words alone");
+                        match &context {
+                            None => emit_ui(
+                                &app,
+                                "warn",
+                                &format!("couldn't read the screen ({read_error}) — drafting from your words alone"),
+                            ),
+                            Some(c) if c.lines.is_empty() && c.focused_text.is_none() => emit_ui(
+                                &app,
+                                "warn",
+                                &format!(
+                                    "{} showed no readable text — drafting from your words alone",
+                                    if c.app_name.is_empty() { "the screen" } else { c.app_name.as_str() }
+                                ),
+                            ),
+                            Some(_) => {}
                         }
                         emit_ui(&app, "state", "writing");
                         match reply::generate_draft(

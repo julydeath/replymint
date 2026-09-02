@@ -91,14 +91,27 @@
     };
 
     // warn/err hold the pill for a few seconds so fallbacks are actually seen,
-    // instead of vanishing with the idle state right after.
+    // instead of vanishing with the idle state right after. A hold that ends
+    // mid-session (e.g. the 5-minute cap warning while polishing) gives way to
+    // the live state it interrupted; only an idle session lets the pill fade.
     let holdTimer = null;
+    let active = false;  // between "recording" and "idle"
+    let current = null;  // [dotCls, html] of the live state, restored after a hold
     const hold = (dotCls, t, textCls, ms) => {
       pill.classList.add("show");
       set(dotCls, `<bdo>${esc(t)}</bdo>`, textCls);
       clearTimeout(holdTimer);
-      holdTimer = setTimeout(() => { holdTimer = null; pill.classList.remove("show"); }, ms);
+      holdTimer = setTimeout(() => {
+        holdTimer = null;
+        if (active && current) set(...current);
+        else pill.classList.remove("show");
+      }, ms);
     };
+    const show = (dotCls, html) => {
+      current = [dotCls, html];
+      if (!holdTimer) set(dotCls, html);
+    };
+    const liveDot = () => (current ? current[0] : dot.className);
 
     // Live transcript accumulates across utterance pauses: each STT partial/
     // final event carries only the current segment, so keep the finals and
@@ -111,25 +124,26 @@
       if (kind === "mode") { listeningLabel = MODE_LABELS[t] || "Listening…"; return; }
       if (kind === "warn") return hold("warn", t, "warn", 6000);
       if (kind === "error") return hold("err", t, "err", 6000);
-      if (kind === "state" && t === "recording") {
-        finals = [];
-        clearTimeout(holdTimer); holdTimer = null;
-        pill.classList.add("show");
-      }
-      if (holdTimer) return; // a warn/error (or ✓) is on screen — don't overwrite it
+      if (kind === "inserted") return hold("", `✓ ${INSERTED[t] || "Inserted"}`, "", 1500);
       if (kind === "state") {
-        if (t === "idle") pill.classList.remove("show");
-        else if (t === "recording") set("recording", `<bdo class="dim">${esc(listeningLabel)}</bdo>`);
-        else if (STATES[t]) set(...STATES[t]);
+        if (t === "recording") {
+          finals = []; active = true;
+          clearTimeout(holdTimer); holdTimer = null;
+          pill.classList.add("show");
+          show("recording", `<bdo class="dim">${esc(listeningLabel)}</bdo>`);
+        } else if (t === "idle") {
+          active = false; current = null;
+          if (!holdTimer) pill.classList.remove("show");
+        } else if (STATES[t]) {
+          show(...STATES[t]);
+        }
       } else if (kind === "partial") {
-        set(dot.className, `<bdo>${esc(live(t))}</bdo>`);
+        show(liveDot(), `<bdo>${esc(live(t))}</bdo>`);
       } else if (kind === "final") {
         if (t) finals.push(t);
-        set(dot.className, `<bdo>${esc(live(""))}</bdo>`);
+        show(liveDot(), `<bdo>${esc(live(""))}</bdo>`);
       } else if (kind === "done") {
-        if (t) set(dot.className, `<bdo>${esc(t)}</bdo>`);
-      } else if (kind === "inserted") {
-        hold("", `✓ ${INSERTED[t] || "Inserted"}`, "", 1500);
+        if (t) show(liveDot(), `<bdo>${esc(t)}</bdo>`);
       }
     });
   </script>

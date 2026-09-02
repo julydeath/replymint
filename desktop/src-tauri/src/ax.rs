@@ -18,7 +18,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use crate::screen::{ScreenContext, MAX_LINES, NODE_BUDGET};
 
 use accessibility_sys::{
-    kAXChildrenAttribute, kAXErrorSuccess, kAXFocusedApplicationAttribute,
+    kAXChildrenAttribute, kAXErrorNoValue, kAXErrorSuccess, kAXFocusedApplicationAttribute,
     kAXFocusedUIElementAttribute, kAXFocusedWindowAttribute, kAXRoleAttribute,
     kAXSelectedTextAttribute, kAXTitleAttribute, kAXTrustedCheckOptionPrompt,
     kAXValueAttribute, AXIsProcessTrustedWithOptions, AXUIElementCopyAttributeValue,
@@ -44,15 +44,32 @@ impl Elem {
         self.0.as_CFTypeRef() as AXUIElementRef
     }
 
-    /// Copy an attribute value (owned). None on any AX error.
-    fn attr(&self, name: &str) -> Option<CFType> {
+    /// Copy an attribute value (owned). Err carries the AXError code — only
+    /// surfaced where the reason matters (why did the screen read fail?).
+    fn attr_checked(&self, name: &str) -> Result<CFType, i32> {
         let cf_name = CFString::new(name);
         let mut out: CFTypeRef = std::ptr::null();
         let err = unsafe {
             AXUIElementCopyAttributeValue(self.as_ax(), cf_name.as_concrete_TypeRef(), &mut out)
         };
-        if err == kAXErrorSuccess && !out.is_null() {
-            Some(unsafe { CFType::wrap_under_create_rule(out) })
+        if err != kAXErrorSuccess {
+            return Err(err);
+        }
+        if out.is_null() {
+            return Err(kAXErrorNoValue);
+        }
+        Ok(unsafe { CFType::wrap_under_create_rule(out) })
+    }
+
+    /// Copy an attribute value (owned). None on any AX error.
+    fn attr(&self, name: &str) -> Option<CFType> {
+        self.attr_checked(name).ok()
+    }
+
+    /// Wrap a CF value that should be an AXUIElement.
+    fn from_cf(v: CFType) -> Option<Elem> {
+        if unsafe { CFGetTypeID(v.as_CFTypeRef()) } == unsafe { AXUIElementGetTypeID() } {
+            Some(Elem(v))
         } else {
             None
         }
@@ -65,12 +82,7 @@ impl Elem {
     }
 
     fn attr_elem(&self, name: &str) -> Option<Elem> {
-        let v = self.attr(name)?;
-        if unsafe { CFGetTypeID(v.as_CFTypeRef()) } == unsafe { AXUIElementGetTypeID() } {
-            Some(Elem(v))
-        } else {
-            None
-        }
+        Elem::from_cf(self.attr(name)?)
     }
 
     fn children(&self) -> Vec<Elem> {
@@ -98,6 +110,20 @@ impl Elem {
             AXUIElementIsAttributeSettable(self.as_ax(), cf_name.as_concrete_TypeRef(), &mut out)
         };
         err == kAXErrorSuccess && out
+    }
+
+    /// Best-effort boolean attribute set (used for the app-level AX switches).
+    fn set_bool(&self, name: &str, value: bool) -> bool {
+        let cf_name = CFString::new(name);
+        let cf_value = CFBoolean::from(value);
+        let err = unsafe {
+            AXUIElementSetAttributeValue(
+                self.as_ax(),
+                cf_name.as_concrete_TypeRef(),
+                cf_value.as_CFTypeRef(),
+            )
+        };
+        err == kAXErrorSuccess
     }
 
     fn set_string(&self, name: &str, value: &str) -> Result<(), String> {
@@ -135,15 +161,21 @@ fn focused_element() -> Option<Elem> {
     Elem::system_wide().attr_elem(kAXFocusedUIElementAttribute)
 }
 
-/// Snapshot the focused app/window at dictation start. None when untrusted or
-/// nothing is focused. Same shape the Android ScreenReader feeds /v1/reply.
-pub fn read_context() -> Option<ScreenContext> {
+/// Snapshot the focused app/window at dictation start. Err says why it
+/// couldn't (untrusted, no frontmost app, AX call failed) — the reason is
+/// shown to the user, so keep it short. Same shape the Android ScreenReader
+/// feeds /v1/reply.
+pub fn read_context() -> Result<ScreenContext, String> {
     if !ensure_trusted(false) {
-        return None;
+        return Err("Accessibility permission not granted".into());
     }
     let system = Elem::system_wide();
-    let app = system.attr_elem(kAXFocusedApplicationAttribute)?;
+    let app = system
+        .attr_checked(kAXFocusedApplicationAttribute)
+        .map_err(|code| format!("no frontmost app (AX error {code})"))
+        .and_then(|v| Elem::from_cf(v).ok_or_else(|| "frontmost app is not an AX element".to_string()))?;
     let app_name = app.attr_string(kAXTitleAttribute).unwrap_or_default();
+    enable_web_content_ax(&app, &app_name);
     let window = app.attr_elem(kAXFocusedWindowAttribute);
     let window_title = window
         .as_ref()
@@ -162,7 +194,25 @@ pub fn read_context() -> Option<ScreenContext> {
         lines.drain(..lines.len() - MAX_LINES);
     }
 
-    Some(ScreenContext { app_name, window_title, lines, focused_text })
+    Ok(ScreenContext { app_name, window_title, lines, focused_text })
+}
+
+/// Chromium and Electron apps build their web-content AX tree only once an
+/// assistive client announces itself — until then the walk sees toolbar
+/// labels, not the page. Chrome-family browsers honour AXEnhancedUserInterface
+/// (what VoiceOver sets); Electron apps expose AXManualAccessibility for
+/// exactly this purpose. Best-effort and idempotent; other apps ignore both.
+fn enable_web_content_ax(app: &Elem, app_name: &str) {
+    const CHROMIUM: &[&str] = &[
+        "Google Chrome", "Chromium", "Brave Browser", "Microsoft Edge", "Arc", "Vivaldi", "Opera",
+    ];
+    let electron = app.settable("AXManualAccessibility");
+    if electron {
+        app.set_bool("AXManualAccessibility", true);
+    }
+    if electron || CHROMIUM.contains(&app_name) {
+        app.set_bool("AXEnhancedUserInterface", true);
+    }
 }
 
 /// Bounded DFS in document order collecting each element's value (or title).

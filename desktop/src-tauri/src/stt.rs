@@ -7,6 +7,13 @@ use tokio_tungstenite::tungstenite::Message;
 
 use crate::audio::SAMPLE_RATE;
 
+/// Mirrors the proxy's MAX_AUDIO_SECONDS (backend/src/server.ts): one session
+/// carries at most 5 minutes of audio. Ending it here, client-side, means the
+/// mic and the UI stop together — otherwise the server finishes the session
+/// while the tray still shows a live mic and the user keeps talking to nobody.
+pub const MAX_AUDIO_SECONDS: u32 = 300;
+const MAX_AUDIO_BYTES: usize = MAX_AUDIO_SECONDS as usize * SAMPLE_RATE as usize * 2;
+
 /// Events from one streaming session, mirroring the proxy's wire protocol
 /// (backend/src/server.ts /v1/stt/stream).
 #[derive(Debug, Clone)]
@@ -15,6 +22,8 @@ pub enum SttEvent {
     Partial(String),
     Final(String),
     Done(String),
+    /// The per-session audio cap was hit: stop the mic now; Done still follows.
+    Limit,
     /// The message travels via run_session's Err return; the event just marks it.
     Error,
 }
@@ -68,19 +77,26 @@ pub async fn run_session(
         .map_err(|e| format!("send config: {e}"))?;
 
     let mut finished = false;
+    let mut sent_bytes = 0usize;
     loop {
         tokio::select! {
-            chunk = audio_rx.recv(), if !finished => match chunk {
-                Some(bytes) => sink
-                    .send(Message::Binary(bytes))
-                    .await
-                    .map_err(|e| format!("send audio: {e}"))?,
-                None => {
-                    finished = true;
-                    sink.send(Message::Text(r#"{"type":"finish"}"#.into()))
+            chunk = audio_rx.recv(), if !finished => {
+                if let Some(bytes) = chunk {
+                    sent_bytes += bytes.len();
+                    sink.send(Message::Binary(bytes))
                         .await
-                        .map_err(|e| format!("send finish: {e}"))?;
+                        .map_err(|e| format!("send audio: {e}"))?;
+                    if sent_bytes < MAX_AUDIO_BYTES {
+                        continue;
+                    }
+                    on_event(SttEvent::Limit);
                 }
+                // Recorder stopped (channel closed) or the cap is hit: no more
+                // audio from here; the server flushes and answers "done".
+                finished = true;
+                sink.send(Message::Text(r#"{"type":"finish"}"#.into()))
+                    .await
+                    .map_err(|e| format!("send finish: {e}"))?;
             },
             msg = stream.next() => match msg {
                 Some(Ok(Message::Text(json))) => {
